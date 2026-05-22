@@ -185,56 +185,124 @@ def _consultar_padron(access_token: str, env: str, tax_id: str,
         return None
 
 
+def _map_estado_impuesto(codigo: str) -> str:
+    """Convierte el código de estado de impuesto a texto legible."""
+    return {
+        "AC": "ACTIVO",
+        "EX": "EXENTO",
+        "BA": "BAJA",
+        "NA": "NO ALCANZADO",
+    }.get(codigo, codigo or "—")
+
+
 def _parse_persona(resp: dict) -> dict:
-    """Normaliza la respuesta de getPersona_v2 al formato interno."""
-    persona = resp.get("persona") or resp.get("data") or resp
+    """Normaliza la respuesta de getPersona_v2 al formato interno.
 
-    razon = persona.get("razonSocial") or persona.get("nombre") or "—"
-    if isinstance(razon, dict):
-        razon = razon.get("razonSocial") or "—"
+    Estructura real de afipsdk / WS_SR_PADRON_A13:
+      {
+        "personaReturn": {
+          "datosGenerales": {
+            "razonSocial" / "apellido" + "nombre",
+            "tipoPersona": "FISICA" | "JURIDICA",
+            "estadoClave": "ACTIVO",
+            "domicilioFiscal": { direccion, localidad, descripcionProvincia, ... },
+            "fechaContratoSocial" / "fechaNacimiento",
+            ...
+          },
+          "datosRegimenGeneral": {
+            "actividad": [...],
+            "impuesto": [{ descripcionImpuesto, estadoImpuesto: "AC"|"EX"|"BA", ... }]
+          },
+          "datosMonotributo": {  # solo si es monotributista
+            "actividad": [...],
+            "categoriaMonotributo": {...},
+            "impuesto": [...]
+          },
+          "errorMonotributo" / "errorConstancia": ...  # si hay errores
+        }
+      }
+    """
+    pr = resp.get("personaReturn") or resp.get("persona") or resp.get("data") or resp
+    dg = pr.get("datosGenerales") or pr
+    drg = pr.get("datosRegimenGeneral") or {}
+    dmo = pr.get("datosMonotributo") or {}
 
-    dom = persona.get("domicilioFiscal") or {}
+    tipo = dg.get("tipoPersona", "—")
+
+    # Nombre / razón social según tipo
+    if tipo == "FISICA":
+        apellido = dg.get("apellido", "")
+        nombre = dg.get("nombre", "")
+        razon = f"{apellido}, {nombre}".strip(", ") or "—"
+    else:
+        razon = dg.get("razonSocial") or "—"
+
+    # Domicilio fiscal
+    dom = dg.get("domicilioFiscal") or {}
     if isinstance(dom, list) and dom:
         dom = dom[0]
-    dom_str = " ".join(filter(None, [
+    dom_str = ", ".join(filter(None, [
         dom.get("direccion") if isinstance(dom, dict) else None,
         dom.get("localidad") if isinstance(dom, dict) else None,
         dom.get("descripcionProvincia") if isinstance(dom, dict) else None,
     ])) or "—"
 
+    # Impuestos: combinamos régimen general y monotributo
+    impuestos_total = []
+    for fuente in (drg.get("impuesto"), dmo.get("impuesto")):
+        if isinstance(fuente, dict):
+            impuestos_total.append(fuente)
+        elif isinstance(fuente, list):
+            impuestos_total.extend(fuente)
+
     cond_iva = "—"
     cond_gan = "—"
-    impuestos = persona.get("impuesto") or persona.get("impuestos") or []
-    if isinstance(impuestos, dict):
-        impuestos = [impuestos]
-    for imp in impuestos:
+    for imp in impuestos_total:
         desc = (imp.get("descripcionImpuesto") or imp.get("descripcion") or "").upper()
-        estado = imp.get("descripcionEstado") or imp.get("estado") or "—"
-        if "IVA" in desc and cond_iva == "—":
+        estado = _map_estado_impuesto(imp.get("estadoImpuesto") or imp.get("estado"))
+        # IVA puro o IVA + algo (SIRE-IVA, etc.)
+        if "IVA" in desc and "MONOTRIBUTO" not in desc and cond_iva == "—":
             cond_iva = f"{desc} ({estado})"
+        # Ganancias (GANANCIAS SOCIEDADES, IMPTO.A LAS GANANCIAS, etc.)
         if "GANANCIAS" in desc and cond_gan == "—":
             cond_gan = f"{desc} ({estado})"
-    if cond_iva == "—" and persona.get("categoriaMonotributo"):
-        cond_iva = "MONOTRIBUTO"
 
-    actividad = persona.get("actividad") or []
-    if isinstance(actividad, dict):
-        actividad = [actividad]
+    # Si tiene categoría de monotributo, eso sobreescribe IVA
+    cat_mono = dmo.get("categoriaMonotributo")
+    if cat_mono:
+        cat_desc = cat_mono.get("descripcionCategoria", "") if isinstance(cat_mono, dict) else ""
+        cond_iva = f"MONOTRIBUTO — Categoría {cat_desc}".strip(" —")
+
+    # Actividad principal: prioridad régimen general, fallback monotributo
     act_str = "—"
-    for a in actividad:
-        if a.get("orden") == 1 or len(actividad) == 1:
-            act_str = a.get("descripcionActividad") or a.get("descripcion") or "—"
+    for fuente in (drg.get("actividad"), dmo.get("actividad")):
+        if not fuente:
+            continue
+        actividades = [fuente] if isinstance(fuente, dict) else fuente
+        for a in actividades:
+            if a.get("orden") == 1 or len(actividades) == 1:
+                desc = a.get("descripcionActividad") or a.get("descripcion")
+                if desc:
+                    act_str = desc
+                    break
+        if act_str != "—":
             break
+
+    # Fecha de inicio: contrato social (jurídicas) o nacimiento/inscripción (físicas)
+    fecha = dg.get("fechaContratoSocial") or dg.get("fechaNacimiento") or dg.get("fechaInscripcion") or "—"
+    # Acortar timestamp ISO si vino con hora
+    if isinstance(fecha, str) and "T" in fecha:
+        fecha = fecha.split("T")[0]
 
     return {
         "razon_social": razon,
-        "tipo_persona": persona.get("tipoPersona", "—"),
-        "estado_clave": persona.get("estadoClave", "—"),
+        "tipo_persona": tipo,
+        "estado_clave": dg.get("estadoClave", "—"),
         "condicion_iva": cond_iva,
         "condicion_ganancias": cond_gan,
         "domicilio_fiscal": dom_str,
         "actividad_principal": act_str,
-        "fecha_inicio": persona.get("fechaInscripcion", "—"),
+        "fecha_inicio": fecha,
         "en_apoc": False,  # APOC requiere otro WSID — pendiente fase 1
     }
 
