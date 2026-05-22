@@ -2,19 +2,26 @@
 
 Flujo según docs.afipsdk.com:
   1) POST /api/v1/afip/auth      -> obtiene Ticket de Acceso (token + sign)
+                                   En modo "prod" se mandan cert y key en el body.
   2) POST /api/v1/afip/requests  -> consulta el padrón usando el TA
 
 Documentación:
   https://docs.afipsdk.com/integracion/api
   https://docs.afipsdk.com/siguientes-pasos/web-services/padron-de-constancia-de-inscripcion
 
+Variables de entorno:
+  AFIPSDK_TOKEN    -> access_token de afipsdk.com (obligatorio para live)
+  AFIPSDK_ENV      -> "dev" (default) o "prod"
+  AFIPSDK_TAX_ID   -> CUIT de la empresa que representa (11 dígitos sin guiones)
+  AFIPSDK_CERT     -> path al archivo .crt (solo prod, ej.
+                      ~/Documents/menter-certificados-afip/Menter.crt)
+  AFIPSDK_KEY      -> path al archivo .key (solo prod)
+
 Si AFIPSDK_TOKEN está vacío, cae a modo demo.
-Si AFIPSDK_ENV=dev (default), usa el CUIT de prueba 20409378472 de afipsdk.
-Si AFIPSDK_ENV=prod, requiere certificado propio cargado en la cuenta afipsdk.com
-y el CUIT de la empresa que lo posee en AFIPSDK_TAX_ID.
 """
 import os
 import time
+from pathlib import Path
 import httpx
 from typing import Optional, Tuple
 
@@ -64,27 +71,58 @@ DEMO_DATA = {
 WSID = "ws_sr_constancia_inscripcion"
 
 
-def _config() -> Tuple[str, str, str]:
-    """Devuelve (access_token, environment, tax_id_representada)."""
+def _config() -> Tuple[str, str, str, Optional[str], Optional[str]]:
+    """Devuelve (access_token, env, tax_id, cert_path, key_path)."""
     token = os.environ.get("AFIPSDK_TOKEN", "").strip()
     env = os.environ.get("AFIPSDK_ENV", "dev").strip() or "dev"
-    # En dev, afipsdk permite usar este CUIT de prueba.
-    # En prod hay que poner el CUIT de la empresa con certificado.
     default_tax = "20409378472" if env == "dev" else ""
     tax_id = os.environ.get("AFIPSDK_TAX_ID", default_tax).strip() or default_tax
-    return token, env, tax_id
+    cert = os.environ.get("AFIPSDK_CERT", "").strip() or None
+    key = os.environ.get("AFIPSDK_KEY", "").strip() or None
+    # Expandir ~ a $HOME
+    if cert:
+        cert = str(Path(cert).expanduser())
+    if key:
+        key = str(Path(key).expanduser())
+    return token, env, tax_id, cert, key
 
 
-def _get_ta(access_token: str, env: str, tax_id: str) -> Optional[dict]:
+def _leer_archivo(path: Optional[str]) -> Optional[str]:
+    """Lee un archivo (cert o key) como string. Devuelve None si no existe."""
+    if not path:
+        return None
+    try:
+        p = Path(path)
+        if not p.exists():
+            print(f"[afip_arca] archivo no encontrado: {path}")
+            return None
+        return p.read_text()
+    except Exception as e:
+        print(f"[afip_arca] error leyendo {path}: {e}")
+        return None
+
+
+def _get_ta(access_token: str, env: str, tax_id: str,
+            cert_path: Optional[str], key_path: Optional[str]) -> Optional[dict]:
     """Obtiene (o recupera del cache) el Ticket de Acceso para el WSID."""
     cache_key = f"{env}:{tax_id}:{WSID}"
     cached = _TA_CACHE.get(cache_key)
-    # Renovamos si vence en menos de 5 minutos
     if cached and cached.get("expira_ts", 0) > time.time() + 300:
         return cached
 
     url = f"{AFIPSDK_BASE}/afip/auth"
     body = {"environment": env, "tax_id": tax_id, "wsid": WSID}
+
+    # En modo prod, afipsdk necesita el certificado y la clave en cada auth
+    if env == "prod":
+        cert_content = _leer_archivo(cert_path)
+        key_content = _leer_archivo(key_path)
+        if not cert_content or not key_content:
+            print(f"[afip_arca] modo prod requiere AFIPSDK_CERT y AFIPSDK_KEY válidos. cert={cert_path} key={key_path}")
+            return None
+        body["cert"] = cert_content
+        body["key"] = key_content
+
     try:
         with httpx.Client(timeout=30.0) as client:
             r = client.post(
@@ -100,11 +138,10 @@ def _get_ta(access_token: str, env: str, tax_id: str) -> Optional[dict]:
             print(f"[afip_arca] auth fallo status={r.status_code} body={r.text[:300]}")
             return None
         data = r.json()
-        # data: {token, sign, expiration}
         ta = {
             "token": data.get("token"),
             "sign": data.get("sign"),
-            "expira_ts": time.time() + 11 * 3600,  # asumimos 11h de duración
+            "expira_ts": time.time() + 11 * 3600,
         }
         _TA_CACHE[cache_key] = ta
         return ta
@@ -113,7 +150,8 @@ def _get_ta(access_token: str, env: str, tax_id: str) -> Optional[dict]:
         return None
 
 
-def _consultar_padron(access_token: str, env: str, tax_id: str, ta: dict, cuit_limpio: str) -> Optional[dict]:
+def _consultar_padron(access_token: str, env: str, tax_id: str,
+                      ta: dict, cuit_limpio: str) -> Optional[dict]:
     """Hace la consulta real al padrón usando el TA."""
     url = f"{AFIPSDK_BASE}/afip/requests"
     body = {
@@ -148,31 +186,13 @@ def _consultar_padron(access_token: str, env: str, tax_id: str, ta: dict, cuit_l
 
 
 def _parse_persona(resp: dict) -> dict:
-    """Normaliza la respuesta de getPersona_v2 al formato interno.
-
-    La estructura real es algo como:
-      { "persona": {
-          "idPersona": ...,
-          "tipoPersona": "FISICA"|"JURIDICA",
-          "estadoClave": "ACTIVO",
-          "nombre": "...",
-          "razonSocial": "...",
-          "tipoClave": "CUIT",
-          "domicilioFiscal": { "direccion": "...", "localidad": "...", "descripcionProvincia": "..." },
-          "impuesto": [{...}],
-          "actividad": [{...}],
-          "categoriaMonotributo": [...],
-          ...
-      }}
-    """
+    """Normaliza la respuesta de getPersona_v2 al formato interno."""
     persona = resp.get("persona") or resp.get("data") or resp
 
-    # nombre razón social (varía según tipo)
     razon = persona.get("razonSocial") or persona.get("nombre") or "—"
     if isinstance(razon, dict):
         razon = razon.get("razonSocial") or "—"
 
-    # domicilio
     dom = persona.get("domicilioFiscal") or {}
     if isinstance(dom, list) and dom:
         dom = dom[0]
@@ -182,7 +202,6 @@ def _parse_persona(resp: dict) -> dict:
         dom.get("descripcionProvincia") if isinstance(dom, dict) else None,
     ])) or "—"
 
-    # impuestos: IVA y Ganancias
     cond_iva = "—"
     cond_gan = "—"
     impuestos = persona.get("impuesto") or persona.get("impuestos") or []
@@ -198,7 +217,6 @@ def _parse_persona(resp: dict) -> dict:
     if cond_iva == "—" and persona.get("categoriaMonotributo"):
         cond_iva = "MONOTRIBUTO"
 
-    # actividad principal
     actividad = persona.get("actividad") or []
     if isinstance(actividad, dict):
         actividad = [actividad]
@@ -226,15 +244,15 @@ def consultar_constancia(cuit_limpio: str) -> dict:
 
     Estrategia:
       1) Si hay AFIPSDK_TOKEN, hace flujo real auth -> requests.
-      2) Si falla la API real, intenta fallback a datos demo.
+      2) Si falla la API real, fallback a datos demo.
       3) Si no hay token ni datos demo, devuelve placeholder.
     """
-    access_token, env, tax_id = _config()
+    access_token, env, tax_id, cert_path, key_path = _config()
     modo = "demo"
     datos = None
 
     if access_token and tax_id:
-        ta = _get_ta(access_token, env, tax_id)
+        ta = _get_ta(access_token, env, tax_id, cert_path, key_path)
         if ta:
             resp = _consultar_padron(access_token, env, tax_id, ta, cuit_limpio)
             if resp:
@@ -252,7 +270,7 @@ def consultar_constancia(cuit_limpio: str) -> dict:
         return {
             "modo": "demo",
             "encontrado": False,
-            "detalle": "Sin datos para este CUIT. Verificá el token, el modo (dev/prod) y el endpoint.",
+            "detalle": "Sin datos para este CUIT. Verificá token, modo (dev/prod), cert/key y endpoint.",
             "razon_social": "—",
             "estado_clave": "—",
             "condicion_iva": "—",

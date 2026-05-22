@@ -28,3 +28,9 @@ uv.lock
 .idea/
 *.swp
 *.swo
+
+# Certificados (nunca subir)
+*.crt
+*.key
+*.csr
+*.pem
