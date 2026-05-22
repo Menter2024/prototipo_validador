@@ -64,6 +64,34 @@ AFIPSDK_TOKEN=tu_token_aqui
 
 5. Detené el server (Ctrl+C) y volvelo a arrancar con `bash run.sh`. Ahora consulta en vivo.
 
+## Deploy en Railway
+
+El repo ya incluye `railway.json` y `requirements.txt` para que Railway detecte Python/FastAPI y arranque con el puerto dinámico que expone la plataforma.
+
+### Opción A: desde GitHub
+
+1. Subí este proyecto a un repo de GitHub.
+2. En Railway: **New Project → Deploy from GitHub repo**.
+3. Seleccioná el repo y hacé deploy.
+4. En el servicio creado: **Settings → Networking → Public Networking → Generate Domain**.
+5. Si querés AFIP en vivo, agregá en Railway → **Variables**:
+
+```
+AFIPSDK_TOKEN=tu_token_aqui
+PADRONES_DIR=./padrones
+SALIDAS_DIR=./salidas
+```
+
+### Opción B: desde Railway CLI
+
+```bash
+railway login
+railway init
+railway up
+```
+
+Después generá el dominio público desde **Settings → Networking**.
+
 ## Cómo cargar padrones provinciales reales
 
 Mirá `padrones/README.md`. Resumen: bajás el padrón mensual del sitio oficial (ARBA, AGIP, etc.), lo convertís a CSV con la cabecera correcta, y lo guardás con el nombre fijo en la carpeta `padrones/`.
