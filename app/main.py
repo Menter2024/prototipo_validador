@@ -1,0 +1,139 @@
+"""Backend FastAPI del prototipo Menter — Validación de Alta de Proveedores.
+
+Endpoints:
+  GET  /            -> sirve el front HTML
+  POST /api/validar -> recibe lista de CUITs y devuelve resultados
+  GET  /api/excel/{filename} -> descarga del Excel generado
+"""
+import os
+import asyncio
+from datetime import datetime
+from pathlib import Path
+from typing import List
+
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, HTMLResponse
+from pydantic import BaseModel
+
+from app.modules import validador, padrones, afip_arca, georef, excel
+
+
+# Carga .env manualmente (sin dependencia extra)
+ENV_FILE = Path(__file__).parent.parent / ".env"
+if ENV_FILE.exists():
+    for line in ENV_FILE.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip())
+
+PADRONES_DIR = Path(os.environ.get("PADRONES_DIR", "./padrones")).resolve()
+SALIDAS_DIR = Path(os.environ.get("SALIDAS_DIR", "./salidas")).resolve()
+SALIDAS_DIR.mkdir(parents=True, exist_ok=True)
+
+app = FastAPI(title="Menter · Validación de Alta de Proveedores")
+
+
+class ValidarRequest(BaseModel):
+    cuits: List[str]
+
+
+async def _procesar_cuit(cuit: str) -> dict:
+    """Procesa un CUIT en sus 3 etapas: validación matemática, AFIP, padrones."""
+    val = validador.validar(cuit)
+    resultado = {
+        "cuit": val["cuit"],
+        "cuit_limpio": val["cuit_limpio"],
+        "valido": val["valido"],
+        "tipo_persona": val["tipo"],
+        "mensaje_validador": val["mensaje"],
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    if not val["valido"]:
+        resultado["afip"] = {
+            "razon_social": "—",
+            "estado_clave": "—",
+            "detalle": "No se consultó AFIP porque el CUIT es inválido.",
+        }
+        resultado["padrones"] = {}
+        resultado["georef"] = {"provincia": None}
+        resultado["modo_afip"] = "skip"
+        return resultado
+
+    # Llamadas en paralelo (asyncio) — wrapper para funciones sync
+    loop = asyncio.get_event_loop()
+    afip_task = loop.run_in_executor(None, afip_arca.consultar_constancia, val["cuit_limpio"])
+    padrones_task = loop.run_in_executor(None, padrones.consultar_todos, val["cuit_limpio"], PADRONES_DIR)
+    afip_data, padrones_data = await asyncio.gather(afip_task, padrones_task)
+
+    resultado["afip"] = afip_data
+    resultado["padrones"] = padrones_data
+    resultado["modo_afip"] = afip_data.get("modo", "demo")
+
+    # Georef sobre el domicilio fiscal
+    dom = afip_data.get("domicilio_fiscal", "")
+    geo = await loop.run_in_executor(None, georef.normalizar_provincia, dom)
+    resultado["georef"] = geo
+
+    return resultado
+
+
+@app.post("/api/validar")
+async def validar_endpoint(req: ValidarRequest):
+    if not req.cuits:
+        raise HTTPException(status_code=400, detail="Lista de CUITs vacía.")
+    if len(req.cuits) > 50:
+        raise HTTPException(status_code=400, detail="Máximo 50 CUITs por solicitud en este prototipo.")
+
+    tareas = [_procesar_cuit(c) for c in req.cuits]
+    resultados = await asyncio.gather(*tareas)
+
+    # Generar Excel
+    filename = f"validacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    ruta = SALIDAS_DIR / filename
+    excel.generar(resultados, ruta)
+
+    return {
+        "resultados": resultados,
+        "excel": filename,
+        "modo_general": "live" if any(r.get("modo_afip") == "live" for r in resultados) else "demo",
+        "total_procesados": len(resultados),
+    }
+
+
+@app.get("/api/excel/{filename}")
+def descargar_excel(filename: str):
+    ruta = SALIDAS_DIR / filename
+    if not ruta.exists() or ".." in filename or "/" in filename:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado.")
+    return FileResponse(
+        ruta,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=filename,
+    )
+
+
+@app.get("/api/info")
+def info():
+    """Diagnóstico: muestra configuración y archivos disponibles."""
+    return {
+        "afip_modo": "live" if os.environ.get("AFIPSDK_TOKEN") else "demo",
+        "padrones_dir": str(PADRONES_DIR),
+        "padrones_disponibles": sorted(p.name for p in PADRONES_DIR.glob("*.csv")) if PADRONES_DIR.exists() else [],
+        "salidas_dir": str(SALIDAS_DIR),
+    }
+
+
+# Front estático
+STATIC_DIR = Path(__file__).parent / "static"
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    return (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

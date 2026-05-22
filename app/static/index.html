@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Validador de Alta de Proveedores</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+<header class="gradient-menter text-white">
+  <div class="max-w-6xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Validador de Alta de Proveedores</div>
+    <div class="text-sm text-blue-100">Prototipo funcional · backend Python + consultas reales</div>
+  </div>
+</header>
+
+<div id="modo-banner" class="hidden bg-amber-100 border-b border-amber-300 text-amber-900 text-sm">
+  <div class="max-w-6xl mx-auto px-6 py-2"></div>
+</div>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+
+  <!-- Input -->
+  <section id="view-input" class="bg-white rounded-xl shadow-sm p-8">
+    <h1 class="text-2xl font-bold mb-1">Iniciar validación</h1>
+    <p class="text-slate-500 mb-6">Ingresá uno o varios CUITs (uno por línea).</p>
+
+    <textarea id="cuit-input" rows="5"
+      class="w-full border border-slate-300 rounded-lg p-4 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      placeholder="33-69345023-9&#10;30-50001091-2"></textarea>
+
+    <div class="flex flex-wrap items-center gap-3 mt-4 text-sm">
+      <button onclick="cargarEjemplos()" class="text-blue-600 hover:text-blue-800 underline">Cargar CUITs de ejemplo</button>
+      <span class="text-slate-300">·</span>
+      <a href="/api/info" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Ver configuración actual</a>
+    </div>
+
+    <div class="mt-8 flex justify-end">
+      <button id="btn-validar" onclick="validar()"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition">
+        Validar  →
+      </button>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  <section id="view-loading" class="hidden bg-white rounded-xl shadow-sm p-8 text-center">
+    <div class="inline-flex items-center gap-3">
+      <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span class="text-lg text-slate-700">Consultando fuentes en paralelo...</span>
+    </div>
+  </section>
+
+  <!-- Resultados -->
+  <section id="view-results" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6 flex justify-between items-center flex-wrap gap-3">
+      <div>
+        <div class="text-xs uppercase tracking-wider text-slate-500">Resultados</div>
+        <div id="result-summary" class="text-lg font-semibold"></div>
+      </div>
+      <div class="flex gap-2">
+        <a id="btn-descarga" href="#" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">Descargar Excel</a>
+        <button onclick="reset()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm">Nueva consulta</button>
+      </div>
+    </div>
+    <div id="results-container" class="space-y-4"></div>
+  </section>
+
+</main>
+
+<footer class="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-slate-500 border-t border-slate-200 mt-12">
+  Menter S.A.S. · <a href="https://menter.io" class="text-blue-600 hover:underline">menter.io</a> · hola@menter.io
+</footer>
+
+<script>
+function cargarEjemplos() {
+  // CUITs reales conocidos (AFIP, Banco Nación, YPF)
+  document.getElementById('cuit-input').value = '33-69345023-9\n30-50001091-2\n30-54668997-9';
+}
+
+function show(id) {
+  ['view-input', 'view-loading', 'view-results'].forEach(v => {
+    document.getElementById(v).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+}
+
+async function validar() {
+  const raw = document.getElementById('cuit-input').value;
+  const cuits = raw.split(/\r?\n|,|;/).map(s => s.trim()).filter(Boolean);
+  if (cuits.length === 0) {
+    alert('Ingresá al menos un CUIT.');
+    return;
+  }
+  show('view-loading');
+
+  try {
+    const r = await fetch('/api/validar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({cuits}),
+    });
+    if (!r.ok) {
+      const err = await r.json();
+      alert('Error: ' + (err.detail || r.statusText));
+      show('view-input');
+      return;
+    }
+    const data = await r.json();
+    renderResults(data);
+  } catch (e) {
+    alert('Error de conexión: ' + e.message);
+    show('view-input');
+  }
+}
+
+function statusColor(s) {
+  return s === 'ok' ? 'emerald' : s === 'warn' ? 'amber' : 'rose';
+}
+
+function renderResults(data) {
+  show('view-results');
+
+  // Banner modo
+  const banner = document.getElementById('modo-banner');
+  if (data.modo_general === 'demo') {
+    banner.classList.remove('hidden');
+    banner.querySelector('div').innerHTML = '<strong>Modo demo activo.</strong> Los datos de AFIP/ARCA son de demostración. Configurá <code>AFIPSDK_TOKEN</code> en <code>.env</code> para consultas reales.';
+  } else {
+    banner.classList.add('hidden');
+  }
+
+  document.getElementById('result-summary').textContent =
+    `${data.total_procesados} CUIT(s) procesados · modo ${data.modo_general.toUpperCase()}`;
+
+  document.getElementById('btn-descarga').href = '/api/excel/' + data.excel;
+
+  const cont = document.getElementById('results-container');
+  cont.innerHTML = '';
+
+  for (const r of data.resultados) {
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-xl shadow-sm p-6';
+
+    const validBadge = r.valido
+      ? '<span class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded">CUIT VÁLIDO</span>'
+      : '<span class="bg-rose-100 text-rose-700 text-xs font-semibold px-2 py-1 rounded">CUIT INVÁLIDO</span>';
+
+    const afip = r.afip || {};
+    const apoc = afip.en_apoc === true
+      ? '<span class="text-rose-700 font-bold">SÍ — REVISAR</span>'
+      : (afip.en_apoc === false ? '<span class="text-emerald-700">NO</span>' : '<span class="text-slate-500">—</span>');
+
+    let padrones_html = '';
+    const pads = r.padrones || {};
+    for (const prov in pads) {
+      const p = pads[prov];
+      const colorMap = { inscripto: 'amber', no_inscripto: 'emerald', no_disponible: 'slate' };
+      const icon = p.status === 'inscripto' ? '!' : p.status === 'no_inscripto' ? '✓' : '·';
+      const col = colorMap[p.status] || 'slate';
+      padrones_html += `
+        <div class="flex items-start gap-2 py-1 text-sm">
+          <span class="w-5 h-5 rounded-full bg-${col}-100 text-${col}-700 flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
+          <span class="font-semibold w-24 flex-shrink-0">${prov}</span>
+          <span class="text-slate-600">${p.detalle || ''}</span>
+        </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <div class="font-mono text-lg font-bold text-slate-800">${r.cuit}</div>
+          <div class="text-sm text-slate-500">${r.tipo_persona} · ${r.mensaje_validador}</div>
+        </div>
+        <div>${validBadge}</div>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4 mb-4">
+        <div class="md:col-span-2 bg-slate-50 rounded-lg p-3">
+          <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">AFIP / ARCA  <span class="ml-2 text-xs font-semibold text-slate-400">[${(r.modo_afip || 'demo').toUpperCase()}]</span></div>
+          <div class="font-bold text-slate-800">${afip.razon_social || '—'}</div>
+          <div class="text-sm text-slate-600">${afip.actividad_principal || '—'}</div>
+          <div class="text-sm text-slate-600">${afip.domicilio_fiscal || '—'}</div>
+          <div class="text-sm text-slate-600 mt-1">IVA: ${afip.condicion_iva || '—'} · Ganancias: ${afip.condicion_ganancias || '—'}</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3">
+          <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Estado</div>
+          <div class="text-lg font-bold text-slate-800">${afip.estado_clave || '—'}</div>
+          <div class="text-sm text-slate-600 mt-2">En base APOC: ${apoc}</div>
+          <div class="text-sm text-slate-600">Provincia: ${(r.georef && r.georef.provincia) || '—'}</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Padrones de Ingresos Brutos</div>
+        ${padrones_html || '<div class="text-sm text-slate-500">No se consultaron padrones (CUIT inválido).</div>'}
+      </div>
+    `;
+    cont.appendChild(card);
+  }
+}
+
+function reset() {
+  show('view-input');
+}
+</script>
+
+</body>
+</html>

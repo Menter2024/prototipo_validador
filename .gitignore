@@ -1,0 +1,30 @@
+# Secretos y entorno local
+.env
+.env.local
+*.env.local
+
+# Resultados generados localmente
+salidas/*.xlsx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.python-version
+
+# uv
+.uv-cache/
+uv.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo

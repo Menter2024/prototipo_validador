@@ -1,0 +1,13 @@
+[project]
+name = "validador-proveedores"
+version = "0.1.0"
+description = "Prototipo Menter — Validación automatizada de alta de proveedores"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "httpx>=0.28",
+  "openpyxl>=3.1",
+  "python-multipart>=0.0.12",
+  "pydantic>=2.9",
+]
