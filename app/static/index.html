@@ -150,6 +150,8 @@ function statusColor(s) {
 function padronBadgeClass(status) {
   if (status === 'inscripto') return 'bg-amber-100 text-amber-700';
   if (status === 'no_inscripto') return 'bg-emerald-100 text-emerald-700';
+  if (status === 'consulta_manual') return 'bg-blue-100 text-blue-700';
+  if (status === 'requiere_credenciales') return 'bg-violet-100 text-violet-700';
   return 'bg-slate-100 text-slate-700';
 }
 
@@ -205,13 +207,14 @@ function renderResults(data) {
     const pads = r.padrones || {};
     for (const prov in pads) {
       const p = pads[prov];
-      const icon = p.status === 'inscripto' ? '!' : p.status === 'no_inscripto' ? '✓' : '·';
+      const icon = p.status === 'inscripto' ? '!' : p.status === 'no_inscripto' ? '✓' : (p.status === 'consulta_manual' ? '↗' : p.status === 'requiere_credenciales' ? '🔒' : '·');
       const badgeClass = padronBadgeClass(p.status);
+      const link = p.url ? ` <a class="text-blue-600 hover:underline" target="_blank" href="${p.url}">abrir fuente</a>` : '';
       padrones_html += `
         <div class="flex items-start gap-2 py-1 text-sm">
           <span class="w-5 h-5 rounded-full ${badgeClass} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
           <span class="font-semibold w-24 flex-shrink-0">${prov}</span>
-          <span class="text-slate-600">${p.detalle || ''}</span>
+          <span class="text-slate-600">${p.detalle || ''}${link}</span>
         </div>`;
     }
 

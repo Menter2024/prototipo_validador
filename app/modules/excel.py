@@ -189,7 +189,13 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
         _cell(s3.cell(row=row, column=2), r.get("afip", {}).get("razon_social", "—"))
         for i, prov in enumerate(provincias):
             p = r.get("padrones", {}).get(prov, {})
-            st = {"inscripto": "warn", "no_inscripto": "ok", "no_disponible": None}.get(p.get("status"))
+            st = {
+                "inscripto": "warn",
+                "no_inscripto": "ok",
+                "no_disponible": None,
+                "consulta_manual": None,
+                "requiere_credenciales": None,
+            }.get(p.get("status"))
             _cell(s3.cell(row=row, column=3 + i), p.get("detalle", "—"), st)
 
     s3.column_dimensions["A"].width = 18

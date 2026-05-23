@@ -20,6 +20,17 @@ PadronTucuman.csv
 
 Si un archivo falta, el sistema lo reporta como "no_disponible" pero no se detiene.
 
+## Fuentes provinciales sin archivo mensual normalizado
+
+También se informan en la salida, pero no se marcan como "no inscripto" porque requieren consulta online o credenciales:
+
+| Provincia | Estado técnico | Fuente |
+|---|---|---|
+| Misiones | consulta manual online | https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion |
+| Neuquén | consulta manual online | https://rentasneuquenweb.gob.ar/nqn/SCF/cons_inscripcion.php |
+| Río Negro | consulta manual / CAPTCHA | https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/ |
+| Corrientes | requiere credenciales | https://www.dgrcorrientes.gob.ar/ |
+
 ## Formato CSV canónico
 
 Cabecera recomendada:

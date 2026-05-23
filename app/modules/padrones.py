@@ -6,15 +6,92 @@ from typing import Optional
 
 
 PADRONES_PROVINCIAS = {
-    "ARBA": {"archivo": "PadronARBA.csv", "nombre": "Buenos Aires / ARBA", "prioridad": "P1"},
-    "CABA": {"archivo": "PadronCABA.csv", "nombre": "CABA / AGIP", "prioridad": "P1"},
-    "EntreRios": {"archivo": "PadronEntreRios.csv", "nombre": "Entre Ríos / ATER", "prioridad": "P1"},
-    "Cordoba": {"archivo": "PadronCordoba.csv", "nombre": "Córdoba", "prioridad": "P2"},
-    "Formosa": {"archivo": "PadronFormosa.csv", "nombre": "Formosa", "prioridad": "P2"},
-    "Jujuy": {"archivo": "PadronJujuy.csv", "nombre": "Jujuy", "prioridad": "P2"},
-    "Mendoza": {"archivo": "PadronMendoza.csv", "nombre": "Mendoza", "prioridad": "P2"},
-    "SantaFe": {"archivo": "PadronSantaFe.csv", "nombre": "Santa Fe", "prioridad": "P2"},
-    "Tucuman": {"archivo": "PadronTucuman.csv", "nombre": "Tucumán", "prioridad": "P2"},
+    "ARBA": {
+        "archivo": "PadronARBA.csv",
+        "nombre": "Buenos Aires / ARBA",
+        "prioridad": "P1",
+        "tipo": "archivo",
+    },
+    "CABA": {
+        "archivo": "PadronCABA.csv",
+        "nombre": "CABA / AGIP",
+        "prioridad": "P1",
+        "tipo": "archivo",
+    },
+    "EntreRios": {
+        "archivo": "PadronEntreRios.csv",
+        "nombre": "Entre Ríos / ATER",
+        "prioridad": "P1",
+        "tipo": "archivo",
+    },
+    "Cordoba": {
+        "archivo": "PadronCordoba.csv",
+        "nombre": "Córdoba",
+        "prioridad": "P2",
+        "tipo": "archivo",
+    },
+    "Formosa": {
+        "archivo": "PadronFormosa.csv",
+        "nombre": "Formosa",
+        "prioridad": "P2",
+        "tipo": "archivo",
+    },
+    "Jujuy": {
+        "archivo": "PadronJujuy.csv",
+        "nombre": "Jujuy",
+        "prioridad": "P2",
+        "tipo": "archivo",
+    },
+    "Mendoza": {
+        "archivo": "PadronMendoza.csv",
+        "nombre": "Mendoza",
+        "prioridad": "P2",
+        "tipo": "archivo",
+    },
+    "SantaFe": {
+        "archivo": "PadronSantaFe.csv",
+        "nombre": "Santa Fe",
+        "prioridad": "P2",
+        "tipo": "archivo",
+    },
+    "Tucuman": {
+        "archivo": "PadronTucuman.csv",
+        "nombre": "Tucumán",
+        "prioridad": "P2",
+        "tipo": "archivo",
+    },
+    "Misiones": {
+        "archivo": None,
+        "nombre": "Misiones / ATM",
+        "prioridad": "P3",
+        "tipo": "consulta_manual",
+        "url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
+        "detalle": "Fuente pública relevada sin padrón mensual normalizado. Requiere consulta online por CUIT.",
+    },
+    "Neuquen": {
+        "archivo": None,
+        "nombre": "Neuquén / Rentas",
+        "prioridad": "P3",
+        "tipo": "consulta_manual",
+        "url": "https://rentasneuquenweb.gob.ar/nqn/SCF/cons_inscripcion.php",
+        "detalle": "Fuente pública relevada sin padrón mensual normalizado. Requiere consulta online por CUIT.",
+    },
+    "RioNegro": {
+        "archivo": None,
+        "nombre": "Río Negro / Agencia de Recaudación",
+        "prioridad": "P3",
+        "tipo": "consulta_manual",
+        "url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
+        "detalle": "Fuente con CAPTCHA relevada. Requiere consulta asistida o integración específica.",
+    },
+    "Corrientes": {
+        "archivo": None,
+        "nombre": "Corrientes / DGR",
+        "prioridad": "P3",
+        "tipo": "requiere_credenciales",
+        "url": "https://www.dgrcorrientes.gob.ar/",
+        "detalle": "Fuente relevada con acceso por clave. Requiere credenciales o archivo exportado.",
+    },
 }
 
 ALIASES = {
@@ -103,6 +180,16 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
     resultados = {}
     for provincia, cfg in PADRONES_PROVINCIAS.items():
         nombre_archivo = cfg["archivo"]
+        if cfg.get("tipo") != "archivo":
+            resultados[provincia] = {
+                "status": cfg["tipo"],
+                "detalle": cfg["detalle"],
+                "nombre": cfg["nombre"],
+                "prioridad": cfg["prioridad"],
+                "url": cfg.get("url"),
+            }
+            continue
+
         archivo = padrones_dir / nombre_archivo
         if not archivo.exists():
             resultados[provincia] = {
