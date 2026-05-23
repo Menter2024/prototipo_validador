@@ -125,6 +125,14 @@ Después generá el dominio público desde **Settings → Networking**.
 
 Mirá `padrones/README.md`. Resumen: bajás el padrón mensual del sitio oficial (ARBA, AGIP, etc.), lo convertís a CSV con la cabecera correcta, y lo guardás con el nombre fijo en la carpeta `padrones/`.
 
+También podés usar el importador:
+
+```bash
+python scripts/importar_padron.py ARBA /ruta/al/padron_original.txt
+python scripts/importar_padron.py CABA /ruta/al/padron_original.xlsx
+python scripts/importar_padron.py EntreRios /ruta/al/padron_original.csv
+```
+
 ## Estructura del proyecto
 
 ```

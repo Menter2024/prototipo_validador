@@ -74,7 +74,37 @@ El resto queda soportado por convención de nombres, pero se normaliza cuando es
 
 ## Cómo armar el CSV a partir del padrón oficial
 
-Cada provincia entrega el padrón en formato distinto (ARBA en TXT ancho fijo, otras en Excel). En la próxima fase del proyecto se incorpora un conversor automático. Para el prototipo, basta con:
+Cada provincia entrega el padrón en formato distinto (ARBA en TXT ancho fijo, otras en Excel/CSV). El repo incluye un importador para normalizar ARBA, CABA y Entre Ríos.
+
+### Importador automático
+
+Uso:
+
+```bash
+python scripts/importar_padron.py ARBA /ruta/al/padron_original.txt
+python scripts/importar_padron.py CABA /ruta/al/padron_original.xlsx
+python scripts/importar_padron.py EntreRios /ruta/al/padron_original.csv
+```
+
+Opciones:
+
+```bash
+python scripts/importar_padron.py CABA archivo.xlsx --sheet "Hoja1"
+python scripts/importar_padron.py ARBA archivo.txt --dry-run
+python scripts/importar_padron.py EntreRios archivo.csv --out-dir ./padrones
+```
+
+El importador:
+
+- Detecta CSV separado por coma, punto y coma, tab o `|`.
+- Lee XLSX.
+- Para TXT sin cabecera, intenta detectar CUIT de 11 dígitos y hasta dos alícuotas por línea.
+- Deduplica CUITs.
+- Escribe el archivo destino con el nombre esperado por el validador.
+
+### Conversión manual
+
+Si el archivo oficial viene en un formato todavía no soportado:
 
 1. Descargar el padrón mensual del sitio oficial.
 2. Abrirlo en Excel y dejar las columnas en el orden indicado arriba.
