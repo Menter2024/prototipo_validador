@@ -205,14 +205,42 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
     s3.row_dimensions[3].height = 30
 
     # ---- Hoja 4: Trazabilidad
-    s4 = wb.create_sheet("Trazabilidad")
-    s4["A1"] = "Trazabilidad de la consulta"
+    s4 = wb.create_sheet("Fuentes online")
+    s4["A1"] = "Fuentes online sin padrón mensual"
     s4["A1"].font = TITLE_FONT
-    s4.merge_cells("A1:E1")
+    s4.merge_cells("A1:F1")
 
-    hdrs4 = ["CUIT", "Timestamp", "Modo AFIP", "Mensaje validador", "Provincia normalizada"]
+    hdrs4 = ["CUIT", "Fuente", "Estado", "Detalle", "URL", "Timestamp"]
     for i, h in enumerate(hdrs4):
         _hdr(s4.cell(row=3, column=i + 1), h)
+
+    row = 4
+    for r in resultados:
+        for fuente, info in r.get("fuentes_online", {}).items():
+            vals = [
+                r.get("cuit", "—"),
+                fuente,
+                info.get("estado", "—"),
+                info.get("detalle", "—"),
+                info.get("url_consulta", "—"),
+                info.get("timestamp", "—"),
+            ]
+            for i, v in enumerate(vals):
+                _cell(s4.cell(row=row, column=i + 1), v)
+            row += 1
+
+    for col, w in zip("ABCDEF", [18, 16, 24, 56, 60, 22]):
+        s4.column_dimensions[col].width = w
+
+    # ---- Hoja 5: Trazabilidad
+    s5 = wb.create_sheet("Trazabilidad")
+    s5["A1"] = "Trazabilidad de la consulta"
+    s5["A1"].font = TITLE_FONT
+    s5.merge_cells("A1:E1")
+
+    hdrs5 = ["CUIT", "Timestamp", "Modo AFIP", "Mensaje validador", "Provincia normalizada"]
+    for i, h in enumerate(hdrs5):
+        _hdr(s5.cell(row=3, column=i + 1), h)
 
     for ri, r in enumerate(resultados):
         row = 4 + ri
@@ -224,10 +252,10 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
             r.get("georef", {}).get("provincia", "—") or "—",
         ]
         for i, v in enumerate(vals):
-            _cell(s4.cell(row=row, column=i + 1), v)
+            _cell(s5.cell(row=row, column=i + 1), v)
 
     for col, w in zip("ABCDE", [18, 22, 12, 50, 28]):
-        s4.column_dimensions[col].width = w
+        s5.column_dimensions[col].width = w
 
     ruta_salida.parent.mkdir(parents=True, exist_ok=True)
     wb.save(ruta_salida)

@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -138,10 +138,12 @@ async def _procesar_cuit(cuit: str) -> dict:
     loop = asyncio.get_event_loop()
     afip_task = loop.run_in_executor(None, afip_arca.consultar_constancia, val["cuit_limpio"])
     padrones_task = loop.run_in_executor(None, padrones.consultar_todos, val["cuit_limpio"], PADRONES_DIR)
-    afip_data, padrones_data = await asyncio.gather(afip_task, padrones_task)
+    fuentes_task = loop.run_in_executor(None, fuentes_online.consultar_todas, val["cuit_limpio"])
+    afip_data, padrones_data, fuentes_data = await asyncio.gather(afip_task, padrones_task, fuentes_task)
 
     resultado["afip"] = afip_data
     resultado["padrones"] = padrones_data
+    resultado["fuentes_online"] = fuentes_data
     resultado["modo_afip"] = afip_data.get("modo", "demo")
 
     # Georef sobre el domicilio fiscal

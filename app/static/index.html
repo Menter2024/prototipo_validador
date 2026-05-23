@@ -225,6 +225,24 @@ function renderResults(data) {
         </div>`;
     }
 
+    let fuentes_html = '';
+    const fuentes = r.fuentes_online || {};
+    for (const key in fuentes) {
+      const f = fuentes[key];
+      const cls = f.estado === 'pendiente_automatizacion'
+        ? 'bg-blue-100 text-blue-700'
+        : f.estado === 'requiere_captcha'
+          ? 'bg-amber-100 text-amber-700'
+          : 'bg-violet-100 text-violet-700';
+      const icon = f.estado === 'pendiente_automatizacion' ? '↗' : f.estado === 'requiere_captcha' ? '!' : '🔒';
+      fuentes_html += `
+        <div class="flex items-start gap-2 py-1 text-sm">
+          <span class="w-5 h-5 rounded-full ${cls} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
+          <span class="font-semibold w-24 flex-shrink-0">${key}</span>
+          <span class="text-slate-600">${f.detalle || ''} <a class="text-blue-600 hover:underline" target="_blank" href="${f.url_consulta}">abrir fuente</a></span>
+        </div>`;
+    }
+
     card.innerHTML = `
       <div class="flex justify-between items-start mb-4">
         <div>
@@ -254,6 +272,11 @@ function renderResults(data) {
         <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Padrones de Ingresos Brutos</div>
         <div class="text-xs text-slate-500 mb-2">Si un padrón figura como no cargado, subilo desde “Administrar padrones” y tocá “Revalidar”.</div>
         ${padrones_html || '<div class="text-sm text-slate-500">No se consultaron padrones (CUIT inválido).</div>'}
+      </div>
+      <div class="mt-4">
+        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Fuentes online sin padrón mensual</div>
+        <div class="text-xs text-slate-500 mb-2">Estas fuentes quedan preparadas para automatización/asistencia. Hoy se registran con link directo y estado técnico.</div>
+        ${fuentes_html || '<div class="text-sm text-slate-500">No se consultaron fuentes online.</div>'}
       </div>
     `;
     cont.appendChild(card);
