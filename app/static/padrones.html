@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Administrar padrones</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="gradient-menter text-white">
+  <div class="max-w-6xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Administrar padrones provinciales</div>
+    <div class="text-sm text-blue-100">Subí archivos originales y convertimos al formato normalizado</div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex justify-between gap-4 flex-wrap mb-5">
+      <div>
+        <h1 class="text-2xl font-bold">Importar padrón</h1>
+        <p class="text-slate-500 text-sm">Soporta CSV, TXT, TSV, PSV y XLSX para provincias con padrón por archivo.</p>
+      </div>
+      <a href="/" class="text-blue-600 hover:underline text-sm">← Volver al validador</a>
+    </div>
+    <form id="form-importar" class="grid md:grid-cols-4 gap-3 items-end">
+      <label class="block">
+        <span class="text-sm font-semibold">Provincia</span>
+        <select id="provincia" name="provincia" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
+      </label>
+      <label class="block md:col-span-2">
+        <span class="text-sm font-semibold">Archivo original</span>
+        <input id="archivo" name="archivo" type="file" accept=".csv,.txt,.tsv,.psv,.xlsx,.xlsm" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 bg-white" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Hoja XLSX opcional</span>
+        <input id="sheet" name="sheet" placeholder="Hoja1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
+      <div class="md:col-span-4 flex justify-end">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg">Importar padrón</button>
+      </div>
+    </form>
+    <div id="msg" class="hidden mt-4 rounded-lg px-4 py-3 text-sm"></div>
+  </section>
+
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Estado de padrones</h2>
+      <button onclick="cargarEstado()" class="text-blue-600 hover:underline text-sm">Actualizar</button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600">
+          <tr>
+            <th class="text-left p-2">Provincia</th>
+            <th class="text-left p-2">Tipo</th>
+            <th class="text-left p-2">Estado</th>
+            <th class="text-left p-2">Registros</th>
+            <th class="text-left p-2">Actualizado</th>
+            <th class="text-left p-2">Archivo / fuente</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+const importables = new Set(['archivo']);
+
+function badge(status) {
+  const cls = {
+    disponible: 'bg-emerald-100 text-emerald-700',
+    no_disponible: 'bg-slate-100 text-slate-700',
+    consulta_manual: 'bg-blue-100 text-blue-700',
+    requiere_credenciales: 'bg-violet-100 text-violet-700',
+    error: 'bg-rose-100 text-rose-700',
+  }[status] || 'bg-slate-100 text-slate-700';
+  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${status}</span>`;
+}
+
+async function cargarEstado() {
+  const r = await fetch('/api/padrones');
+  const data = await r.json();
+  const select = document.getElementById('provincia');
+  const current = select.value;
+  select.innerHTML = data.padrones
+    .filter(p => importables.has(p.tipo))
+    .map(p => `<option value="${p.key}">${p.nombre}</option>`)
+    .join('');
+  if (current) select.value = current;
+
+  document.getElementById('tbody').innerHTML = data.padrones.map(p => {
+    const fuente = p.url
+      ? `<a href="${p.url}" target="_blank" class="text-blue-600 hover:underline">abrir fuente</a>`
+      : (p.archivo || '—');
+    return `<tr class="border-b border-slate-100">
+      <td class="p-2 font-semibold">${p.nombre} <span class="text-xs text-slate-400">${p.prioridad}</span></td>
+      <td class="p-2">${p.tipo}</td>
+      <td class="p-2">${badge(p.status)}</td>
+      <td class="p-2">${p.registros ?? '—'}</td>
+      <td class="p-2">${p.actualizado ?? '—'}</td>
+      <td class="p-2">${fuente}</td>
+    </tr>`;
+  }).join('');
+}
+
+function mostrarMsg(ok, texto) {
+  const msg = document.getElementById('msg');
+  msg.className = ok
+    ? 'mt-4 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800'
+    : 'mt-4 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800';
+  msg.textContent = texto;
+}
+
+document.getElementById('form-importar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.currentTarget);
+  if (!document.getElementById('archivo').files.length) {
+    mostrarMsg(false, 'Seleccioná un archivo.');
+    return;
+  }
+  mostrarMsg(true, 'Importando...');
+  const r = await fetch('/api/padrones/importar', { method: 'POST', body: form });
+  const data = await r.json();
+  if (!r.ok) {
+    mostrarMsg(false, data.detail || 'Error importando padrón.');
+    return;
+  }
+  mostrarMsg(true, `${data.nombre}: ${data.registros} registros importados.`);
+  await cargarEstado();
+});
+
+cargarEstado();
+</script>
+</body>
+</html>

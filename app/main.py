@@ -9,16 +9,23 @@ import os
 import asyncio
 import base64
 import secrets
+import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
 from app.modules import validador, padrones, afip_arca, georef, excel
+
+ROOT_DIR = Path(__file__).parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+from scripts.importar_padron import importar_padron  # noqa: E402
 
 
 # Carga .env manualmente (sin dependencia extra)
@@ -34,12 +41,41 @@ if ENV_FILE.exists():
 PADRONES_DIR = Path(os.environ.get("PADRONES_DIR", "./padrones")).resolve()
 SALIDAS_DIR = Path(os.environ.get("SALIDAS_DIR", "./salidas")).resolve()
 SALIDAS_DIR.mkdir(parents=True, exist_ok=True)
+UPLOADS_DIR = Path(os.environ.get("UPLOADS_DIR", "./uploads")).resolve()
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Menter · Validación de Alta de Proveedores")
 
 
 class ValidarRequest(BaseModel):
     cuits: List[str]
+
+
+def _padrones_estado() -> list[dict]:
+    estado = []
+    for key, cfg in padrones.PADRONES_PROVINCIAS.items():
+        item = {
+            "key": key,
+            "nombre": cfg["nombre"],
+            "prioridad": cfg["prioridad"],
+            "tipo": cfg["tipo"],
+            "archivo": cfg.get("archivo"),
+            "url": cfg.get("url"),
+            "status": "consulta_manual" if cfg["tipo"] != "archivo" else "no_disponible",
+            "registros": None,
+            "actualizado": None,
+        }
+        if cfg["tipo"] == "archivo":
+            archivo = PADRONES_DIR / cfg["archivo"]
+            if archivo.exists():
+                item["status"] = "disponible"
+                item["actualizado"] = datetime.fromtimestamp(archivo.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                try:
+                    item["registros"] = len(padrones._leer_padron(archivo))
+                except Exception:
+                    item["status"] = "error"
+        estado.append(item)
+    return estado
 
 
 def _basic_auth_habilitada() -> bool:
@@ -174,6 +210,32 @@ def info():
     }
 
 
+@app.get("/api/padrones")
+def padrones_estado():
+    return {"padrones": _padrones_estado()}
+
+
+@app.post("/api/padrones/importar")
+async def importar_padron_endpoint(
+    provincia: str = Form(...),
+    archivo: UploadFile = File(...),
+    sheet: str | None = Form(None),
+):
+    if not archivo.filename:
+        raise HTTPException(status_code=400, detail="Archivo requerido.")
+    ext = Path(archivo.filename).suffix.lower()
+    if ext not in {".csv", ".txt", ".tsv", ".psv", ".xlsx", ".xlsm"}:
+        raise HTTPException(status_code=400, detail="Formato no soportado. Usá CSV, TXT o XLSX.")
+    destino_tmp = UPLOADS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{Path(archivo.filename).name}"
+    try:
+        with destino_tmp.open("wb") as f:
+            shutil.copyfileobj(archivo.file, f)
+        resultado = importar_padron(provincia, destino_tmp, PADRONES_DIR, sheet or None)
+        return {"ok": True, **resultado, "estado": _padrones_estado()}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
@@ -186,6 +248,11 @@ STATIC_DIR = Path(__file__).parent / "static"
 @app.get("/", response_class=HTMLResponse)
 def index():
     return (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/padrones", response_class=HTMLResponse)
+def padrones_admin():
+    return (STATIC_DIR / "padrones.html").read_text(encoding="utf-8")
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

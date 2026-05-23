@@ -185,6 +185,34 @@ def escribir_csv(rows: list[dict], destino: Path) -> None:
         writer.writerows(rows)
 
 
+def importar_padron(
+    provincia_arg: str,
+    origen: Path,
+    out_dir: Path,
+    sheet: str | None = None,
+    dry_run: bool = False,
+) -> dict:
+    provincia = _norm_provincia(provincia_arg)
+    cfg = PADRONES_PROVINCIAS[provincia]
+    origen = origen.expanduser().resolve()
+    if not origen.exists():
+        raise FileNotFoundError(f"No existe el archivo origen: {origen}")
+
+    rows = normalizar_rows(_leer_origen(origen, sheet))
+    destino = out_dir / cfg["archivo"]
+    if not dry_run:
+        escribir_csv(rows, destino)
+    return {
+        "provincia": provincia,
+        "nombre": cfg["nombre"],
+        "origen": str(origen),
+        "destino": str(destino),
+        "registros": len(rows),
+        "muestra": rows[:3],
+        "dry_run": dry_run,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Importa padrones provinciales al formato canónico del validador.")
     parser.add_argument("provincia", help="Provincia con padrón por archivo: ARBA, CABA, EntreRios, Cordoba, Formosa, Jujuy, Mendoza, SantaFe, Tucuman")
@@ -194,26 +222,21 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="No escribe archivo; solo informa")
     args = parser.parse_args()
 
-    provincia = _norm_provincia(args.provincia)
-    cfg = PADRONES_PROVINCIAS[provincia]
-    origen = args.origen.expanduser().resolve()
-    if not origen.exists():
-        raise SystemExit(f"No existe el archivo origen: {origen}")
+    try:
+        resultado = importar_padron(args.provincia, args.origen, args.out_dir, args.sheet, args.dry_run)
+    except Exception as e:
+        raise SystemExit(str(e)) from e
 
-    rows = normalizar_rows(_leer_origen(origen, args.sheet))
-    destino = args.out_dir / cfg["archivo"]
-    print(f"Provincia: {provincia} ({cfg['nombre']})")
-    print(f"Origen: {origen}")
-    print(f"Registros normalizados: {len(rows)}")
-    print(f"Destino: {destino}")
-    if rows[:3]:
+    print(f"Provincia: {resultado['provincia']} ({resultado['nombre']})")
+    print(f"Origen: {resultado['origen']}")
+    print(f"Registros normalizados: {resultado['registros']}")
+    print(f"Destino: {resultado['destino']}")
+    if resultado["muestra"]:
         print("Muestra:")
-        for row in rows[:3]:
+        for row in resultado["muestra"]:
             print("  " + ", ".join(f"{k}={row[k]}" for k in CANONICAL_HEADERS))
-    if args.dry_run:
-        return 0
-    escribir_csv(rows, destino)
-    print("OK")
+    if not args.dry_run:
+        print("OK")
     return 0
 
 
