@@ -13,9 +13,8 @@ Variables de entorno:
   AFIPSDK_TOKEN    -> access_token de afipsdk.com (obligatorio para live)
   AFIPSDK_ENV      -> "dev" (default) o "prod"
   AFIPSDK_TAX_ID   -> CUIT de la empresa que representa (11 dígitos sin guiones)
-  AFIPSDK_CERT     -> path al archivo .crt (solo prod, ej.
-                      ~/Documents/menter-certificados-afip/Menter.crt)
-  AFIPSDK_KEY      -> path al archivo .key (solo prod)
+  AFIPSDK_CERT     -> path al archivo .crt o contenido PEM (solo prod)
+  AFIPSDK_KEY      -> path al archivo .key o contenido PEM (solo prod)
 
 Si AFIPSDK_TOKEN está vacío, cae a modo demo.
 """
@@ -88,9 +87,11 @@ def _config() -> Tuple[str, str, str, Optional[str], Optional[str]]:
 
 
 def _leer_archivo(path: Optional[str]) -> Optional[str]:
-    """Lee un archivo (cert o key) como string. Devuelve None si no existe."""
+    """Lee un archivo (cert/key) o devuelve contenido PEM pegado en variable."""
     if not path:
         return None
+    if "-----BEGIN" in path:
+        return path.replace("\\n", "\n").replace("\\r", "\r")
     try:
         p = Path(path)
         if not p.exists():
@@ -223,6 +224,9 @@ def _parse_persona(resp: dict) -> dict:
       }
     """
     pr = resp.get("personaReturn") or resp.get("persona") or resp.get("data") or resp
+    if not isinstance(pr, dict) or not (pr.get("datosGenerales") or pr.get("razonSocial") or pr.get("apellido")):
+        err = resp.get("error") or resp.get("fault") or resp.get("message") or resp.get("faultstring") or "respuesta sin datosGenerales"
+        raise ValueError(f"respuesta AFIP sin datos de persona: {err}")
     dg = pr.get("datosGenerales") or pr
     drg = pr.get("datosRegimenGeneral") or {}
     dmo = pr.get("datosMonotributo") or {}

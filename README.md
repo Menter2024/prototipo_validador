@@ -82,6 +82,17 @@ PADRONES_DIR=./padrones
 SALIDAS_DIR=./salidas
 ```
 
+Para consultar CUITs reales en producción (no homologación/dev), agregá también:
+
+```
+AFIPSDK_ENV=prod
+AFIPSDK_TAX_ID=CUIT_REPRESENTANTE_SIN_GUIONES
+AFIPSDK_CERT=contenido_del_certificado_crt
+AFIPSDK_KEY=contenido_de_la_clave_key
+```
+
+Si solo cargás `AFIPSDK_TOKEN`, el sistema puede quedar en modo live contra el entorno `dev` de AFIPSDK, pero ese entorno no devuelve datos productivos de cualquier CUIT real.
+
 ### Opción B: desde Railway CLI
 
 ```bash

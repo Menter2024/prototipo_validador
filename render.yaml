@@ -1,0 +1,38 @@
+# Configuración declarativa de Render para Menter — Validador de Proveedores
+# Render lee este archivo automáticamente al conectar el repo.
+# Las variables marcadas con `sync: false` deben configurarse a mano en el dashboard
+# (son secretas: token AFIP, contenido del certificado, credenciales).
+
+services:
+  - type: web
+    name: menter-validador
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/info
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: AFIPSDK_ENV
+        value: prod
+      - key: AFIPSDK_TAX_ID
+        value: "30718869966"
+      - key: PADRONES_DIR
+        value: ./padrones
+      - key: SALIDAS_DIR
+        value: ./salidas
+      # Secretas: se setean a mano en el dashboard de Render
+      - key: AFIPSDK_TOKEN
+        sync: false
+      - key: AFIPSDK_CERT_PEM
+        sync: false
+      - key: AFIPSDK_KEY_PEM
+        sync: false
+      - key: BASIC_AUTH_USER
+        sync: false
+      - key: BASIC_AUTH_PASS
+        sync: false
