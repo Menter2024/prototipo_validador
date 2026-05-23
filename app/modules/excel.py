@@ -68,12 +68,40 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
     ws["A2"].font = SUBTITLE_FONT
     ws.merge_cells("A2:F2")
 
+    total = len(resultados)
+    total_validos = sum(1 for r in resultados if r.get("valido"))
+    total_live = sum(1 for r in resultados if r.get("modo_afip") == "live")
+    total_observados = 0
+    for r in resultados:
+        afip = r.get("afip", {})
+        observado = (
+            (not r.get("valido"))
+            or afip.get("en_apoc")
+            or (afip.get("estado_clave") not in (None, "—", "ACTIVO"))
+            or any(p.get("status") == "inscripto" for p in r.get("padrones", {}).values())
+        )
+        total_observados += 1 if observado else 0
+
+    kpis = [
+        ("Procesados", total),
+        ("CUIT válidos", total_validos),
+        ("AFIP live", total_live),
+        ("Observados", total_observados),
+    ]
+    for i, (label, value) in enumerate(kpis, start=1):
+        cell = ws.cell(row=3, column=i)
+        cell.value = f"{label}: {value}"
+        cell.font = Font(name="Arial", bold=True, color="1F3864", size=10)
+        cell.fill = NEUT_FILL
+        cell.border = ALL_BORDER
+        cell.alignment = CENTER
+
     headers = ["CUIT", "Razón Social", "Validez DV", "Estado AFIP", "Modo", "Hallazgos"]
     for i, h in enumerate(headers):
-        _hdr(ws.cell(row=4, column=i + 1), h)
+        _hdr(ws.cell(row=5, column=i + 1), h)
 
     for ri, r in enumerate(resultados):
-        row = 5 + ri
+        row = 6 + ri
         afip = r.get("afip", {})
         # Computamos hallazgos
         hallazgos = []
@@ -100,7 +128,9 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
     for col, w in zip("ABCDEF", [18, 36, 12, 18, 10, 50]):
         ws.column_dimensions[col].width = w
     ws.row_dimensions[1].height = 28
-    ws.row_dimensions[4].height = 22
+    ws.row_dimensions[5].height = 22
+    ws.freeze_panes = "A6"
+    ws.auto_filter.ref = f"A5:F{5 + max(len(resultados), 1)}"
 
     # ---- Hoja 2: AFIP / ARCA
     s2 = wb.create_sheet("AFIP-ARCA")

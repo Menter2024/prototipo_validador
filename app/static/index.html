@@ -8,6 +8,9 @@
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
   .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
+  .source-live { background: #dcfce7; color: #166534; }
+  .source-demo { background: #fef3c7; color: #92400e; }
+  .source-skip { background: #fee2e2; color: #991b1b; }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
@@ -16,7 +19,7 @@
   <div class="max-w-6xl mx-auto px-6 py-5">
     <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
     <div class="text-xl font-bold">Validador de Alta de Proveedores</div>
-    <div class="text-sm text-blue-100">Prototipo funcional · backend Python + consultas reales</div>
+    <div class="text-sm text-blue-100">Demo ejecutiva · AFIP/ARCA live + padrones + Excel consolidado</div>
   </div>
 </header>
 
@@ -28,8 +31,24 @@
 
   <!-- Input -->
   <section id="view-input" class="bg-white rounded-xl shadow-sm p-8">
-    <h1 class="text-2xl font-bold mb-1">Iniciar validación</h1>
-    <p class="text-slate-500 mb-6">Ingresá uno o varios CUITs (uno por línea).</p>
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold mb-1">Validación express de proveedores</h1>
+        <p class="text-slate-500">Ingresá uno o varios CUITs. El sistema valida, consulta fuentes y genera un Excel trazable.</p>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div class="bg-blue-50 text-blue-800 rounded-lg px-3 py-2"><div class="font-bold">1</div><div>CUIT</div></div>
+        <div class="bg-blue-50 text-blue-800 rounded-lg px-3 py-2"><div class="font-bold">2</div><div>AFIP</div></div>
+        <div class="bg-blue-50 text-blue-800 rounded-lg px-3 py-2"><div class="font-bold">3</div><div>Excel</div></div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-3 mb-6">
+      <div class="border border-slate-200 rounded-lg p-3"><div class="font-semibold text-sm">Dígito verificador</div><div class="text-xs text-slate-500">Filtro offline inmediato.</div></div>
+      <div class="border border-slate-200 rounded-lg p-3"><div class="font-semibold text-sm">AFIP / ARCA live</div><div class="text-xs text-slate-500">Razón social, estado e impuestos.</div></div>
+      <div class="border border-slate-200 rounded-lg p-3"><div class="font-semibold text-sm">Padrones IIBB</div><div class="text-xs text-slate-500">Cruce provincial extensible.</div></div>
+      <div class="border border-slate-200 rounded-lg p-3"><div class="font-semibold text-sm">Reporte Excel</div><div class="text-xs text-slate-500">Resumen y trazabilidad.</div></div>
+    </div>
 
     <textarea id="cuit-input" rows="5"
       class="w-full border border-slate-300 rounded-lg p-4 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -72,6 +91,7 @@
         <button onclick="reset()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm">Nueva consulta</button>
       </div>
     </div>
+    <div id="kpi-container" class="grid md:grid-cols-4 gap-3 mb-6"></div>
     <div id="results-container" class="space-y-4"></div>
   </section>
 
@@ -83,7 +103,7 @@
 
 <script>
 function cargarEjemplos() {
-  // CUITs reales conocidos (AFIP, Banco Nación, YPF)
+  // CUITs reales conocidos para demo pública
   document.getElementById('cuit-input').value = '33-69345023-9\n30-50001091-2\n30-54668997-9';
 }
 
@@ -127,22 +147,41 @@ function statusColor(s) {
   return s === 'ok' ? 'emerald' : s === 'warn' ? 'amber' : 'rose';
 }
 
+function padronBadgeClass(status) {
+  if (status === 'inscripto') return 'bg-amber-100 text-amber-700';
+  if (status === 'no_inscripto') return 'bg-emerald-100 text-emerald-700';
+  return 'bg-slate-100 text-slate-700';
+}
+
 function renderResults(data) {
   show('view-results');
 
   // Banner modo
   const banner = document.getElementById('modo-banner');
-  if (data.modo_general === 'demo') {
-    banner.classList.remove('hidden');
-    banner.querySelector('div').innerHTML = '<strong>Modo demo activo.</strong> Los datos de AFIP/ARCA son de demostración. Configurá <code>AFIPSDK_TOKEN</code> en <code>.env</code> para consultas reales.';
-  } else {
-    banner.classList.add('hidden');
-  }
+  banner.classList.remove('hidden');
+  banner.className = data.modo_general === 'demo'
+    ? 'bg-amber-100 border-b border-amber-300 text-amber-900 text-sm'
+    : 'bg-emerald-100 border-b border-emerald-300 text-emerald-900 text-sm';
+  banner.querySelector('div').innerHTML = data.modo_general === 'demo'
+    ? '<strong>Modo demo activo.</strong> AFIP/ARCA devolvió datos de demostración o fallback.'
+    : '<strong>AFIP/ARCA live activo.</strong> Al menos una consulta respondió con datos reales en tiempo real.';
 
   document.getElementById('result-summary').textContent =
     `${data.total_procesados} CUIT(s) procesados · modo ${data.modo_general.toUpperCase()}`;
 
   document.getElementById('btn-descarga').href = '/api/excel/' + data.excel;
+
+  const kpis = [
+    ['Procesados', data.total_procesados ?? data.resultados.length, 'bg-slate-100 text-slate-800'],
+    ['CUIT válidos', data.total_validos ?? data.resultados.filter(r => r.valido).length, 'bg-emerald-100 text-emerald-800'],
+    ['AFIP live', data.total_live ?? data.resultados.filter(r => r.modo_afip === 'live').length, 'bg-blue-100 text-blue-800'],
+    ['Observados', data.total_observados ?? 0, 'bg-amber-100 text-amber-800'],
+  ];
+  document.getElementById('kpi-container').innerHTML = kpis.map(([label, value, cls]) => `
+    <div class="${cls} rounded-xl p-4">
+      <div class="text-xs uppercase tracking-wider opacity-75">${label}</div>
+      <div class="text-2xl font-bold">${value}</div>
+    </div>`).join('');
 
   const cont = document.getElementById('results-container');
   cont.innerHTML = '';
@@ -156,6 +195,8 @@ function renderResults(data) {
       : '<span class="bg-rose-100 text-rose-700 text-xs font-semibold px-2 py-1 rounded">CUIT INVÁLIDO</span>';
 
     const afip = r.afip || {};
+    const modo = (r.modo_afip || 'demo').toLowerCase();
+    const sourceBadge = `<span class="source-${modo} text-xs font-semibold px-2 py-1 rounded">${modo.toUpperCase()}</span>`;
     const apoc = afip.en_apoc === true
       ? '<span class="text-rose-700 font-bold">SÍ — REVISAR</span>'
       : (afip.en_apoc === false ? '<span class="text-emerald-700">NO</span>' : '<span class="text-slate-500">—</span>');
@@ -164,12 +205,11 @@ function renderResults(data) {
     const pads = r.padrones || {};
     for (const prov in pads) {
       const p = pads[prov];
-      const colorMap = { inscripto: 'amber', no_inscripto: 'emerald', no_disponible: 'slate' };
       const icon = p.status === 'inscripto' ? '!' : p.status === 'no_inscripto' ? '✓' : '·';
-      const col = colorMap[p.status] || 'slate';
+      const badgeClass = padronBadgeClass(p.status);
       padrones_html += `
         <div class="flex items-start gap-2 py-1 text-sm">
-          <span class="w-5 h-5 rounded-full bg-${col}-100 text-${col}-700 flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
+          <span class="w-5 h-5 rounded-full ${badgeClass} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
           <span class="font-semibold w-24 flex-shrink-0">${prov}</span>
           <span class="text-slate-600">${p.detalle || ''}</span>
         </div>`;
@@ -186,7 +226,7 @@ function renderResults(data) {
 
       <div class="grid md:grid-cols-3 gap-4 mb-4">
         <div class="md:col-span-2 bg-slate-50 rounded-lg p-3">
-          <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">AFIP / ARCA  <span class="ml-2 text-xs font-semibold text-slate-400">[${(r.modo_afip || 'demo').toUpperCase()}]</span></div>
+          <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">AFIP / ARCA ${sourceBadge}</div>
           <div class="font-bold text-slate-800">${afip.razon_social || '—'}</div>
           <div class="text-sm text-slate-600">${afip.actividad_principal || '—'}</div>
           <div class="text-sm text-slate-600">${afip.domicilio_fiscal || '—'}</div>

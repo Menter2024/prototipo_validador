@@ -136,6 +136,18 @@ async def validar_endpoint(req: ValidarRequest):
         "excel": filename,
         "modo_general": "live" if any(r.get("modo_afip") == "live" for r in resultados) else "demo",
         "total_procesados": len(resultados),
+        "total_validos": sum(1 for r in resultados if r.get("valido")),
+        "total_live": sum(1 for r in resultados if r.get("modo_afip") == "live"),
+        "total_observados": sum(
+            1
+            for r in resultados
+            if (not r.get("valido"))
+            or r.get("afip", {}).get("en_apoc")
+            or (
+                r.get("afip", {}).get("estado_clave") not in (None, "—", "ACTIVO")
+            )
+            or any(p.get("status") == "inscripto" for p in r.get("padrones", {}).values())
+        ),
     }
 
 
