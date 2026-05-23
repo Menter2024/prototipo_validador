@@ -74,7 +74,7 @@ El resto queda soportado por convención de nombres, pero se normaliza cuando es
 
 ## Cómo armar el CSV a partir del padrón oficial
 
-Cada provincia entrega el padrón en formato distinto (ARBA en TXT ancho fijo, otras en Excel/CSV). El repo incluye un importador para normalizar ARBA, CABA y Entre Ríos.
+Cada provincia entrega el padrón en formato distinto (ARBA en TXT ancho fijo, otras en Excel/CSV). El repo incluye un importador para normalizar todas las provincias que trabajan con archivo mensual.
 
 ### Importador automático
 
@@ -84,6 +84,12 @@ Uso:
 python scripts/importar_padron.py ARBA /ruta/al/padron_original.txt
 python scripts/importar_padron.py CABA /ruta/al/padron_original.xlsx
 python scripts/importar_padron.py EntreRios /ruta/al/padron_original.csv
+python scripts/importar_padron.py Cordoba /ruta/al/padron_original.csv
+python scripts/importar_padron.py Formosa /ruta/al/padron_original.csv
+python scripts/importar_padron.py Jujuy /ruta/al/padron_original.xlsx
+python scripts/importar_padron.py Mendoza /ruta/al/padron_original.csv
+python scripts/importar_padron.py SantaFe /ruta/al/padron_original.csv
+python scripts/importar_padron.py Tucuman /ruta/al/padron_original.csv
 ```
 
 Opciones:
@@ -101,6 +107,22 @@ El importador:
 - Para TXT sin cabecera, intenta detectar CUIT de 11 dígitos y hasta dos alícuotas por línea.
 - Deduplica CUITs.
 - Escribe el archivo destino con el nombre esperado por el validador.
+
+Provincias soportadas por importación de archivo:
+
+| Provincia | Archivo destino |
+|---|---|
+| ARBA / Buenos Aires | `PadronARBA.csv` |
+| CABA / AGIP | `PadronCABA.csv` |
+| Entre Ríos / ATER | `PadronEntreRios.csv` |
+| Córdoba | `PadronCordoba.csv` |
+| Formosa | `PadronFormosa.csv` |
+| Jujuy | `PadronJujuy.csv` |
+| Mendoza / ATM | `PadronMendoza.csv` |
+| Santa Fe | `PadronSantaFe.csv` |
+| Tucumán | `PadronTucuman.csv` |
+
+Misiones, Neuquén, Río Negro y Corrientes quedan como fuentes de consulta online/credenciales hasta que exista un archivo mensual exportable.
 
 ### Conversión manual
 

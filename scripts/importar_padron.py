@@ -5,6 +5,7 @@ Uso:
   python scripts/importar_padron.py ARBA archivo_origen.csv --out-dir padrones
   python scripts/importar_padron.py CABA archivo_origen.xlsx
   python scripts/importar_padron.py EntreRios archivo_origen.txt
+  python scripts/importar_padron.py SantaFe archivo_origen.csv
 """
 from __future__ import annotations
 
@@ -30,9 +31,22 @@ PROVINCIAS_IMPORTABLES = {
     "BSAS": "ARBA",
     "CABA": "CABA",
     "AGIP": "CABA",
+    "CAPITAL": "CABA",
+    "CAPITALFEDERAL": "CABA",
     "ENTRERIOS": "EntreRios",
     "ENTRE_RIOS": "EntreRios",
     "ATER": "EntreRios",
+    "CORDOBA": "Cordoba",
+    "DGRCORDOBA": "Cordoba",
+    "FORMOSA": "Formosa",
+    "JUJUY": "Jujuy",
+    "MENDOZA": "Mendoza",
+    "ATM": "Mendoza",
+    "SANTAFE": "SantaFe",
+    "SANTA_FE": "SantaFe",
+    "APISANTAFE": "SantaFe",
+    "TUCUMAN": "Tucuman",
+    "TUCUMÁN": "Tucuman",
 }
 
 CANONICAL_HEADERS = [
@@ -46,11 +60,18 @@ CANONICAL_HEADERS = [
 
 
 def _norm_provincia(valor: str) -> str:
-    key = re.sub(r"[^A-Za-z]", "", valor or "").upper()
+    key = (
+        re.sub(r"[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ]", "", valor or "")
+        .upper()
+        .translate(str.maketrans("ÁÉÍÓÚÜÑ", "AEIOUUN"))
+    )
     if key not in PROVINCIAS_IMPORTABLES:
-        opciones = ", ".join(sorted(set(PROVINCIAS_IMPORTABLES.values())))
+        opciones = ", ".join(sorted(p for p, cfg in PADRONES_PROVINCIAS.items() if cfg.get("tipo") == "archivo"))
         raise SystemExit(f"Provincia no soportada: {valor}. Opciones: {opciones}")
-    return PROVINCIAS_IMPORTABLES[key]
+    provincia = PROVINCIAS_IMPORTABLES[key]
+    if PADRONES_PROVINCIAS[provincia].get("tipo") != "archivo":
+        raise SystemExit(f"{provincia} no tiene padrón por archivo normalizado; figura como consulta manual/credenciales.")
+    return provincia
 
 
 def _leer_texto(path: Path) -> str:
@@ -166,7 +187,7 @@ def escribir_csv(rows: list[dict], destino: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Importa padrones provinciales al formato canónico del validador.")
-    parser.add_argument("provincia", help="ARBA, CABA o EntreRios")
+    parser.add_argument("provincia", help="Provincia con padrón por archivo: ARBA, CABA, EntreRios, Cordoba, Formosa, Jujuy, Mendoza, SantaFe, Tucuman")
     parser.add_argument("origen", type=Path, help="Archivo origen CSV/TXT/XLSX")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "padrones", help="Carpeta destino")
     parser.add_argument("--sheet", help="Hoja XLSX a leer")

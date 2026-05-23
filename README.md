@@ -131,6 +131,7 @@ También podés usar el importador:
 python scripts/importar_padron.py ARBA /ruta/al/padron_original.txt
 python scripts/importar_padron.py CABA /ruta/al/padron_original.xlsx
 python scripts/importar_padron.py EntreRios /ruta/al/padron_original.csv
+python scripts/importar_padron.py SantaFe /ruta/al/padron_original.csv
 ```
 
 ## Estructura del proyecto
