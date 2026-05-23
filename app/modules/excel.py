@@ -96,7 +96,7 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
         cell.border = ALL_BORDER
         cell.alignment = CENTER
 
-    headers = ["CUIT", "Razón Social", "Validez DV", "Estado AFIP", "Modo", "Hallazgos"]
+    headers = ["CUIT", "Razón Social", "Validez DV", "Estado AFIP", "Modo", "Decisión", "Hallazgos"]
     for i, h in enumerate(headers):
         _hdr(ws.cell(row=5, column=i + 1), h)
 
@@ -123,14 +123,18 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
         _cell(ws.cell(row=row, column=3), "Válido" if r.get("valido") else "Inválido", "ok" if r.get("valido") else "error")
         _cell(ws.cell(row=row, column=4), afip.get("estado_clave", "—"))
         _cell(ws.cell(row=row, column=5), r.get("modo_afip", "demo").upper())
-        _cell(ws.cell(row=row, column=6), " · ".join(hallazgos) if hallazgos else "Sin hallazgos", status_resumen)
+        decision = r.get("decision_fiscal", {})
+        decision_estado = decision.get("estado", "REVISION_MANUAL")
+        decision_status = {"APROBABLE": "ok", "OBSERVADO": "warn", "REVISION_MANUAL": "warn", "BLOQUEAR": "error"}.get(decision_estado)
+        _cell(ws.cell(row=row, column=6), decision.get("label", "—"), decision_status)
+        _cell(ws.cell(row=row, column=7), " · ".join(decision.get("motivos", [])) or (" · ".join(hallazgos) if hallazgos else "Sin hallazgos"), status_resumen)
 
-    for col, w in zip("ABCDEF", [18, 36, 12, 18, 10, 50]):
+    for col, w in zip("ABCDEFG", [18, 36, 12, 18, 10, 18, 60]):
         ws.column_dimensions[col].width = w
     ws.row_dimensions[1].height = 28
     ws.row_dimensions[5].height = 22
     ws.freeze_panes = "A6"
-    ws.auto_filter.ref = f"A5:F{5 + max(len(resultados), 1)}"
+    ws.auto_filter.ref = f"A5:G{5 + max(len(resultados), 1)}"
 
     # ---- Hoja 2: AFIP / ARCA
     s2 = wb.create_sheet("AFIP-ARCA")
