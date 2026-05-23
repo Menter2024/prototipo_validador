@@ -226,7 +226,14 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
                 info.get("timestamp", "—"),
             ]
             for i, v in enumerate(vals):
-                _cell(s4.cell(row=row, column=i + 1), v)
+                st = None
+                if i == 2:
+                    st = {
+                        "encontrado": "warn",
+                        "no_encontrado": "ok",
+                        "error": "error",
+                    }.get(info.get("estado"))
+                _cell(s4.cell(row=row, column=i + 1), v, st)
             row += 1
 
     for col, w in zip("ABCDEF", [18, 16, 24, 56, 60, 22]):

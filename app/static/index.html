@@ -229,12 +229,18 @@ function renderResults(data) {
     const fuentes = r.fuentes_online || {};
     for (const key in fuentes) {
       const f = fuentes[key];
-      const cls = f.estado === 'pendiente_automatizacion'
+      const cls = ['encontrado'].includes(f.estado)
+        ? 'bg-amber-100 text-amber-700'
+        : ['no_encontrado'].includes(f.estado)
+          ? 'bg-emerald-100 text-emerald-700'
+          : ['pendiente_automatizacion', 'requiere_navegador'].includes(f.estado)
         ? 'bg-blue-100 text-blue-700'
-        : f.estado === 'requiere_captcha'
+        : ['requiere_captcha', 'revisar'].includes(f.estado)
           ? 'bg-amber-100 text-amber-700'
-          : 'bg-violet-100 text-violet-700';
-      const icon = f.estado === 'pendiente_automatizacion' ? '↗' : f.estado === 'requiere_captcha' ? '!' : '🔒';
+          : f.estado === 'error'
+            ? 'bg-rose-100 text-rose-700'
+            : 'bg-violet-100 text-violet-700';
+      const icon = f.estado === 'encontrado' ? '!' : f.estado === 'no_encontrado' ? '✓' : ['pendiente_automatizacion', 'requiere_navegador'].includes(f.estado) ? '↗' : f.estado === 'requiere_captcha' ? '!' : f.estado === 'error' ? '×' : '🔒';
       fuentes_html += `
         <div class="flex items-start gap-2 py-1 text-sm">
           <span class="w-5 h-5 rounded-full ${cls} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
