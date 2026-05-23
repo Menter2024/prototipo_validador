@@ -93,6 +93,24 @@ AFIPSDK_KEY=contenido_de_la_clave_key
 
 Si solo cargás `AFIPSDK_TOKEN`, el sistema puede quedar en modo live contra el entorno `dev` de AFIPSDK, pero ese entorno no devuelve datos productivos de cualquier CUIT real.
 
+## Deploy gratis en Render
+
+El repo incluye `render.yaml`. En Render usá **New → Blueprint**, conectá el repo y dejá vacío **Blueprint Path** para que detecte el archivo de la raíz.
+
+Variables secretas requeridas en Render:
+
+```
+AFIPSDK_TOKEN
+AFIPSDK_CERT_PEM
+AFIPSDK_KEY_PEM
+BASIC_AUTH_USER
+BASIC_AUTH_PASS
+```
+
+`AFIPSDK_CERT_PEM` y `AFIPSDK_KEY_PEM` pueden pegarse con saltos de línea reales o con `\n`. Si el dashboard rompe el formato, usá `AFIPSDK_CERT_B64` y `AFIPSDK_KEY_B64` como alternativa manual.
+
+El sitio queda protegido con Basic Auth; `/healthz` queda público solo para que Render pueda verificar el servicio.
+
 ### Opción B: desde Railway CLI
 
 ```bash

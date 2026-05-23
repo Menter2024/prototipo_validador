@@ -13,13 +13,15 @@ Variables de entorno:
   AFIPSDK_TOKEN    -> access_token de afipsdk.com (obligatorio para live)
   AFIPSDK_ENV      -> "dev" (default) o "prod"
   AFIPSDK_TAX_ID   -> CUIT de la empresa que representa (11 dígitos sin guiones)
-  AFIPSDK_CERT     -> path al archivo .crt o contenido PEM (solo prod)
-  AFIPSDK_KEY      -> path al archivo .key o contenido PEM (solo prod)
+  AFIPSDK_CERT     -> path al archivo .crt (solo prod, ej.
+                      ~/Documents/menter-certificados-afip/Menter.crt)
+  AFIPSDK_KEY      -> path al archivo .key (solo prod)
 
 Si AFIPSDK_TOKEN está vacío, cae a modo demo.
 """
 import os
 import time
+import base64
 from pathlib import Path
 import httpx
 from typing import Optional, Tuple
@@ -86,16 +88,50 @@ def _config() -> Tuple[str, str, str, Optional[str], Optional[str]]:
     return token, env, tax_id, cert, key
 
 
-def _leer_archivo(path: Optional[str]) -> Optional[str]:
-    """Lee un archivo (cert/key) o devuelve contenido PEM pegado en variable."""
+def _normalizar_pem(valor: str) -> str:
+    """Normaliza PEM pegado en variables de entorno."""
+    return valor.strip().replace("\\n", "\n").replace("\\r", "\r")
+
+
+def _leer_cert_o_key(path: Optional[str], env_var_pem: str) -> Optional[str]:
+    """Obtiene el contenido del cert o key.
+
+    Prioridad:
+      1) Variable de entorno con contenido PEM directo (para deploys cloud).
+         Ej.: AFIPSDK_CERT_PEM="-----BEGIN CERTIFICATE-----\\nMIIDRDCC..."
+      2) Variable de entorno base64 (AFIPSDK_CERT_B64/AFIPSDK_KEY_B64).
+      3) AFIPSDK_CERT/AFIPSDK_KEY con contenido PEM directo (compatibilidad).
+      4) Archivo local en `path` (para desarrollo en la Mac de Berna).
+
+    Devuelve None si ninguno está disponible.
+    """
+    # 1) Probar env var con contenido directo (Railway, Fly.io, etc.)
+    pem = os.environ.get(env_var_pem, "").strip()
+    if pem:
+        # Soportar \n literal por si lo pegaron así en el dashboard del host
+        return _normalizar_pem(pem)
+
+    # 2) Probar base64 (más seguro para dashboards que rompen saltos de línea)
+    b64_var = env_var_pem.replace("_PEM", "_B64")
+    b64 = os.environ.get(b64_var, "").strip()
+    if b64:
+        try:
+            return base64.b64decode(b64).decode("utf-8")
+        except Exception as e:
+            print(f"[afip_arca] error decodificando {b64_var}: {e}")
+            return None
+
+    # 3) Compatibilidad: AFIPSDK_CERT/AFIPSDK_KEY pueden traer PEM directo
+    if path and "-----BEGIN" in path:
+        return _normalizar_pem(path)
+
+    # 4) Fallback a archivo en disco
     if not path:
         return None
-    if "-----BEGIN" in path:
-        return path.replace("\\n", "\n").replace("\\r", "\r")
     try:
         p = Path(path)
         if not p.exists():
-            print(f"[afip_arca] archivo no encontrado: {path}")
+            print(f"[afip_arca] archivo no encontrado: {path}  (tampoco hay env var {env_var_pem})")
             return None
         return p.read_text()
     except Exception as e:
@@ -116,10 +152,11 @@ def _get_ta(access_token: str, env: str, tax_id: str,
 
     # En modo prod, afipsdk necesita el certificado y la clave en cada auth
     if env == "prod":
-        cert_content = _leer_archivo(cert_path)
-        key_content = _leer_archivo(key_path)
+        cert_content = _leer_cert_o_key(cert_path, "AFIPSDK_CERT_PEM")
+        key_content = _leer_cert_o_key(key_path, "AFIPSDK_KEY_PEM")
         if not cert_content or not key_content:
-            print(f"[afip_arca] modo prod requiere AFIPSDK_CERT y AFIPSDK_KEY válidos. cert={cert_path} key={key_path}")
+            print(f"[afip_arca] modo prod requiere certificado y clave. "
+                  f"Configurá AFIPSDK_CERT_PEM/AFIPSDK_KEY_PEM (deploy) o AFIPSDK_CERT/AFIPSDK_KEY (local).")
             return None
         body["cert"] = cert_content
         body["key"] = key_content

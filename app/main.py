@@ -7,13 +7,15 @@ Endpoints:
 """
 import os
 import asyncio
+import base64
+import secrets
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
 from app.modules import validador, padrones, afip_arca, georef, excel
@@ -38,6 +40,39 @@ app = FastAPI(title="Menter · Validación de Alta de Proveedores")
 
 class ValidarRequest(BaseModel):
     cuits: List[str]
+
+
+def _basic_auth_habilitada() -> bool:
+    return bool(os.environ.get("BASIC_AUTH_USER") and os.environ.get("BASIC_AUTH_PASS"))
+
+
+def _credenciales_validas(header: str | None) -> bool:
+    if not _basic_auth_habilitada():
+        return True
+    if not header or not header.startswith("Basic "):
+        return False
+    try:
+        usuario_pass = base64.b64decode(header.split(" ", 1)[1]).decode("utf-8")
+        usuario, password = usuario_pass.split(":", 1)
+    except Exception:
+        return False
+    return (
+        secrets.compare_digest(usuario, os.environ["BASIC_AUTH_USER"])
+        and secrets.compare_digest(password, os.environ["BASIC_AUTH_PASS"])
+    )
+
+
+@app.middleware("http")
+async def basic_auth_middleware(request: Request, call_next):
+    if request.url.path == "/healthz":
+        return await call_next(request)
+    if not _credenciales_validas(request.headers.get("Authorization")):
+        return Response(
+            status_code=401,
+            headers={"WWW-Authenticate": 'Basic realm="Menter Validador"'},
+            content="Autenticación requerida",
+        )
+    return await call_next(request)
 
 
 async def _procesar_cuit(cuit: str) -> dict:
@@ -125,6 +160,11 @@ def info():
         "padrones_disponibles": sorted(p.name for p in PADRONES_DIR.glob("*.csv")) if PADRONES_DIR.exists() else [],
         "salidas_dir": str(SALIDAS_DIR),
     }
+
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
 
 
 # Front estático
