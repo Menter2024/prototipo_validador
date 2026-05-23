@@ -64,7 +64,7 @@ def _credenciales_validas(header: str | None) -> bool:
 
 @app.middleware("http")
 async def basic_auth_middleware(request: Request, call_next):
-    if request.url.path == "/healthz":
+    if request.url.path in ("/healthz", "/api/info"):
         return await call_next(request)
     if not _credenciales_validas(request.headers.get("Authorization")):
         return Response(
