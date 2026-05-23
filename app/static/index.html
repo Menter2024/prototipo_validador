@@ -90,6 +90,7 @@
       </div>
       <div class="flex gap-2">
         <a id="btn-descarga" href="#" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">Descargar Excel</a>
+        <button onclick="validar()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">Revalidar</button>
         <button onclick="reset()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm">Nueva consulta</button>
       </div>
     </div>
@@ -152,6 +153,7 @@ function statusColor(s) {
 function padronBadgeClass(status) {
   if (status === 'inscripto') return 'bg-amber-100 text-amber-700';
   if (status === 'no_inscripto') return 'bg-emerald-100 text-emerald-700';
+  if (status === 'no_disponible') return 'bg-slate-100 text-slate-700';
   if (status === 'consulta_manual') return 'bg-blue-100 text-blue-700';
   if (status === 'requiere_credenciales') return 'bg-violet-100 text-violet-700';
   return 'bg-slate-100 text-slate-700';
@@ -212,11 +214,14 @@ function renderResults(data) {
       const icon = p.status === 'inscripto' ? '!' : p.status === 'no_inscripto' ? '✓' : (p.status === 'consulta_manual' ? '↗' : p.status === 'requiere_credenciales' ? '🔒' : '·');
       const badgeClass = padronBadgeClass(p.status);
       const link = p.url ? ` <a class="text-blue-600 hover:underline" target="_blank" href="${p.url}">abrir fuente</a>` : '';
+      const cargar = p.status === 'no_disponible'
+        ? ' <a class="text-blue-600 hover:underline" href="/padrones">cargar padrón</a>'
+        : '';
       padrones_html += `
         <div class="flex items-start gap-2 py-1 text-sm">
           <span class="w-5 h-5 rounded-full ${badgeClass} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
           <span class="font-semibold w-24 flex-shrink-0">${prov}</span>
-          <span class="text-slate-600">${p.detalle || ''}${link}</span>
+          <span class="text-slate-600">${p.detalle || ''}${link}${cargar}</span>
         </div>`;
     }
 
@@ -247,6 +252,7 @@ function renderResults(data) {
 
       <div>
         <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Padrones de Ingresos Brutos</div>
+        <div class="text-xs text-slate-500 mb-2">Si un padrón figura como no cargado, subilo desde “Administrar padrones” y tocá “Revalidar”.</div>
         ${padrones_html || '<div class="text-sm text-slate-500">No se consultaron padrones (CUIT inválido).</div>'}
       </div>
     `;
