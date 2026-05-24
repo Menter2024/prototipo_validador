@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -160,6 +160,7 @@ async def _procesar_cuit(cuit: str) -> dict:
     geo = await loop.run_in_executor(None, georef.normalizar_provincia, dom)
     resultado["georef"] = geo
     resultado["decision_fiscal"] = riesgo_fiscal.evaluar(resultado)
+    resultado["matriz_tributaria"] = matriz_tributaria.generar(resultado)
 
     return resultado
 

@@ -243,15 +243,46 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
     for col, w in zip("ABCDEF", [18, 16, 24, 56, 60, 22]):
         s4.column_dimensions[col].width = w
 
-    # ---- Hoja 5: Trazabilidad
+    # ---- Hoja 5: Matriz tributaria
     s5 = wb.create_sheet("Trazabilidad")
-    s5["A1"] = "Trazabilidad de la consulta"
+    s5.title = "Matriz tributaria"
+    s5["A1"] = "Matriz tributaria sugerida"
     s5["A1"].font = TITLE_FONT
-    s5.merge_cells("A1:E1")
+    s5.merge_cells("A1:H1")
 
-    hdrs5 = ["CUIT", "Timestamp", "Modo AFIP", "Mensaje validador", "Provincia normalizada"]
+    hdrs5 = ["CUIT", "Jurisdicción", "Impuesto", "Condición", "Retención", "Percepción", "Fuente", "Acción"]
     for i, h in enumerate(hdrs5):
         _hdr(s5.cell(row=3, column=i + 1), h)
+
+    row = 4
+    for r in resultados:
+        for item in r.get("matriz_tributaria", {}).get("items", []):
+            vals = [
+                r.get("cuit", "—"),
+                item.get("jurisdiccion", "—"),
+                item.get("impuesto", "—"),
+                item.get("condicion", "—"),
+                item.get("retencion", "—"),
+                item.get("percepcion", "—"),
+                item.get("fuente", "—"),
+                item.get("accion", "—"),
+            ]
+            for i, v in enumerate(vals):
+                _cell(s5.cell(row=row, column=i + 1), v)
+            row += 1
+
+    for col, w in zip("ABCDEFGH", [18, 24, 18, 34, 14, 14, 18, 50]):
+        s5.column_dimensions[col].width = w
+
+    # ---- Hoja 6: Trazabilidad
+    s6 = wb.create_sheet("Trazabilidad")
+    s6["A1"] = "Trazabilidad de la consulta"
+    s6["A1"].font = TITLE_FONT
+    s6.merge_cells("A1:E1")
+
+    hdrs6 = ["CUIT", "Timestamp", "Modo AFIP", "Mensaje validador", "Provincia normalizada"]
+    for i, h in enumerate(hdrs6):
+        _hdr(s6.cell(row=3, column=i + 1), h)
 
     for ri, r in enumerate(resultados):
         row = 4 + ri
@@ -263,10 +294,10 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
             r.get("georef", {}).get("provincia", "—") or "—",
         ]
         for i, v in enumerate(vals):
-            _cell(s5.cell(row=row, column=i + 1), v)
+            _cell(s6.cell(row=row, column=i + 1), v)
 
     for col, w in zip("ABCDE", [18, 22, 12, 50, 28]):
-        s5.column_dimensions[col].width = w
+        s6.column_dimensions[col].width = w
 
     ruta_salida.parent.mkdir(parents=True, exist_ok=True)
     wb.save(ruta_salida)
