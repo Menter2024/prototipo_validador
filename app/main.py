@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -169,10 +169,12 @@ async def validar_endpoint(req: ValidarRequest):
     filename = f"validacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
+    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR)
 
     return {
         "resultados": resultados,
         "excel": filename,
+        "legajo_id": legajo["id"],
         "modo_general": "live" if any(r.get("modo_afip") == "live" for r in resultados) else "demo",
         "total_procesados": len(resultados),
         "total_validos": sum(1 for r in resultados if r.get("valido")),
@@ -200,6 +202,19 @@ def descargar_excel(filename: str):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename=filename,
     )
+
+
+@app.get("/api/legajos")
+def listar_legajos_endpoint():
+    return {"legajos": legajos.listar_legajos(SALIDAS_DIR)}
+
+
+@app.get("/api/legajos/{legajo_id}")
+def obtener_legajo_endpoint(legajo_id: str):
+    legajo = legajos.obtener_legajo(SALIDAS_DIR, legajo_id)
+    if not legajo:
+        raise HTTPException(status_code=404, detail="Legajo no encontrado.")
+    return legajo
 
 
 @app.get("/api/info")
@@ -256,6 +271,16 @@ def index():
 @app.get("/padrones", response_class=HTMLResponse)
 def padrones_admin():
     return (STATIC_DIR / "padrones.html").read_text(encoding="utf-8")
+
+
+@app.get("/legajos", response_class=HTMLResponse)
+def legajos_page():
+    return (STATIC_DIR / "legajos.html").read_text(encoding="utf-8")
+
+
+@app.get("/legajos/{legajo_id}", response_class=HTMLResponse)
+def legajo_detalle_page(legajo_id: str):
+    return (STATIC_DIR / "legajo_detalle.html").read_text(encoding="utf-8")
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

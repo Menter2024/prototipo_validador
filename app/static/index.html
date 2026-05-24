@@ -64,6 +64,8 @@
       <a href="/api/info" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Ver configuración actual</a>
       <span class="text-slate-300">·</span>
       <a href="/padrones" class="text-blue-600 hover:text-blue-800 underline">Administrar padrones</a>
+      <span class="text-slate-300">·</span>
+      <a href="/legajos" class="text-blue-600 hover:text-blue-800 underline">Ver legajos</a>
     </div>
 
     <div class="mt-8 flex justify-end">
@@ -94,6 +96,7 @@
       </div>
       <div class="flex gap-2">
         <a id="btn-descarga" href="#" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">Descargar Excel</a>
+        <a id="btn-legajo" href="#" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">Ver legajo</a>
         <button onclick="validar()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">Revalidar</button>
         <button onclick="reset()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm">Nueva consulta</button>
       </div>
@@ -180,6 +183,7 @@ function renderResults(data) {
     `${data.total_procesados} CUIT(s) procesados · modo ${data.modo_general.toUpperCase()}`;
 
   document.getElementById('btn-descarga').href = '/api/excel/' + data.excel;
+  document.getElementById('btn-legajo').href = '/legajos/' + data.legajo_id;
 
   const kpis = [
     ['Procesados', data.total_procesados ?? data.resultados.length, 'bg-slate-100 text-slate-800'],

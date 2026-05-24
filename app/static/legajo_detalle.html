@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Detalle legajo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="bg-slate-900 text-white">
+  <div class="max-w-6xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Detalle de legajo fiscal</div>
+  </div>
+</header>
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <div class="flex justify-between mb-5">
+    <div>
+      <h1 id="title" class="text-2xl font-bold">Legajo</h1>
+      <p id="subtitle" class="text-slate-500 text-sm"></p>
+    </div>
+    <a href="/legajos" class="text-blue-600 hover:underline text-sm">← Legajos</a>
+  </div>
+  <div id="content" class="space-y-4"></div>
+</main>
+<script>
+const legajoId = location.pathname.split('/').pop();
+function decisionClass(estado) {
+  return {
+    APROBABLE:'bg-emerald-100 text-emerald-700',
+    OBSERVADO:'bg-amber-100 text-amber-700',
+    REVISION_MANUAL:'bg-blue-100 text-blue-700',
+    BLOQUEAR:'bg-rose-100 text-rose-700',
+  }[estado] || 'bg-slate-100 text-slate-700';
+}
+async function cargar() {
+  const r = await fetch('/api/legajos/' + legajoId);
+  const data = await r.json();
+  document.getElementById('title').textContent = data.id;
+  document.getElementById('subtitle').textContent = `${data.creado_en} · ${data.total_proveedores} proveedor(es)`;
+  document.getElementById('content').innerHTML = data.resultados.map(res => {
+    const afip = res.afip || {};
+    const dec = res.decision_fiscal || {};
+    return `<section class="bg-white rounded-xl shadow-sm p-5">
+      <div class="flex justify-between gap-3 flex-wrap">
+        <div>
+          <div class="font-mono text-lg font-bold">${res.cuit}</div>
+          <div class="text-slate-600">${afip.razon_social || '—'}</div>
+        </div>
+        <span class="${decisionClass(dec.estado)} text-xs font-semibold px-2 py-1 rounded self-start">${dec.label || '—'}</span>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4 mt-4">
+        <div class="bg-slate-50 rounded-lg p-3">
+          <div class="text-xs uppercase text-slate-500">Motivos</div>
+          <ul class="list-disc ml-5 text-sm">${(dec.motivos || []).map(m => `<li>${m}</li>`).join('')}</ul>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3">
+          <div class="text-xs uppercase text-slate-500">Recomendaciones</div>
+          <ul class="list-disc ml-5 text-sm">${(dec.recomendaciones || []).map(m => `<li>${m}</li>`).join('')}</ul>
+        </div>
+      </div>
+      <details class="mt-4">
+        <summary class="cursor-pointer text-blue-600">Ver evidencia JSON completa</summary>
+        <pre class="mt-2 bg-slate-900 text-slate-100 rounded-lg p-3 text-xs overflow-auto">${JSON.stringify(res, null, 2)}</pre>
+      </details>
+    </section>`;
+  }).join('');
+}
+cargar();
+</script>
+</body>
+</html>

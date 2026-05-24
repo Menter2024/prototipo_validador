@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Legajos fiscales</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="bg-slate-900 text-white">
+  <div class="max-w-6xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Legajos fiscales digitales</div>
+  </div>
+</header>
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <div class="flex justify-between mb-5">
+    <div>
+      <h1 class="text-2xl font-bold">Historial de validaciones</h1>
+      <p class="text-slate-500 text-sm">Evidencia auditable por corrida.</p>
+    </div>
+    <a href="/" class="text-blue-600 hover:underline text-sm">← Volver</a>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-100 text-slate-600">
+        <tr>
+          <th class="text-left p-3">Fecha</th>
+          <th class="text-left p-3">Proveedores</th>
+          <th class="text-left p-3">Resumen</th>
+          <th class="text-left p-3">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>
+<script>
+function badge(decision) {
+  const cls = {
+    APROBABLE:'bg-emerald-100 text-emerald-700',
+    OBSERVADO:'bg-amber-100 text-amber-700',
+    REVISION_MANUAL:'bg-blue-100 text-blue-700',
+    BLOQUEAR:'bg-rose-100 text-rose-700',
+  }[decision] || 'bg-slate-100 text-slate-700';
+  return cls;
+}
+async function cargar() {
+  const r = await fetch('/api/legajos');
+  const data = await r.json();
+  document.getElementById('tbody').innerHTML = data.legajos.map(l => {
+    const resumen = (l.resumen || []).slice(0,3).map(x => `
+      <div class="mb-1">
+        <span class="font-mono">${x.cuit}</span> · ${x.razon_social || '—'}
+        <span class="${badge(x.decision_estado)} text-xs font-semibold px-2 py-1 rounded">${x.decision}</span>
+      </div>`).join('');
+    return `<tr class="border-b border-slate-100">
+      <td class="p-3">${l.creado_en || '—'}</td>
+      <td class="p-3">${l.total_proveedores}</td>
+      <td class="p-3">${resumen || '—'}</td>
+      <td class="p-3 whitespace-nowrap">
+        <a href="/legajos/${l.id}" class="text-blue-600 hover:underline">ver detalle</a>
+        ${l.excel ? ` · <a href="/api/excel/${l.excel}" class="text-emerald-600 hover:underline">excel</a>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+cargar();
+</script>
+</body>
+</html>
