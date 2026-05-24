@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -52,6 +52,7 @@ class ValidarRequest(BaseModel):
 
 
 def _padrones_estado() -> list[dict]:
+    manifest = padron_manifest.cargar_manifest(PADRONES_DIR)
     estado = []
     for key, cfg in padrones.PADRONES_PROVINCIAS.items():
         item = {
@@ -64,7 +65,15 @@ def _padrones_estado() -> list[dict]:
             "status": "consulta_manual" if cfg["tipo"] != "archivo" else "no_disponible",
             "registros": None,
             "actualizado": None,
+            "periodo": "",
+            "vigencia_hasta": "",
+            "vigencia_estado": "sin_vigencia",
         }
+        meta = manifest.get("padrones", {}).get(key, {})
+        if meta:
+            item["periodo"] = meta.get("periodo", "")
+            item["vigencia_hasta"] = meta.get("vigencia_hasta", "")
+            item["vigencia_estado"] = padron_manifest.estado_vigencia(meta.get("vigencia_hasta"))
         if cfg["tipo"] == "archivo":
             archivo = PADRONES_DIR / cfg["archivo"]
             if archivo.exists():
@@ -270,7 +279,8 @@ def info():
 
 @app.get("/api/padrones")
 def padrones_estado():
-    return {"padrones": _padrones_estado()}
+    manifest = padron_manifest.cargar_manifest(PADRONES_DIR)
+    return {"padrones": _padrones_estado(), "historial": manifest.get("historial", [])[:20]}
 
 
 @app.post("/api/padrones/importar")
@@ -278,6 +288,8 @@ async def importar_padron_endpoint(
     provincia: str = Form(...),
     archivo: UploadFile = File(...),
     sheet: str | None = Form(None),
+    periodo: str | None = Form(None),
+    vigencia_hasta: str | None = Form(None),
 ):
     if not archivo.filename:
         raise HTTPException(status_code=400, detail="Archivo requerido.")
@@ -288,7 +300,7 @@ async def importar_padron_endpoint(
     try:
         with destino_tmp.open("wb") as f:
             shutil.copyfileobj(archivo.file, f)
-        resultado = importar_padron(provincia, destino_tmp, PADRONES_DIR, sheet or None)
+        resultado = importar_padron(provincia, destino_tmp, PADRONES_DIR, sheet or None, False, periodo, vigencia_hasta)
         return {"ok": True, **resultado, "estado": _padrones_estado()}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

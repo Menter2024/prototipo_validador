@@ -191,6 +191,9 @@ def importar_padron(
     out_dir: Path,
     sheet: str | None = None,
     dry_run: bool = False,
+    periodo: str | None = None,
+    vigencia_hasta: str | None = None,
+    backup: bool = True,
 ) -> dict:
     provincia = _norm_provincia(provincia_arg)
     cfg = PADRONES_PROVINCIAS[provincia]
@@ -200,8 +203,13 @@ def importar_padron(
 
     rows = normalizar_rows(_leer_origen(origen, sheet))
     destino = out_dir / cfg["archivo"]
+    backup_path = None
     if not dry_run:
+        from app.modules.padron_manifest import backup_si_existe, registrar_carga
+        if backup:
+            backup_path = backup_si_existe(destino)
         escribir_csv(rows, destino)
+        registrar_carga(out_dir, provincia, cfg["archivo"], len(rows), str(origen), periodo, vigencia_hasta, backup_path)
     return {
         "provincia": provincia,
         "nombre": cfg["nombre"],
@@ -210,6 +218,9 @@ def importar_padron(
         "registros": len(rows),
         "muestra": rows[:3],
         "dry_run": dry_run,
+        "periodo": periodo or "",
+        "vigencia_hasta": vigencia_hasta or "",
+        "backup": backup_path,
     }
 
 
@@ -219,11 +230,23 @@ def main() -> int:
     parser.add_argument("origen", type=Path, help="Archivo origen CSV/TXT/XLSX")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "padrones", help="Carpeta destino")
     parser.add_argument("--sheet", help="Hoja XLSX a leer")
+    parser.add_argument("--periodo", help="Período del padrón, ej. 2026-06")
+    parser.add_argument("--vigencia-hasta", help="Fecha de vigencia hasta, ej. 2026-06-30")
+    parser.add_argument("--sin-backup", action="store_true", help="No respalda el padrón anterior")
     parser.add_argument("--dry-run", action="store_true", help="No escribe archivo; solo informa")
     args = parser.parse_args()
 
     try:
-        resultado = importar_padron(args.provincia, args.origen, args.out_dir, args.sheet, args.dry_run)
+        resultado = importar_padron(
+            args.provincia,
+            args.origen,
+            args.out_dir,
+            args.sheet,
+            args.dry_run,
+            args.periodo,
+            args.vigencia_hasta,
+            not args.sin_backup,
+        )
     except Exception as e:
         raise SystemExit(str(e)) from e
 

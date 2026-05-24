@@ -41,6 +41,14 @@
         <span class="text-sm font-semibold">Hoja XLSX opcional</span>
         <input id="sheet" name="sheet" placeholder="Hoja1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
       </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Período</span>
+        <input name="periodo" placeholder="2026-06" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Vigencia hasta</span>
+        <input name="vigencia_hasta" placeholder="2026-06-30" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
       <div class="md:col-span-4 flex justify-end">
         <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg">Importar padrón</button>
       </div>
@@ -61,6 +69,8 @@
             <th class="text-left p-2">Tipo</th>
             <th class="text-left p-2">Estado</th>
             <th class="text-left p-2">Registros</th>
+            <th class="text-left p-2">Período</th>
+            <th class="text-left p-2">Vigencia</th>
             <th class="text-left p-2">Actualizado</th>
             <th class="text-left p-2">Archivo / fuente</th>
           </tr>
@@ -85,6 +95,16 @@ function badge(status) {
   return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${status}</span>`;
 }
 
+function vigenciaBadge(status) {
+  const cls = {
+    vigente: 'bg-emerald-100 text-emerald-700',
+    por_vencer: 'bg-amber-100 text-amber-700',
+    vencido: 'bg-rose-100 text-rose-700',
+    sin_vigencia: 'bg-slate-100 text-slate-700',
+  }[status] || 'bg-slate-100 text-slate-700';
+  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${status}</span>`;
+}
+
 async function cargarEstado() {
   const r = await fetch('/api/padrones');
   const data = await r.json();
@@ -105,6 +125,8 @@ async function cargarEstado() {
       <td class="p-2">${p.tipo}</td>
       <td class="p-2">${badge(p.status)}</td>
       <td class="p-2">${p.registros ?? '—'}</td>
+      <td class="p-2">${p.periodo || '—'}</td>
+      <td class="p-2">${vigenciaBadge(p.vigencia_estado)} ${p.vigencia_hasta || ''}</td>
       <td class="p-2">${p.actualizado ?? '—'}</td>
       <td class="p-2">${fuente}</td>
     </tr>`;
