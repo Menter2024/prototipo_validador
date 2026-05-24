@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Validación masiva</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="bg-slate-900 text-white">
+  <div class="max-w-6xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Carga masiva de proveedores</div>
+    <div class="text-sm text-slate-300">Subí Excel/CSV, detectamos CUITs y generamos legajo fiscal por lote</div>
+  </div>
+</header>
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex justify-between mb-5">
+      <div>
+        <h1 class="text-2xl font-bold">Validar lote</h1>
+        <p class="text-slate-500 text-sm">La columna CUIT/CUIL se detecta automáticamente. Si no, indicá el nombre.</p>
+      </div>
+      <a href="/" class="text-blue-600 hover:underline text-sm">← Volver</a>
+    </div>
+    <form id="form" class="grid md:grid-cols-4 gap-3 items-end">
+      <label class="block md:col-span-2">
+        <span class="text-sm font-semibold">Archivo Excel/CSV</span>
+        <input id="archivo" name="archivo" type="file" accept=".csv,.txt,.tsv,.psv,.xlsx,.xlsm" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 bg-white" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Columna opcional</span>
+        <input name="columna" placeholder="CUIT" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Hoja XLSX opcional</span>
+        <input name="sheet" placeholder="Hoja1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
+      <div class="md:col-span-4 flex justify-end">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg">Validar lote</button>
+      </div>
+    </form>
+    <div id="msg" class="hidden mt-4 rounded-lg px-4 py-3 text-sm"></div>
+  </section>
+  <section id="res" class="hidden bg-white rounded-xl shadow-sm p-6 mt-6">
+    <h2 class="text-xl font-bold mb-3">Resultado</h2>
+    <div id="summary" class="text-sm text-slate-700 mb-4"></div>
+    <div class="flex gap-3">
+      <a id="excel" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Descargar Excel</a>
+      <a id="legajo" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Ver legajo</a>
+    </div>
+  </section>
+</main>
+<script>
+function msg(ok, text) {
+  const el = document.getElementById('msg');
+  el.className = ok ? 'mt-4 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800' : 'mt-4 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800';
+  el.textContent = text;
+}
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!document.getElementById('archivo').files.length) return msg(false, 'Seleccioná un archivo.');
+  msg(true, 'Procesando lote... puede tardar según cantidad de CUITs.');
+  const r = await fetch('/api/validar-excel', {method:'POST', body:new FormData(e.currentTarget)});
+  const data = await r.json();
+  if (!r.ok) return msg(false, data.detail || 'Error procesando lote.');
+  msg(true, 'Lote procesado correctamente.');
+  document.getElementById('res').classList.remove('hidden');
+  document.getElementById('summary').textContent = `${data.total_procesados} procesados · ${data.total_validos} CUIT válidos · ${data.total_observados} observados`;
+  document.getElementById('excel').href = '/api/excel/' + data.excel;
+  document.getElementById('legajo').href = '/legajos/' + data.legajo_id;
+});
+</script>
+</body>
+</html>

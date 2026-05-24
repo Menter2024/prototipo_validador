@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -192,6 +192,46 @@ async def validar_endpoint(req: ValidarRequest):
     }
 
 
+@app.post("/api/validar-excel")
+async def validar_excel_endpoint(
+    archivo: UploadFile = File(...),
+    columna: str | None = Form(None),
+    sheet: str | None = Form(None),
+):
+    if not archivo.filename:
+        raise HTTPException(status_code=400, detail="Archivo requerido.")
+    ext = Path(archivo.filename).suffix.lower()
+    if ext not in {".csv", ".txt", ".tsv", ".psv", ".xlsx", ".xlsm"}:
+        raise HTTPException(status_code=400, detail="Formato no soportado. Usá Excel o CSV/TXT.")
+    tmp = UPLOADS_DIR / f"lote_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{Path(archivo.filename).name}"
+    try:
+        with tmp.open("wb") as f:
+            shutil.copyfileobj(archivo.file, f)
+        cuits = carga_masiva.leer_cuits(tmp, columna or None, sheet or None)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    if not cuits:
+        raise HTTPException(status_code=400, detail="No encontré CUITs válidos en el archivo.")
+    if len(cuits) > 500:
+        raise HTTPException(status_code=400, detail="Máximo 500 CUITs por lote en esta versión.")
+
+    resultados = await asyncio.gather(*[_procesar_cuit(c) for c in cuits])
+    filename = f"validacion_lote_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    ruta = SALIDAS_DIR / filename
+    excel.generar(resultados, ruta)
+    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR)
+    return {
+        "resultados": resultados,
+        "excel": filename,
+        "legajo_id": legajo["id"],
+        "modo_general": "live" if any(r.get("modo_afip") == "live" for r in resultados) else "demo",
+        "total_procesados": len(resultados),
+        "total_validos": sum(1 for r in resultados if r.get("valido")),
+        "total_live": sum(1 for r in resultados if r.get("modo_afip") == "live"),
+        "total_observados": sum(1 for r in resultados if r.get("decision_fiscal", {}).get("estado") != "APROBABLE"),
+    }
+
+
 @app.get("/api/excel/{filename}")
 def descargar_excel(filename: str):
     ruta = SALIDAS_DIR / filename
@@ -281,6 +321,11 @@ def legajos_page():
 @app.get("/legajos/{legajo_id}", response_class=HTMLResponse)
 def legajo_detalle_page(legajo_id: str):
     return (STATIC_DIR / "legajo_detalle.html").read_text(encoding="utf-8")
+
+
+@app.get("/lotes", response_class=HTMLResponse)
+def lotes_page():
+    return (STATIC_DIR / "lotes.html").read_text(encoding="utf-8")
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
