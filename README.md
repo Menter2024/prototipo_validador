@@ -183,12 +183,13 @@ Módulo: app/modules/excel.py
 | Ruta | Uso |
 |---|---|
 | / | Validación individual o múltiple por texto |
+| /info | Configuración actual en formato legible |
 | /lotes | Carga masiva desde Excel/CSV |
 | /padrones | Administración de padrones provinciales |
 | /fuentes | Monitor de fuentes fiscales y alertas |
 | /legajos | Historial de legajos fiscales |
 | /legajos/{id} | Detalle y evidencia de un legajo |
-| /api/info | Diagnóstico no sensible |
+| /api/info | Diagnóstico no sensible en JSON |
 | /healthz | Health check |
 
 ## Arquitectura técnica

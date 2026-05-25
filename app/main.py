@@ -326,6 +326,11 @@ def index():
     return (STATIC_DIR / "index.html").read_text(encoding="utf-8")
 
 
+@app.get("/info", response_class=HTMLResponse)
+def info_page():
+    return (STATIC_DIR / "info.html").read_text(encoding="utf-8")
+
+
 @app.get("/padrones", response_class=HTMLResponse)
 def padrones_admin():
     return (STATIC_DIR / "padrones.html").read_text(encoding="utf-8")
