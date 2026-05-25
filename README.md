@@ -1,196 +1,255 @@
-# Prototipo Menter — Validador de Alta de Proveedores
+# Menter — Plataforma de Control Fiscal de Proveedores
 
-Backend Python (FastAPI) + front HTML que muestra cómo funcionaría la solución completa para CCU Argentina. Hace consultas reales contra APIs públicas y muestra resultados en Excel.
+Sistema web para automatizar controles fiscales de alta, mantenimiento y revisión de proveedores en empresas medianas y grandes que actúan como agentes de retención, percepción e información dentro del sistema tributario argentino.
 
-## Qué hace de verdad este prototipo
+El objetivo no es solo consultar CUITs: el producto construye un legajo fiscal digital auditable que ayuda a Compras, Cuentas a Pagar, Impuestos, Compliance y Auditoría a decidir si un proveedor es aprobable, observado, requiere revisión manual o debe bloquearse.
 
-Tres módulos funcionan al 100% sin que tengas que configurar nada:
+Estado actual: prototipo funcional desplegable con AFIP/ARCA live, padrones provinciales, fuentes online, carga masiva, matriz tributaria inicial, motor de decisión fiscal y legajos digitales.
 
-**Validación matemática del CUIT.** Verifica el dígito verificador con el algoritmo oficial de AFIP. Funciona offline contra cualquier CUIT. Permite descartar CUITs mal escritos antes de gastar tiempo consultando.
+## Problema que resuelve
 
-**Lectura de padrones provinciales.** Lee archivos CSV de la carpeta `padrones/`. Ya viene un padrón ARBA de ejemplo. Cuando reemplaces los archivos por padrones reales, la búsqueda es real.
+Las compañías con volumen relevante de proveedores deben administrar obligaciones formales y operativas vinculadas a:
 
-**Validación de provincia con georef.** Consulta la API pública de `apis.datos.gob.ar` para normalizar la provincia del domicilio. Es una API gubernamental argentina real, sin auth.
+- alta fiscal de proveedores;
+- validación de CUIT, inscripción y condición tributaria;
+- padrones de retención/percepción provinciales;
+- certificados, exclusiones, CBU y constancias;
+- controles de riesgo fiscal y facturación apócrifa;
+- evidencia para auditoría interna, externa o fiscal;
+- actualización mensual de padrones;
+- coordinación entre Compras, Impuestos y Cuentas a Pagar.
 
-Y un módulo que arranca en modo demo y se vuelve "live" cuando configurás credenciales:
+El sistema centraliza este proceso y reduce controles manuales dispersos en planillas, capturas y portales.
 
-**Consulta a AFIP/ARCA vía afipsdk.com.** Si dejás vacío el token, devuelve datos demo de tres CUITs conocidos (AFIP, Banco Nación, YPF). Si registrás una cuenta en afipsdk.com (gratis hasta cierto volumen) y pegás el token en `.env`, el sistema consulta en tiempo real contra Padrón Constancia de Inscripción.
+## Usuarios objetivo
 
-## Instalación paso a paso
+- Impuestos: define criterios, administra padrones y revisa observaciones.
+- Compras / Abastecimiento: inicia altas y consulta estado.
+- Cuentas a Pagar: controla antes de pagar.
+- Compliance: revisa señales críticas.
+- Auditoría: consulta legajos, evidencias e historial.
+- Sistemas / Data: integra ERP, almacenamiento y automatizaciones.
 
-### 1. Requisitos previos
+## Capacidades implementadas
 
-Ya tenés instalado todo lo que se necesita: `uv` está en `/Users/berna/.local/bin/uv` y se encarga del resto.
+### Validación fiscal de CUIT
 
-### 2. Descomprimir el proyecto
+- Validación matemática del dígito verificador.
+- Normalización de CUIT/CUIL con o sin guiones.
+- Clasificación básica de tipo de persona.
 
-Descomprimí la carpeta `prototipo_validador` donde quieras. Por ejemplo en `~/projects/`.
+Módulo: app/modules/validador.py
 
-### 3. Arrancar el servidor
+### Consulta AFIP/ARCA live
 
-Abrí Terminal y ejecutá estos dos comandos:
+- Integración vía AFIPSDK.
+- Soporte productivo con certificado y clave.
+- Credenciales por variables de entorno, PEM directo o base64.
+- Razón social, estado, actividad, domicilio, IVA, Ganancias y monotributo.
 
-```bash
-cd ~/projects/prototipo_validador
-bash run.sh
-```
+Módulo: app/modules/afip_arca.py
 
-La primera vez tarda un poco mientras `uv` instala las dependencias. Cuando termina, vas a ver:
+### Padrones provinciales de Ingresos Brutos
 
-```
-==> Arrancando servidor en http://localhost:8000
-```
+Padrones por archivo mensual:
 
-### 4. Abrir el navegador
+- ARBA / Buenos Aires
+- CABA / AGIP
+- Entre Ríos / ATER
+- Córdoba
+- Formosa
+- Jujuy
+- Mendoza
+- Santa Fe
+- Tucumán
 
-Andá a [http://localhost:8000](http://localhost:8000). Vas a ver el front del validador.
+Fuentes sin archivo mensual normalizado:
 
-### 5. Probar
+- Misiones
+- Neuquén
+- Río Negro
+- Corrientes
 
-Click en "Cargar CUITs de ejemplo" y después "Validar". Vas a ver tres CUITs reales procesados (AFIP, Banco Nación, YPF) con sus datos. El botón "Descargar Excel" te baja el reporte consolidado.
+Módulos: app/modules/padrones.py y app/modules/padron_manifest.py
 
-## Cómo activar el modo "live" (consulta real a AFIP)
+### Importador y lifecycle de padrones
 
-Por defecto, el sistema usa datos demo para AFIP. Para que consulte en vivo:
+- CSV, TXT, TSV, PSV, XLSX y XLSM.
+- Separadores coma, punto y coma, tab y pipe.
+- UTF-8 y Latin-1.
+- Alias de columnas y deduplicación de CUIT.
+- Backup automático antes de sobrescribir.
+- Período, vigencia, historial y estado de vigencia.
 
-1. Andá a [afipsdk.com](https://afipsdk.com/) y registrate (botón "Comenzar" o "Sign Up"). Es gratis para volumen inicial.
-2. Una vez dentro, buscá la sección "API Keys" o "Tokens".
-3. Generá un token nuevo y copialo.
-4. En la carpeta del proyecto, abrí el archivo `.env` y pegá el token:
+CLI: scripts/importar_padron.py
+Web: /padrones
 
-```
-AFIPSDK_TOKEN=tu_token_aqui
-```
+### Fuentes online sin padrón mensual
 
-5. Detené el server (Ctrl+C) y volvelo a arrancar con `bash run.sh`. Ahora consulta en vivo.
+- Neuquén automatizado contra endpoint público.
+- Misiones modelado como requiere navegador/adaptador por bloqueo 403.
+- Río Negro modelado como requiere CAPTCHA.
+- Corrientes modelado como requiere credenciales.
 
-## Deploy en Railway
+Módulo: app/modules/fuentes_online.py
 
-El repo ya incluye `railway.json` y `requirements.txt` para que Railway detecte Python/FastAPI y arranque con el puerto dinámico que expone la plataforma.
+### Motor de decisión fiscal
 
-### Opción A: desde GitHub
+Estados:
 
-1. Subí este proyecto a un repo de GitHub.
-2. En Railway: **New Project → Deploy from GitHub repo**.
-3. Seleccioná el repo y hacé deploy.
-4. En el servicio creado: **Settings → Networking → Public Networking → Generate Domain**.
-5. Si querés AFIP en vivo, agregá en Railway → **Variables**:
-
-```
-AFIPSDK_TOKEN=tu_token_aqui
-PADRONES_DIR=./padrones
-SALIDAS_DIR=./salidas
-```
-
-Para consultar CUITs reales en producción (no homologación/dev), agregá también:
-
-```
-AFIPSDK_ENV=prod
-AFIPSDK_TAX_ID=CUIT_REPRESENTANTE_SIN_GUIONES
-AFIPSDK_CERT=contenido_del_certificado_crt
-AFIPSDK_KEY=contenido_de_la_clave_key
-```
-
-Si solo cargás `AFIPSDK_TOKEN`, el sistema puede quedar en modo live contra el entorno `dev` de AFIPSDK, pero ese entorno no devuelve datos productivos de cualquier CUIT real.
-
-## Deploy gratis en Render
-
-El repo incluye `render.yaml`. En Render usá **New → Blueprint**, conectá el repo y dejá vacío **Blueprint Path** para que detecte el archivo de la raíz.
-
-Variables secretas requeridas en Render:
-
-```
-AFIPSDK_TOKEN
-AFIPSDK_CERT_PEM
-AFIPSDK_KEY_PEM
-BASIC_AUTH_USER
-BASIC_AUTH_PASS
-```
-
-`AFIPSDK_CERT_PEM` y `AFIPSDK_KEY_PEM` pueden pegarse con saltos de línea reales o con `\n`. Si el dashboard rompe el formato, usá `AFIPSDK_CERT_B64` y `AFIPSDK_KEY_B64` como alternativa manual.
-
-El sitio queda protegido con Basic Auth; `/healthz` queda público solo para que Render pueda verificar el servicio.
-
-### Opción B: desde Railway CLI
-
-```bash
-railway login
-railway init
-railway up
-```
-
-Después generá el dominio público desde **Settings → Networking**.
-
-## Cómo cargar padrones provinciales reales
-
-Mirá `padrones/README.md`. Resumen: bajás el padrón mensual del sitio oficial (ARBA, AGIP, etc.), lo convertís a CSV con la cabecera correcta, y lo guardás con el nombre fijo en la carpeta `padrones/`.
-
-También podés usar el importador:
-
-```bash
-python scripts/importar_padron.py ARBA /ruta/al/padron_original.txt
-python scripts/importar_padron.py CABA /ruta/al/padron_original.xlsx
-python scripts/importar_padron.py EntreRios /ruta/al/padron_original.csv
-python scripts/importar_padron.py SantaFe /ruta/al/padron_original.csv
-```
-
-## Estructura del proyecto
-
-```
-prototipo_validador/
-├── README.md                  # este archivo
-├── pyproject.toml             # dependencias (gestionado por uv)
-├── .env.example               # plantilla de configuración
-├── run.sh                     # arranque en un comando
-│
-├── app/
-│   ├── main.py                # API FastAPI (endpoints)
-│   ├── modules/
-│   │   ├── validador.py       # validación matemática CUIT
-│   │   ├── afip_arca.py       # consulta AFIP (demo o live)
-│   │   ├── padrones.py        # lectura padrones CSV
-│   │   ├── georef.py          # API real datos.gob.ar
-│   │   └── excel.py           # generación Excel
-│   └── static/
-│       └── index.html         # front
-│
-├── padrones/                  # archivos de padrones provinciales
-│   ├── README.md
-│   └── PadronARBA.csv         # ejemplo con datos ficticios
-│
-└── salidas/                   # acá se guardan los Excel generados
-```
-
-## Endpoints del backend
-
-Si querés usar el backend desde tu propio script o desde n8n:
-
-**POST** `/api/validar`
-
-```json
-{ "cuits": ["33-69345023-9", "30-50001091-2"] }
-```
-
-Devuelve los resultados estructurados + el nombre del archivo Excel generado.
-
-**GET** `/api/excel/{filename}` — descarga el Excel.
-
-**GET** `/api/info` — diagnóstico (modo actual, padrones disponibles, etc.).
-
-## Qué le mostrás a Luis Ronchi
-
-1. Abrís el front en `localhost:8000`.
-2. Cargás los CUITs de ejemplo y mostrás cómo el sistema valida matemáticamente y consulta AFIP + padrones + georef en paralelo, en segundos.
-3. Le mostrás el Excel descargado y le explicás que esto es lo que su equipo de Impuestos recibiría en cada alta.
-4. Le explicás que el alcance completo (los 23 sitios y padrones) es lo que se construye en las fases 1 y 2 de la propuesta.
-5. Le decís: "Este prototipo lo armamos en dos días para que veas la mecánica. La versión productiva, con afipsdk en vivo, los 13 padrones provinciales, los sitios con CAPTCHA y la interfaz pulida para Impuestos, es lo que cotizamos en la propuesta."
-
-## Solución de problemas
-
-**Si el server no arranca:** verificá que `uv` esté en `/Users/berna/.local/bin/uv`. Si no, ajustá la ruta en `run.sh`.
-
-**Si dice "Address already in use":** algún otro proceso está usando el puerto 8000. Cambiá `--port 8000` por `--port 8080` en `run.sh`.
-
-**Si AFIP devuelve siempre demo:** revisá que `AFIPSDK_TOKEN` esté en `.env` (sin espacios) y que reiniciaste el server.
-
-**Si los padrones no aparecen:** verificá que el archivo `PadronARBA.csv` (u otro) esté en la carpeta `padrones/`, con esa cabecera exacta, y guardado como UTF-8.
+- APROBABLE
+- OBSERVADO
+- REVISIÓN MANUAL
+- BLOQUEAR
+
+Evalúa CUIT inválido, AFIP/ARCA, estado fiscal, APOC, monotributo, padrones IIBB, fuentes pendientes y hallazgos online.
+
+Módulo: app/modules/riesgo_fiscal.py
+
+### Matriz tributaria inicial
+
+Consolida señales para retenciones/percepciones:
+
+- IVA nacional;
+- Ganancias nacional;
+- IIBB por jurisdicción;
+- alícuotas de retención/percepción informadas por padrones;
+- alertas por padrones faltantes;
+- alertas por fuentes manuales;
+- advertencias por monotributo.
+
+Módulo: app/modules/matriz_tributaria.py
+
+### Carga masiva desde Excel/CSV
+
+- XLSX, XLSM, CSV, TXT, TSV y PSV.
+- Detección automática de columna CUIT/CUIL.
+- Columna y hoja opcionales.
+- Deduplicación.
+- Límite inicial: 500 CUITs por lote.
+- Excel consolidado y legajo del lote.
+
+Web: /lotes
+Módulo: app/modules/carga_masiva.py
+
+### Legajo fiscal digital
+
+Cada validación genera evidencia auditable:
+
+- ID único;
+- fecha/hora;
+- CUIT y razón social;
+- decisión fiscal;
+- motivos y recomendaciones;
+- AFIP/ARCA;
+- padrones;
+- fuentes online;
+- matriz tributaria;
+- Excel asociado;
+- JSON completo de evidencia.
+
+Web: /legajos y /legajos/{id}
+Módulo: app/modules/legajos.py
+
+### Reportes Excel
+
+Hojas generadas:
+
+- Resumen
+- AFIP-ARCA
+- Padrones IIBB
+- Fuentes online
+- Matriz tributaria
+- Trazabilidad
+
+Módulo: app/modules/excel.py
+
+## Pantallas principales
+
+| Ruta | Uso |
+|---|---|
+| / | Validación individual o múltiple por texto |
+| /lotes | Carga masiva desde Excel/CSV |
+| /padrones | Administración de padrones provinciales |
+| /legajos | Historial de legajos fiscales |
+| /legajos/{id} | Detalle y evidencia de un legajo |
+| /api/info | Diagnóstico no sensible |
+| /healthz | Health check |
+
+## Arquitectura técnica
+
+Stack actual:
+
+- Python 3.11+
+- FastAPI
+- HTML + Tailwind CDN
+- OpenPyXL
+- HTTPX
+- Render/Railway compatible
+- Persistencia local en archivos para prototipo
+
+Estructura:
+
+    app/main.py
+    app/modules/afip_arca.py
+    app/modules/validador.py
+    app/modules/padrones.py
+    app/modules/padron_manifest.py
+    app/modules/fuentes_online.py
+    app/modules/riesgo_fiscal.py
+    app/modules/matriz_tributaria.py
+    app/modules/carga_masiva.py
+    app/modules/legajos.py
+    app/modules/excel.py
+    scripts/importar_padron.py
+    padrones/
+    salidas/
+    docs/
+
+## Variables de entorno
+
+    AFIPSDK_TOKEN=
+    AFIPSDK_ENV=prod
+    AFIPSDK_TAX_ID=
+    AFIPSDK_CERT_PEM=
+    AFIPSDK_KEY_PEM=
+    AFIPSDK_CERT_B64=
+    AFIPSDK_KEY_B64=
+    BASIC_AUTH_USER=
+    BASIC_AUTH_PASS=
+    PADRONES_DIR=./padrones
+    SALIDAS_DIR=./salidas
+    UPLOADS_DIR=./uploads
+
+## Instalación local
+
+    bash run.sh
+
+Luego abrir http://localhost:8000.
+
+## Deploy
+
+El repo incluye render.yaml para Render. El sitio queda protegido con Basic Auth. /healthz y /api/info quedan públicos para health check y diagnóstico no sensible.
+
+## Consideraciones de compliance
+
+El sistema es una plataforma de asistencia, control y evidencia. No reemplaza el criterio profesional de Impuestos ni la liquidación definitiva de retenciones/percepciones.
+
+Para producción enterprise se debe agregar:
+
+- persistencia real;
+- usuarios y roles;
+- auditoría de acciones;
+- gestión segura de secretos;
+- cifrado y backups;
+- monitoreo;
+- validación formal de reglas tributarias;
+- revisión legal/fiscal de fuentes automatizadas.
+
+## Documentación complementaria
+
+- docs/ARQUITECTURA_ENTERPRISE.md
+- docs/OPERACION_TRIBUTARIA.md
+- docs/ROADMAP_ENTERPRISE.md
+- docs/ANTECEDENTES_FUENTES.md
+- padrones/README.md
