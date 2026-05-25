@@ -46,7 +46,7 @@ Módulo: app/modules/validador.py
 - Soporte productivo con certificado y clave.
 - Credenciales por variables de entorno, PEM directo o base64.
 - Razón social, estado, actividad, domicilio, IVA, Ganancias y monotributo.
-- Señales de inscripción en IIBB/Convenio Multilateral y jurisdicciones declaradas en constancia ARCA.
+- Señales de IIBB/Convenio Multilateral y jurisdicciones declaradas en constancia ARCA, sin reemplazar padrones provinciales para inscripciones locales.
 
 Módulo: app/modules/afip_arca.py
 

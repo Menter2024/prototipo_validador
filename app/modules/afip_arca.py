@@ -330,9 +330,9 @@ def _extraer_iibb(pr: dict, impuestos_total: list[dict]) -> dict:
         "impuestos": impuestos_iibb,
         "fuente": "ARCA Constancia de Inscripción",
         "detalle": (
-            "La inscripción en IIBB/Convenio Multilateral surge de la constancia ARCA; "
-            "los padrones provinciales determinan alícuotas y tratamientos operativos."
-        ) if impuestos_iibb or jurisdicciones else "Sin señales de IIBB/Convenio Multilateral en la respuesta ARCA normalizada.",
+            "La constancia ARCA puede informar Convenio Multilateral y jurisdicciones declaradas; "
+            "las inscripciones locales exclusivas pueden no figurar allí y requieren padrón/consulta provincial."
+        ) if impuestos_iibb or jurisdicciones else "Sin señales de IIBB/Convenio Multilateral en la respuesta ARCA normalizada; no descarta inscripción local provincial.",
     }
 
 

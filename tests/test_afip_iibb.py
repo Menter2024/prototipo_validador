@@ -29,3 +29,24 @@ def test_parsea_iibb_convenio_multilateral_y_jurisdicciones():
     assert "Córdoba" in data["inscripciones_iibb"]["jurisdicciones"]
     assert "Santa Fe" in data["inscripciones_iibb"]["jurisdicciones"]
     assert "Tucumán" in data["inscripciones_iibb"]["jurisdicciones"]
+
+
+def test_sin_iibb_arca_no_descarta_inscripcion_local():
+    resp = {
+        "personaReturn": {
+            "datosGenerales": {
+                "razonSocial": "LOCAL SA",
+                "tipoPersona": "JURIDICA",
+                "estadoClave": "ACTIVO",
+                "domicilioFiscal": {"direccion": "CALLE 1", "localidad": "CABA", "descripcionProvincia": "CAPITAL FEDERAL"},
+            },
+            "datosRegimenGeneral": {
+                "impuesto": [{"descripcionImpuesto": "IVA", "estadoImpuesto": "AC"}],
+            },
+        }
+    }
+
+    data = afip_arca._parse_persona(resp)
+
+    assert data["inscripciones_iibb"]["jurisdicciones"] == []
+    assert "no descarta inscripción local" in data["inscripciones_iibb"]["detalle"]

@@ -47,6 +47,8 @@ def generar(resultado: dict) -> dict:
             })
     elif (iibb_arca.get("impuestos") or []):
         alertas.append("ARCA informa inscripción IIBB/Convenio Multilateral, pero no se pudieron normalizar jurisdicciones.")
+    else:
+        alertas.append("ARCA no descarta inscripción local en IIBB: validar padrones/consultas provinciales relevantes.")
 
     for prov, p in padrones.items():
         if p.get("status") == "inscripto":
@@ -60,9 +62,9 @@ def generar(resultado: dict) -> dict:
                 "accion": "Aplicar alícuotas vigentes del padrón provincial.",
             })
         elif p.get("status") == "no_disponible":
-            alertas.append(f"Sin padrón cargado para {prov}; no se puede determinar alícuota IIBB.")
+            alertas.append(f"Sin padrón cargado para {prov}; no se puede confirmar inscripción local ni determinar alícuota IIBB.")
         elif p.get("status") in {"consulta_manual", "requiere_credenciales"}:
-            alertas.append(f"{prov}: fuente requiere consulta manual/credenciales para confirmar IIBB.")
+            alertas.append(f"{prov}: fuente requiere consulta manual/credenciales para confirmar inscripción IIBB y alícuotas.")
 
     if "MONOTRIBUTO" in str(condicion_iva).upper():
         alertas.append("Proveedor monotributista: controlar categoría y compatibilidad con monto/actividad antes de aplicar tratamiento fiscal.")

@@ -70,7 +70,7 @@ A evaluar e implementar priorizando Web Services oficiales:
 - Vigencias.
 - Jurisdicción declarada vs domicilio fiscal.
 - Convenio multilateral.
-- Jurisdicciones IIBB/Convenio Multilateral informadas por constancia ARCA.
+- Jurisdicciones IIBB/Convenio Multilateral informadas por constancia ARCA, complementadas con padrones provinciales para inscripciones locales.
 - Cálculo sugerido por tipo de operación.
 
 ## Fase 7 — Integraciones enterprise

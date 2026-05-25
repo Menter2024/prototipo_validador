@@ -61,12 +61,11 @@ def evaluar(resultado: dict) -> dict:
     if jurisdicciones_arca:
         estado = _max_estado(estado, "OBSERVADO")
         motivos.append(
-            "ARCA informa inscripción IIBB/Convenio Multilateral en: "
+            "ARCA informa Convenio Multilateral o jurisdicciones IIBB declaradas en: "
             + ", ".join(jurisdicciones_arca)
             + "."
         )
         recomendaciones.append("Cruzar esas jurisdicciones contra padrones provinciales y aplicar alícuotas vigentes.")
-
     inscripto_iibb = [prov for prov, p in padrones.items() if p.get("status") == "inscripto"]
     if inscripto_iibb:
         estado = _max_estado(estado, "OBSERVADO")
@@ -77,7 +76,7 @@ def evaluar(resultado: dict) -> dict:
     if faltantes:
         estado = _max_estado(estado, "OBSERVADO")
         motivos.append("Faltan padrones mensuales cargados para: " + ", ".join(faltantes) + ".")
-        recomendaciones.append("Cargar padrones faltantes y revalidar si la jurisdicción es relevante.")
+        recomendaciones.append("Cargar padrones faltantes y revalidar si la jurisdicción es relevante; ARCA no cubre inscripciones locales exclusivas.")
 
     pendientes = [key for key, f in fuentes.items() if f.get("estado") in {"requiere_captcha", "requiere_credenciales", "requiere_navegador", "error", "revisar"}]
     if pendientes:

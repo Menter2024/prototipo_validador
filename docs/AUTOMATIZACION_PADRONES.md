@@ -37,7 +37,12 @@ La implementación evita simular automatización donde el organismo exige creden
 
 ### Criterio Convenio Multilateral
 
-La inscripción en Ingresos Brutos bajo Convenio Multilateral y las jurisdicciones en las que opera el contribuyente surgen de la constancia de inscripción ARCA. Ese dato define **dónde debe analizarse el tratamiento provincial**. Los padrones provinciales siguen siendo necesarios para determinar alícuotas, exclusiones, riesgo fiscal o tratamiento operativo como agente.
+La inscripción en Ingresos Brutos bajo Convenio Multilateral y las jurisdicciones declaradas pueden surgir de la constancia de inscripción ARCA. Ese dato ayuda a definir **dónde debe analizarse el tratamiento provincial**.
+
+Pero ARCA **no reemplaza** a los padrones o consultas provinciales: un contribuyente inscripto localmente solo en una provincia puede no figurar en ARCA como Convenio Multilateral. Por eso los padrones provinciales son necesarios para dos cosas:
+
+- confirmar inscripción local en IIBB;
+- determinar alícuotas, exclusiones, riesgo fiscal o tratamiento operativo como agente.
 
 ## Clasificación operativa
 
