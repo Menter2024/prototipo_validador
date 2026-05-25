@@ -12,6 +12,7 @@ def generar(resultado: dict) -> dict:
 
     condicion_iva = afip.get("condicion_iva", "—")
     condicion_ganancias = afip.get("condicion_ganancias", "—")
+    iibb_arca = afip.get("inscripciones_iibb") or {}
 
     items.append({
         "jurisdiccion": "Nacional",
@@ -31,6 +32,21 @@ def generar(resultado: dict) -> dict:
         "fuente": "AFIP/ARCA",
         "accion": "Controlar certificado de no retención Ganancias antes del pago.",
     })
+
+    jurisdicciones_arca = iibb_arca.get("jurisdicciones") or []
+    if jurisdicciones_arca:
+        for jurisdiccion in jurisdicciones_arca:
+            items.append({
+                "jurisdiccion": jurisdiccion,
+                "impuesto": "Ingresos Brutos",
+                "condicion": iibb_arca.get("regimen") or "Inscripción IIBB informada por ARCA",
+                "retencion": "A determinar por padrón provincial",
+                "percepcion": "A determinar por padrón provincial",
+                "fuente": "ARCA Constancia",
+                "accion": "Validar padrón local de la jurisdicción antes de liquidar retención/percepción.",
+            })
+    elif (iibb_arca.get("impuestos") or []):
+        alertas.append("ARCA informa inscripción IIBB/Convenio Multilateral, pero no se pudieron normalizar jurisdicciones.")
 
     for prov, p in padrones.items():
         if p.get("status") == "inscripto":

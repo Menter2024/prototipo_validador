@@ -26,3 +26,9 @@ def test_plan_descarga_reconoce_credenciales_arba():
 
     assert plan["status"] == "requiere_credenciales"
     assert plan["descargable"] is False
+
+
+def test_plan_descarga_reconoce_circuitos_restantes():
+    assert descarga_fuentes.plan_descarga("neuquen_iibb_online")["status"] == "consulta_online_cuit"
+    assert descarga_fuentes.plan_descarga("rionegro_iibb_online")["status"] == "requiere_captcha"
+    assert descarga_fuentes.plan_descarga("formosa_iibb")["status"] == "requiere_archivo_cliente"

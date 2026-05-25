@@ -7,15 +7,23 @@
       "nombre": "ARCA · Constancia de inscripción",
       "jurisdiccion": "Nacional",
       "organismo": "ARCA",
-      "alcance": "Inscripción, estado fiscal e impuestos nacionales",
-      "regimenes": ["inscripcion", "iva", "ganancias", "monotributo"],
+      "alcance": "Inscripción, estado fiscal, impuestos nacionales e inscripción IIBB/Convenio Multilateral declarada en constancia",
+      "regimenes": [
+        "inscripcion",
+        "iva",
+        "ganancias",
+        "monotributo",
+        "iibb",
+        "convenio_multilateral"
+      ],
       "clase": "api_oficial",
       "prioridad": "P0",
       "frecuencia": "online_en_cada_alta",
       "url": "https://www.afip.gob.ar/ws/",
       "metodo_actualizacion": "AFIPSDK / Web Service",
       "automatizacion": "automatizada",
-      "evidencia_requerida": "respuesta_api"
+      "evidencia_requerida": "respuesta_api_constancia",
+      "nota": "La constancia ARCA informa inscripción en Convenio Multilateral y jurisdicciones declaradas; los padrones provinciales se usan para alícuotas."
     },
     {
       "id": "arba_iibb",
@@ -24,7 +32,11 @@
       "jurisdiccion": "Buenos Aires",
       "organismo": "ARBA",
       "alcance": "Ingresos Brutos · retención/percepción por sujeto",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P1",
       "frecuencia": "mensual",
@@ -47,7 +59,11 @@
       "jurisdiccion": "CABA",
       "organismo": "AGIP",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P1",
       "frecuencia": "mensual",
@@ -60,7 +76,11 @@
         "modo": "pagina_publica_links",
         "landing_url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
         "link_text_regex": "Padrón de Regímenes Generales - Vigencia",
-        "extensiones": [".zip", ".txt", ".rar"],
+        "extensiones": [
+          ".zip",
+          ".txt",
+          ".rar"
+        ],
         "nota": "AGIP publica el enlace vigente en la página de Agentes de Recaudación."
       }
     },
@@ -71,7 +91,11 @@
       "jurisdiccion": "Entre Ríos",
       "organismo": "ATER",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P1",
       "frecuencia": "mensual",
@@ -93,15 +117,33 @@
       "jurisdiccion": "Córdoba",
       "organismo": "Rentas Córdoba",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P2",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.rentascordoba.gob.ar/",
+      "url": "https://www.rentascordoba.gob.ar/cms/ms-agentes/",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "pagina_publica_links",
+        "landing_url": "https://www.rentascordoba.gob.ar/cms/ms-agentes/",
+        "link_text_regex": "(Listado|LUA|Al[ií]cuotas|Padr[oó]n)",
+        "extensiones": [
+          ".zip",
+          ".txt",
+          ".csv",
+          ".xlsx",
+          ".xls",
+          ".rar"
+        ],
+        "nota": "Rentas Córdoba publica listados y consulta de alícuotas para agentes; se releva enlace público y se guarda evidencia."
+      }
     },
     {
       "id": "formosa_iibb",
@@ -110,15 +152,24 @@
       "jurisdiccion": "Formosa",
       "organismo": "DGR Formosa",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P2",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.dgrformosa.gob.ar/",
+      "url": "https://www.formosa.gob.ar/tramite/120/inscripcion_como_agente_de_percepcion_del_impuesto_sobre_los_ingresos_brutos",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "archivo_cliente",
+        "landing_url": "https://www.formosa.gob.ar/tramite/120/inscripcion_como_agente_de_percepcion_del_impuesto_sobre_los_ingresos_brutos",
+        "nota": "No se verificó padrón mensual público normalizado; circuito previsto por archivo/exportación del cliente o relevamiento asistido."
+      }
     },
     {
       "id": "jujuy_iibb",
@@ -127,15 +178,33 @@
       "jurisdiccion": "Jujuy",
       "organismo": "DPR Jujuy",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P2",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.rentasjujuy.gob.ar/",
+      "url": "https://rentasjujuy.gob.ar/agentes-ingresos-brutos/",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "pagina_publica_links",
+        "landing_url": "https://rentasjujuy.gob.ar/agentes-ingresos-brutos/",
+        "link_text_regex": "(Descarga de Padr[oó]n|Padr[oó]n|Al[ií]cuotas|N[oó]mina)",
+        "extensiones": [
+          ".zip",
+          ".txt",
+          ".csv",
+          ".xlsx",
+          ".xls",
+          ".rar"
+        ],
+        "nota": "DPR Jujuy informa consulta/descarga de padrón con alícuotas para retención-percepción."
+      }
     },
     {
       "id": "mendoza_iibb",
@@ -144,15 +213,25 @@
       "jurisdiccion": "Mendoza",
       "organismo": "ATM Mendoza",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P2",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.atm.mendoza.gov.ar/",
+      "url": "https://www.atm.mendoza.gov.ar/portalatm/zoneTop/preguntasFrecuentes/agentes/agentes.jsp",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.atm.mendoza.gov.ar/",
+        "credencial": "Clave Fiscal/portal ATM del agente",
+        "nota": "La operación de agentes se canaliza por servicios ATM/SIRCAR; requiere credenciales o exportación."
+      }
     },
     {
       "id": "santafe_iibb",
@@ -161,15 +240,25 @@
       "jurisdiccion": "Santa Fe",
       "organismo": "API Santa Fe",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P2",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.santafe.gov.ar/api/",
+      "url": "https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284",
+        "credencial": "SIAT/API Santa Fe",
+        "nota": "Santa Fe informa PARP consultable ingresando al Sistema Integral de Administración Tributaria."
+      }
     },
     {
       "id": "tucuman_iibb",
@@ -178,7 +267,11 @@
       "jurisdiccion": "Tucumán",
       "organismo": "DGR Tucumán",
       "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": ["iibb", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "padron_descargable",
       "prioridad": "P2",
       "frecuencia": "mensual",
@@ -186,7 +279,22 @@
       "url": "https://www.rentastucuman.gob.ar/",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "pagina_publica_links",
+        "landing_url": "https://www.rentastucuman.gob.ar/",
+        "link_text_regex": "(Padr[oó]n de Contribuyentes|Coeficiente|RG 23/02|Agentes de Retenci[oó]n)",
+        "extensiones": [
+          ".zip",
+          ".txt",
+          ".csv",
+          ".xlsx",
+          ".xls",
+          ".rar",
+          ".pdf"
+        ],
+        "nota": "DGR Tucumán publica normativa y transferencias de padrones vinculadas a RG 23/02; se releva enlace público y se evidencia."
+      }
     },
     {
       "id": "misiones_iibb_online",
@@ -195,14 +303,22 @@
       "jurisdiccion": "Misiones",
       "organismo": "ATM Misiones",
       "alcance": "Inscripción IIBB por CUIT",
-      "regimenes": ["iibb", "inscripcion"],
+      "regimenes": [
+        "iibb",
+        "inscripcion"
+      ],
       "clase": "consulta_online",
       "prioridad": "P3",
       "frecuencia": "alta_y_revalidacion",
       "url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
       "metodo_actualizacion": "consulta_por_cuit",
       "automatizacion": "requiere_navegador",
-      "evidencia_requerida": "captura_respuesta_html"
+      "evidencia_requerida": "captura_respuesta_html",
+      "descarga": {
+        "modo": "requiere_navegador",
+        "landing_url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
+        "nota": "Consulta pública por CUIT; endpoint directo bloquea acceso sin navegador. Requiere Playwright o cola asistida."
+      }
     },
     {
       "id": "neuquen_iibb_online",
@@ -211,14 +327,22 @@
       "jurisdiccion": "Neuquén",
       "organismo": "Rentas Neuquén",
       "alcance": "Inscripción IIBB por CUIT",
-      "regimenes": ["iibb", "inscripcion"],
+      "regimenes": [
+        "iibb",
+        "inscripcion"
+      ],
       "clase": "consulta_online",
       "prioridad": "P3",
       "frecuencia": "alta_y_revalidacion",
       "url": "https://rentasneuquenweb.gob.ar/nqn/SCF/cons_inscripcion.php",
       "metodo_actualizacion": "consulta_por_cuit",
       "automatizacion": "automatizada",
-      "evidencia_requerida": "respuesta_html_parseada"
+      "evidencia_requerida": "respuesta_html_parseada",
+      "descarga": {
+        "modo": "consulta_online_cuit",
+        "landing_url": "https://rentasneuquenweb.gob.ar/nqn/SCF/cons_inscripcion.php",
+        "nota": "Ya existe adaptador automático por CUIT para constancia de inscripción."
+      }
     },
     {
       "id": "rionegro_iibb_online",
@@ -227,14 +351,22 @@
       "jurisdiccion": "Río Negro",
       "organismo": "Agencia de Recaudación Río Negro",
       "alcance": "Inscripción IIBB por CUIT",
-      "regimenes": ["iibb", "inscripcion"],
+      "regimenes": [
+        "iibb",
+        "inscripcion"
+      ],
       "clase": "portal_captcha",
       "prioridad": "P3",
       "frecuencia": "alta_y_revalidacion",
       "url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
       "metodo_actualizacion": "consulta_asistida",
       "automatizacion": "requiere_captcha",
-      "evidencia_requerida": "captura_asistida"
+      "evidencia_requerida": "captura_asistida",
+      "descarga": {
+        "modo": "requiere_captcha",
+        "landing_url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
+        "nota": "Fuente con CAPTCHA; requiere cola asistida y captura."
+      }
     },
     {
       "id": "corrientes_iibb_online",
@@ -243,14 +375,25 @@
       "jurisdiccion": "Corrientes",
       "organismo": "DGR Corrientes",
       "alcance": "Inscripción IIBB / padrones bajo acceso",
-      "regimenes": ["iibb", "inscripcion", "retencion", "percepcion"],
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
       "clase": "portal_credenciales",
       "prioridad": "P3",
       "frecuencia": "segun_exportacion_cliente",
-      "url": "https://www.dgrcorrientes.gob.ar/",
+      "url": "https://www.dgrcorrientes.gov.ar/rentascorrientes/consultarContenido.do?categoria=199",
       "metodo_actualizacion": "credenciales_o_exportacion",
       "automatizacion": "requiere_credenciales",
-      "evidencia_requerida": "archivo_exportado_o_captura"
+      "evidencia_requerida": "archivo_exportado_o_captura",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.dgrcorrientes.gov.ar/rentascorrientes/consultarContenido.do?categoria=199",
+        "credencial": "usuario registrado/CAV",
+        "nota": "DGR Corrientes indica que las alícuotas se consultan como usuario registrado en Portal del Contribuyente > IIBB Agentes."
+      }
     }
   ]
 }

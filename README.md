@@ -46,6 +46,7 @@ Módulo: app/modules/validador.py
 - Soporte productivo con certificado y clave.
 - Credenciales por variables de entorno, PEM directo o base64.
 - Razón social, estado, actividad, domicilio, IVA, Ganancias y monotributo.
+- Señales de inscripción en IIBB/Convenio Multilateral y jurisdicciones declaradas en constancia ARCA.
 
 Módulo: app/modules/afip_arca.py
 
@@ -102,6 +103,7 @@ Módulo: app/modules/fuentes_online.py
 - API y pantalla para alertas de padrones críticos.
 - Script apto para scheduler diario.
 - Descarga controlada de fuentes públicas con evidencia, hash y manifest.
+- Circuito definido para fuentes restantes: público, credenciales, archivo cliente, consulta CUIT, navegador o CAPTCHA.
 
 Config: config/fuentes_catalogo.json
 Web: /fuentes

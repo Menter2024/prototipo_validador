@@ -28,6 +28,43 @@ from typing import Optional, Tuple
 
 
 AFIPSDK_BASE = "https://app.afipsdk.com/api/v1"
+PROVINCIAS_AR = {
+    "BUENOS AIRES",
+    "CABA",
+    "CIUDAD AUTONOMA DE BUENOS AIRES",
+    "CAPITAL FEDERAL",
+    "CATAMARCA",
+    "CHACO",
+    "CHUBUT",
+    "CORDOBA",
+    "CORRIENTES",
+    "ENTRE RIOS",
+    "FORMOSA",
+    "JUJUY",
+    "LA PAMPA",
+    "LA RIOJA",
+    "MENDOZA",
+    "MISIONES",
+    "NEUQUEN",
+    "RIO NEGRO",
+    "SALTA",
+    "SAN JUAN",
+    "SAN LUIS",
+    "SANTA CRUZ",
+    "SANTA FE",
+    "SANTIAGO DEL ESTERO",
+    "TIERRA DEL FUEGO",
+    "TUCUMAN",
+}
+PROVINCIAS_CANON = {
+    "CIUDAD AUTONOMA DE BUENOS AIRES": "CABA",
+    "CAPITAL FEDERAL": "CABA",
+    "CORDOBA": "Córdoba",
+    "ENTRE RIOS": "Entre Ríos",
+    "NEUQUEN": "Neuquén",
+    "RIO NEGRO": "Río Negro",
+    "TUCUMAN": "Tucumán",
+}
 
 # Cache del Ticket de Acceso en memoria (TAs duran ~12 hs)
 _TA_CACHE: dict = {}
@@ -233,6 +270,72 @@ def _map_estado_impuesto(codigo: str) -> str:
     }.get(codigo, codigo or "—")
 
 
+def _sin_acentos(valor: str) -> str:
+    return (valor or "").translate(str.maketrans("áéíóúÁÉÍÓÚñÑ", "aeiouAEIOUnN")).upper()
+
+
+def _iter_textos(obj):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            yield str(k)
+            yield from _iter_textos(v)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from _iter_textos(item)
+    elif obj is not None:
+        yield str(obj)
+
+
+def _canon_provincia(valor: str) -> str:
+    limpio = _sin_acentos(valor)
+    return PROVINCIAS_CANON.get(limpio, valor.title())
+
+
+def _extraer_iibb(pr: dict, impuestos_total: list[dict]) -> dict:
+    """Extrae señales de IIBB/Convenio Multilateral desde constancia ARCA.
+
+    La constancia de inscripción ARCA puede incluir inscripción en Convenio
+    Multilateral y jurisdicciones declaradas. El WS puede variar nombres de
+    campos; por eso combinamos impuestos normalizados y búsqueda defensiva de
+    jurisdicciones/provincias en la respuesta.
+    """
+    impuestos_iibb = []
+    regimen = "—"
+    for imp in impuestos_total:
+        desc = imp.get("descripcionImpuesto") or imp.get("descripcion") or ""
+        desc_norm = _sin_acentos(desc)
+        if "INGRESOS BRUTOS" in desc_norm or "IIBB" in desc_norm or "CONVENIO MULTILATERAL" in desc_norm:
+            estado = _map_estado_impuesto(imp.get("estadoImpuesto") or imp.get("estado"))
+            impuestos_iibb.append({"descripcion": desc, "estado": estado})
+            if "CONVENIO MULTILATERAL" in desc_norm:
+                regimen = "Convenio Multilateral"
+            elif regimen == "—":
+                regimen = "Ingresos Brutos"
+
+    textos = [_sin_acentos(t) for t in _iter_textos(pr)]
+    jurisdicciones = set()
+    hay_iibb_contexto = any(
+        "INGRESOS BRUTOS" in t or "IIBB" in t or "CONVENIO MULTILATERAL" in t or "JURISDICC" in t
+        for t in textos
+    )
+    if hay_iibb_contexto:
+        joined = " | ".join(textos)
+        for provincia in PROVINCIAS_AR:
+            if provincia in joined:
+                jurisdicciones.add(_canon_provincia(provincia))
+
+    return {
+        "regimen": regimen,
+        "jurisdicciones": sorted(jurisdicciones),
+        "impuestos": impuestos_iibb,
+        "fuente": "ARCA Constancia de Inscripción",
+        "detalle": (
+            "La inscripción en IIBB/Convenio Multilateral surge de la constancia ARCA; "
+            "los padrones provinciales determinan alícuotas y tratamientos operativos."
+        ) if impuestos_iibb or jurisdicciones else "Sin señales de IIBB/Convenio Multilateral en la respuesta ARCA normalizada.",
+    }
+
+
 def _parse_persona(resp: dict) -> dict:
     """Normaliza la respuesta de getPersona_v2 al formato interno.
 
@@ -341,6 +444,7 @@ def _parse_persona(resp: dict) -> dict:
         "estado_clave": dg.get("estadoClave", "—"),
         "condicion_iva": cond_iva,
         "condicion_ganancias": cond_gan,
+        "inscripciones_iibb": _extraer_iibb(pr, impuestos_total),
         "domicilio_fiscal": dom_str,
         "actividad_principal": act_str,
         "fecha_inicio": fecha,
@@ -384,11 +488,26 @@ def consultar_constancia(cuit_limpio: str) -> dict:
             "estado_clave": "—",
             "condicion_iva": "—",
             "condicion_ganancias": "—",
+            "inscripciones_iibb": {
+                "regimen": "—",
+                "jurisdicciones": [],
+                "impuestos": [],
+                "fuente": "ARCA Constancia de Inscripción",
+                "detalle": "Sin datos ARCA para determinar inscripción IIBB/Convenio Multilateral.",
+            },
             "domicilio_fiscal": "—",
             "actividad_principal": "—",
             "fecha_inicio": "—",
             "en_apoc": None,
         }
+
+    datos.setdefault("inscripciones_iibb", {
+        "regimen": "—",
+        "jurisdicciones": [],
+        "impuestos": [],
+        "fuente": "ARCA Constancia de Inscripción",
+        "detalle": "No normalizado en datos demo/fallback.",
+    })
 
     return {
         "modo": modo,

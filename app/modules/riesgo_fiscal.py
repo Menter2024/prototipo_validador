@@ -56,6 +56,17 @@ def evaluar(resultado: dict) -> dict:
         motivos.append("Proveedor monotributista: requiere controlar categoría, actividad y límites frente al volumen esperado.")
         recomendaciones.append("Validar que la operación sea compatible con categoría y actividad declarada.")
 
+    iibb_arca = afip.get("inscripciones_iibb") or {}
+    jurisdicciones_arca = iibb_arca.get("jurisdicciones") or []
+    if jurisdicciones_arca:
+        estado = _max_estado(estado, "OBSERVADO")
+        motivos.append(
+            "ARCA informa inscripción IIBB/Convenio Multilateral en: "
+            + ", ".join(jurisdicciones_arca)
+            + "."
+        )
+        recomendaciones.append("Cruzar esas jurisdicciones contra padrones provinciales y aplicar alícuotas vigentes.")
+
     inscripto_iibb = [prov for prov, p in padrones.items() if p.get("status") == "inscripto"]
     if inscripto_iibb:
         estado = _max_estado(estado, "OBSERVADO")

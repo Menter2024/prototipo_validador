@@ -23,6 +23,22 @@ Mantener actualizado el universo de fuentes que una empresa mediana/grande neces
 
 La implementación evita simular automatización donde el organismo exige credenciales. ARBA queda marcada como automatizable con CIT/Web Service del agente; AGIP queda como fuente pública con detección del enlace vigente; ATER queda como monitoreo de publicación/archivo oficial.
 
+## Sprint 3 implementado
+
+- Estrategia de descarga/circuito definida para las fuentes restantes del catálogo:
+  - Córdoba, Jujuy y Tucumán: relevamiento de enlaces públicos.
+  - Formosa: archivo/exportación cliente hasta confirmar padrón público normalizado.
+  - Mendoza, Santa Fe y Corrientes: portal con credenciales.
+  - Misiones: consulta pública por CUIT con navegador/asistencia.
+  - Neuquén: consulta online por CUIT ya automatizada.
+  - Río Negro: CAPTCHA asistido.
+- ARCA/AFIP ahora normaliza señales de IIBB/Convenio Multilateral desde la constancia de inscripción.
+- La matriz tributaria incorpora jurisdicciones IIBB informadas por ARCA como condición a cruzar contra padrones provinciales.
+
+### Criterio Convenio Multilateral
+
+La inscripción en Ingresos Brutos bajo Convenio Multilateral y las jurisdicciones en las que opera el contribuyente surgen de la constancia de inscripción ARCA. Ese dato define **dónde debe analizarse el tratamiento provincial**. Los padrones provinciales siguen siendo necesarios para determinar alícuotas, exclusiones, riesgo fiscal o tratamiento operativo como agente.
+
 ## Clasificación operativa
 
 | Clase | Ejemplo | Automatización objetivo |
@@ -46,5 +62,6 @@ La implementación evita simular automatización donde el organismo exige creden
    - Base Sprint 2: AGIP releva/descarga desde página pública; ARBA/ATER quedan parametrizadas según credencial/publicación.
 2. Incorporar historial de ejecuciones de jobs y evidencias descargadas.
 3. Crear cola `/fuentes-pendientes` para consultas asistidas de Misiones/Río Negro/Corrientes.
-4. Persistir resultados en base de datos multiempresa.
-5. Agregar alertas por mail/Slack/Teams cuando una fuente crítica esté vencida o sin carga.
+4. Implementar parsers específicos para archivos descargados en formato no estándar (`.rar`, `.xls`, layouts fijos).
+5. Persistir resultados en base de datos multiempresa.
+6. Agregar alertas por mail/Slack/Teams cuando una fuente crítica esté vencida o sin carga.

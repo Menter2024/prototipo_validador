@@ -143,7 +143,7 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
     s2.merge_cells("A1:I1")
 
     hdrs = ["CUIT", "Razón Social", "Tipo", "Estado", "Condición IVA",
-            "Condición Ganancias", "Domicilio Fiscal", "Actividad", "En APOC"]
+            "Condición Ganancias", "IIBB/CM ARCA", "Jurisdicciones IIBB", "Domicilio Fiscal", "Actividad", "En APOC"]
     for i, h in enumerate(hdrs):
         _hdr(s2.cell(row=3, column=i + 1), h)
 
@@ -151,6 +151,7 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
         afip = r.get("afip", {})
         row = 4 + ri
         en_apoc = afip.get("en_apoc")
+        iibb = afip.get("inscripciones_iibb") or {}
         apoc_text = "SÍ" if en_apoc else ("NO" if en_apoc is False else "—")
         apoc_status = "error" if en_apoc else "ok" if en_apoc is False else None
         vals = [
@@ -160,15 +161,17 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
             afip.get("estado_clave", "—"),
             afip.get("condicion_iva", "—"),
             afip.get("condicion_ganancias", "—"),
+            iibb.get("regimen", "—"),
+            ", ".join(iibb.get("jurisdicciones", [])) or "—",
             afip.get("domicilio_fiscal", "—"),
             afip.get("actividad_principal", "—"),
             apoc_text,
         ]
         for i, v in enumerate(vals):
-            st = apoc_status if i == 8 else None
+            st = apoc_status if i == 10 else None
             _cell(s2.cell(row=row, column=i + 1), v, st)
 
-    for col, w in zip("ABCDEFGHI", [18, 32, 12, 12, 22, 18, 36, 30, 10]):
+    for col, w in zip("ABCDEFGHIJK", [18, 32, 12, 12, 22, 18, 22, 36, 36, 30, 10]):
         s2.column_dimensions[col].width = w
 
     # ---- Hoja 3: Padrones IIBB

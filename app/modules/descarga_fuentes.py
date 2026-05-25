@@ -96,7 +96,7 @@ def plan_descarga(fuente_id: str) -> dict:
         "fuente_id": fuente_id,
         "nombre": fuente.get("nombre"),
         "modo": modo,
-        "descargable": modo == "pagina_publica_links",
+        "descargable": modo in {"pagina_publica_links"},
         "landing_url": descarga.get("landing_url") or fuente.get("url"),
         "nota": descarga.get("nota", ""),
     }
@@ -105,6 +105,36 @@ def plan_descarga(fuente_id: str) -> dict:
             **base,
             "status": "requiere_credenciales",
             "detalle": f"Requiere {descarga.get('credencial', 'credenciales')} para automatizar descarga.",
+        }
+    if modo == "portal_credenciales":
+        return {
+            **base,
+            "status": "requiere_credenciales",
+            "detalle": f"Requiere acceso al portal con {descarga.get('credencial', 'credenciales del cliente/agente')}.",
+        }
+    if modo == "consulta_online_cuit":
+        return {
+            **base,
+            "status": "consulta_online_cuit",
+            "detalle": "No hay padrón mensual descargable; corresponde consulta por CUIT y evidencia por proveedor.",
+        }
+    if modo == "requiere_navegador":
+        return {
+            **base,
+            "status": "requiere_navegador",
+            "detalle": "Requiere adaptador con navegador o consulta asistida para completar evidencia.",
+        }
+    if modo == "requiere_captcha":
+        return {
+            **base,
+            "status": "requiere_captcha",
+            "detalle": "Requiere resolución asistida de CAPTCHA y captura de evidencia.",
+        }
+    if modo == "archivo_cliente":
+        return {
+            **base,
+            "status": "requiere_archivo_cliente",
+            "detalle": "Requiere archivo exportado por el cliente/agente y posterior importación normalizada.",
         }
     if modo == "monitoreo_publicacion":
         return {

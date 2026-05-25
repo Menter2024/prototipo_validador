@@ -219,6 +219,10 @@ function renderResults(data) {
     const apoc = afip.en_apoc === true
       ? '<span class="text-rose-700 font-bold">SÍ — REVISAR</span>'
       : (afip.en_apoc === false ? '<span class="text-emerald-700">NO</span>' : '<span class="text-slate-500">—</span>');
+    const iibbArca = afip.inscripciones_iibb || {};
+    const iibbArcaTxt = (iibbArca.jurisdicciones || []).length
+      ? `${iibbArca.regimen || 'IIBB'}: ${(iibbArca.jurisdicciones || []).join(', ')}`
+      : (iibbArca.detalle || 'Sin jurisdicciones IIBB normalizadas.');
 
     let padrones_html = '';
     const pads = r.padrones || {};
@@ -302,6 +306,7 @@ function renderResults(data) {
           <div class="text-sm text-slate-600">${afip.actividad_principal || '—'}</div>
           <div class="text-sm text-slate-600">${afip.domicilio_fiscal || '—'}</div>
           <div class="text-sm text-slate-600 mt-1">IVA: ${afip.condicion_iva || '—'} · Ganancias: ${afip.condicion_ganancias || '—'}</div>
+          <div class="text-sm text-slate-600 mt-1">IIBB / Convenio Multilateral ARCA: ${iibbArcaTxt}</div>
         </div>
         <div class="bg-slate-50 rounded-lg p-3">
           <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Estado</div>
