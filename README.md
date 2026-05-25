@@ -4,7 +4,7 @@ Sistema web para automatizar controles fiscales de alta, mantenimiento y revisi�
 
 El objetivo no es solo consultar CUITs: el producto construye un legajo fiscal digital auditable que ayuda a Compras, Cuentas a Pagar, Impuestos, Compliance y Auditoría a decidir si un proveedor es aprobable, observado, requiere revisión manual o debe bloquearse.
 
-Estado actual: prototipo funcional desplegable con AFIP/ARCA live, padrones provinciales, fuentes online, carga masiva, matriz tributaria inicial, motor de decisión fiscal y legajos digitales.
+Estado actual: prototipo funcional desplegable con AFIP/ARCA live, padrones provinciales, monitor de fuentes, fuentes online, carga masiva, matriz tributaria inicial, motor de decisión fiscal y legajos digitales.
 
 ## Problema que resuelve
 
@@ -93,6 +93,20 @@ Web: /padrones
 
 Módulo: app/modules/fuentes_online.py
 
+### Monitor de fuentes y calendario operativo
+
+- Catálogo versionado de fuentes nacionales/provinciales.
+- Clasificación por API oficial, padrón descargable, consulta online, CAPTCHA o credenciales.
+- Estado de actualización: vigente, por vencer, vencido, pendiente de carga o asistido.
+- Riesgo operativo por prioridad P0/P1/P2/P3.
+- API y pantalla para alertas de padrones críticos.
+- Script apto para scheduler diario.
+
+Config: config/fuentes_catalogo.json
+Web: /fuentes
+API: /api/fuentes
+CLI: scripts/revisar_fuentes.py
+
 ### Motor de decisión fiscal
 
 Estados:
@@ -171,6 +185,7 @@ Módulo: app/modules/excel.py
 | / | Validación individual o múltiple por texto |
 | /lotes | Carga masiva desde Excel/CSV |
 | /padrones | Administración de padrones provinciales |
+| /fuentes | Monitor de fuentes fiscales y alertas |
 | /legajos | Historial de legajos fiscales |
 | /legajos/{id} | Detalle y evidencia de un legajo |
 | /api/info | Diagnóstico no sensible |
@@ -195,6 +210,7 @@ Estructura:
     app/modules/validador.py
     app/modules/padrones.py
     app/modules/padron_manifest.py
+    app/modules/fuentes_catalogo.py
     app/modules/fuentes_online.py
     app/modules/riesgo_fiscal.py
     app/modules/matriz_tributaria.py
@@ -202,6 +218,8 @@ Estructura:
     app/modules/legajos.py
     app/modules/excel.py
     scripts/importar_padron.py
+    scripts/revisar_fuentes.py
+    config/fuentes_catalogo.json
     padrones/
     salidas/
     docs/
@@ -251,5 +269,6 @@ Para producción enterprise se debe agregar:
 - docs/ARQUITECTURA_ENTERPRISE.md
 - docs/OPERACION_TRIBUTARIA.md
 - docs/ROADMAP_ENTERPRISE.md
+- docs/AUTOMATIZACION_PADRONES.md
 - docs/ANTECEDENTES_FUENTES.md
 - padrones/README.md

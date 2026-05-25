@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Monitor de fuentes fiscales</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="gradient-menter text-white">
+  <div class="max-w-7xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Monitor de fuentes fiscales</div>
+    <div class="text-sm text-blue-100">Sprint 1 · catálogo, calendario operativo y alertas de actualización</div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <div class="flex justify-between items-center gap-4 flex-wrap mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Cobertura de padrones y fuentes</h1>
+      <p class="text-slate-500 text-sm">Controla qué fuente está vigente, cuál requiere carga, credenciales, CAPTCHA o automatización asistida.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <a href="/padrones" class="text-blue-600 hover:underline">Administrar padrones</a>
+      <a href="/" class="text-blue-600 hover:underline">← Validador</a>
+    </div>
+  </div>
+
+  <section id="kpis" class="grid md:grid-cols-5 gap-3 mb-6"></section>
+
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex justify-between items-center gap-4 flex-wrap mb-4">
+      <div>
+        <h2 class="text-xl font-bold">Alertas operativas</h2>
+        <p class="text-sm text-slate-500">Prioriza primero fuentes P0/P1 vencidas o sin carga.</p>
+      </div>
+      <button onclick="cargar()" class="text-blue-600 hover:underline text-sm">Actualizar</button>
+    </div>
+    <div id="alertas" class="space-y-2"></div>
+  </section>
+
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600">
+          <tr>
+            <th class="text-left p-2">Fuente</th>
+            <th class="text-left p-2">Régimen</th>
+            <th class="text-left p-2">Frecuencia</th>
+            <th class="text-left p-2">Estado</th>
+            <th class="text-left p-2">Riesgo</th>
+            <th class="text-left p-2">Período / vigencia</th>
+            <th class="text-left p-2">Próxima revisión</th>
+            <th class="text-left p-2">Acción</th>
+            <th class="text-left p-2">Fuente</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+function badge(value, kind='estado') {
+  const cls = {
+    operativa: 'bg-emerald-100 text-emerald-700',
+    vigente: 'bg-emerald-100 text-emerald-700',
+    automatizada: 'bg-emerald-100 text-emerald-700',
+    por_vencer: 'bg-amber-100 text-amber-700',
+    sin_vigencia: 'bg-amber-100 text-amber-700',
+    pendiente_carga: 'bg-rose-100 text-rose-700',
+    vencido: 'bg-rose-100 text-rose-700',
+    requiere_captcha: 'bg-violet-100 text-violet-700',
+    requiere_credenciales: 'bg-violet-100 text-violet-700',
+    pendiente_navegador: 'bg-blue-100 text-blue-700',
+    critico: 'bg-rose-100 text-rose-700',
+    alto: 'bg-orange-100 text-orange-700',
+    medio: 'bg-amber-100 text-amber-700',
+    bajo: 'bg-emerald-100 text-emerald-700',
+  }[value] || 'bg-slate-100 text-slate-700';
+  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${value}</span>`;
+}
+
+function kpi(label, value, cls) {
+  return `<div class="bg-white rounded-xl shadow-sm p-4 border-l-4 ${cls}">
+    <div class="text-xs uppercase tracking-wide text-slate-500">${label}</div>
+    <div class="text-2xl font-bold">${value}</div>
+  </div>`;
+}
+
+async function cargar() {
+  const r = await fetch('/api/fuentes');
+  const data = await r.json();
+  const resumen = data.resumen || {};
+  document.getElementById('kpis').innerHTML = [
+    kpi('Fuentes', resumen.total_fuentes ?? 0, 'border-blue-500'),
+    kpi('Alertas', resumen.alertas ?? 0, 'border-amber-500'),
+    kpi('Críticas', resumen.criticas ?? 0, 'border-rose-500'),
+    kpi('Altas', resumen.altas ?? 0, 'border-orange-500'),
+    kpi('Medias', resumen.medias ?? 0, 'border-yellow-500'),
+  ].join('');
+
+  const alertas = data.alertas || [];
+  document.getElementById('alertas').innerHTML = alertas.length
+    ? alertas.map(a => `<div class="border border-slate-200 rounded-lg p-3 flex justify-between gap-3 flex-wrap">
+        <div><span class="font-semibold">${a.nombre}</span><div class="text-sm text-slate-500">${a.accion}</div></div>
+        <div class="flex gap-2">${badge(a.estado)} ${badge(a.riesgo)}</div>
+      </div>`).join('')
+    : '<div class="text-sm text-slate-500">Sin alertas.</div>';
+
+  document.getElementById('tbody').innerHTML = (data.fuentes || []).map(f => {
+    const regimenes = (f.regimenes || []).join(', ');
+    const vig = [f.periodo, f.vigencia_hasta].filter(Boolean).join(' · ') || '—';
+    const url = f.url ? `<a href="${f.url}" target="_blank" class="text-blue-600 hover:underline">abrir</a>` : '—';
+    return `<tr class="border-b border-slate-100 align-top">
+      <td class="p-2"><div class="font-semibold">${f.nombre}</div><div class="text-xs text-slate-500">${f.jurisdiccion} · ${f.organismo} · ${f.prioridad}</div></td>
+      <td class="p-2">${regimenes}</td>
+      <td class="p-2">${f.frecuencia}</td>
+      <td class="p-2">${badge(f.estado)}</td>
+      <td class="p-2">${badge(f.riesgo_actualizacion)}</td>
+      <td class="p-2">${vig}<div class="text-xs text-slate-400">${f.registros ?? '—'} registros</div></td>
+      <td class="p-2">${f.proxima_revision}</td>
+      <td class="p-2 max-w-xs">${f.proxima_accion}</td>
+      <td class="p-2">${url}</td>
+    </tr>`;
+  }).join('');
+}
+
+cargar();
+</script>
+</body>
+</html>

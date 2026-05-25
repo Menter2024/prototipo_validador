@@ -37,7 +37,7 @@ Prioridad alta para producción real.
 - Aprobación/rechazo.
 - Requerimiento de documentación.
 - Revalidación programada.
-- Alertas de padrones vencidos.
+- Alertas de padrones vencidos. **Base implementada:** `GET /api/fuentes`, `/fuentes` y `scripts/revisar_fuentes.py`.
 - Alertas por proveedores bloqueados.
 
 ## Fase 4 — Fuentes nacionales ARCA ampliadas

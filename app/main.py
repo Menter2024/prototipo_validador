@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -284,6 +284,11 @@ def padrones_estado():
     return {"padrones": _padrones_estado(), "historial": manifest.get("historial", [])[:20]}
 
 
+@app.get("/api/fuentes")
+def fuentes_estado():
+    return fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
+
+
 @app.post("/api/padrones/importar")
 async def importar_padron_endpoint(
     provincia: str = Form(...),
@@ -324,6 +329,11 @@ def index():
 @app.get("/padrones", response_class=HTMLResponse)
 def padrones_admin():
     return (STATIC_DIR / "padrones.html").read_text(encoding="utf-8")
+
+
+@app.get("/fuentes", response_class=HTMLResponse)
+def fuentes_page():
+    return (STATIC_DIR / "fuentes.html").read_text(encoding="utf-8")
 
 
 @app.get("/legajos", response_class=HTMLResponse)

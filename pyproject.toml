@@ -11,3 +11,8 @@ dependencies = [
   "python-multipart>=0.0.12",
   "pydantic>=2.9",
 ]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
