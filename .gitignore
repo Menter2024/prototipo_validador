@@ -5,6 +5,7 @@
 
 # Resultados generados localmente
 salidas/*.xlsx
+salidas/evidencias/
 
 # Python
 __pycache__/

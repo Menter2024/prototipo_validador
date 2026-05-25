@@ -12,6 +12,17 @@ Mantener actualizado el universo de fuentes que una empresa mediana/grande neces
 - Monitor web `/fuentes`.
 - Script scheduler-friendly `scripts/revisar_fuentes.py`.
 
+## Sprint 2 implementado
+
+- Estrategia de descarga por fuente dentro del catálogo.
+- Descarga controlada y evidencia en `app/modules/descarga_fuentes.py`.
+- Manifest de descargas en `salidas/evidencias/fuentes/fuentes_descargas_manifest.json`.
+- API `POST /api/fuentes/descargar`.
+- Botones de relevamiento/descarga en `/fuentes`.
+- CLI `scripts/descargar_fuentes.py`.
+
+La implementación evita simular automatización donde el organismo exige credenciales. ARBA queda marcada como automatizable con CIT/Web Service del agente; AGIP queda como fuente pública con detección del enlace vigente; ATER queda como monitoreo de publicación/archivo oficial.
+
 ## Clasificación operativa
 
 | Clase | Ejemplo | Automatización objetivo |
@@ -32,6 +43,7 @@ Mantener actualizado el universo de fuentes que una empresa mediana/grande neces
 ## Próximos desarrollos
 
 1. Automatizar descarga ARBA/AGIP/ATER donde exista archivo público estable.
+   - Base Sprint 2: AGIP releva/descarga desde página pública; ARBA/ATER quedan parametrizadas según credencial/publicación.
 2. Incorporar historial de ejecuciones de jobs y evidencias descargadas.
 3. Crear cola `/fuentes-pendientes` para consultas asistidas de Misiones/Río Negro/Corrientes.
 4. Persistir resultados en base de datos multiempresa.

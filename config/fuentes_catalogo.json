@@ -32,7 +32,13 @@
       "url": "https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "requiere_credenciales",
+        "landing_url": "https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto",
+        "credencial": "CIT o Web Service ARBA",
+        "nota": "ARBA publica el padrón mensual y servicio web, pero la obtención operativa requiere habilitación/credencial del agente."
+      }
     },
     {
       "id": "agip_caba_iibb",
@@ -46,10 +52,17 @@
       "prioridad": "P1",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.agip.gob.ar/",
+      "url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "pagina_publica_links",
+        "landing_url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
+        "link_text_regex": "Padrón de Regímenes Generales - Vigencia",
+        "extensiones": [".zip", ".txt", ".rar"],
+        "nota": "AGIP publica el enlace vigente en la página de Agentes de Recaudación."
+      }
     },
     {
       "id": "ater_entrerios_iibb",
@@ -63,10 +76,15 @@
       "prioridad": "P1",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.ater.gob.ar/ater2/InfoImpuestos/InfoAgentesRetyPer.asp",
+      "url": "https://www.ater.gov.ar/ater2/NominasAgentes.asp",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest"
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "monitoreo_publicacion",
+        "landing_url": "https://www.ater.gov.ar/ater2/NominasAgentes.asp",
+        "nota": "La normativa ATER indica nóminas semestrales publicadas en abril y octubre; requiere monitoreo y/o archivo oficial exportado."
+      }
     },
     {
       "id": "cordoba_iibb",

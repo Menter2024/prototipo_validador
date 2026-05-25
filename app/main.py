@@ -15,12 +15,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -43,6 +44,7 @@ SALIDAS_DIR = Path(os.environ.get("SALIDAS_DIR", "./salidas")).resolve()
 SALIDAS_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR = Path(os.environ.get("UPLOADS_DIR", "./uploads")).resolve()
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+EVIDENCIAS_FUENTES_DIR = SALIDAS_DIR / "evidencias" / "fuentes"
 
 app = FastAPI(title="Menter · Validación de Alta de Proveedores")
 
@@ -286,7 +288,22 @@ def padrones_estado():
 
 @app.get("/api/fuentes")
 def fuentes_estado():
-    return fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
+    estado = fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
+    estado["descargas"] = descarga_fuentes.cargar_manifest(EVIDENCIAS_FUENTES_DIR).get("descargas", [])[:20]
+    return estado
+
+
+@app.post("/api/fuentes/descargar")
+def descargar_fuente_endpoint(
+    fuente_id: str = Form(...),
+    dry_run: bool = Form(True),
+):
+    try:
+        return descarga_fuentes.ejecutar_descarga(fuente_id, EVIDENCIAS_FUENTES_DIR, dry_run=dry_run)
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Error consultando fuente: {e}") from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/api/padrones/importar")

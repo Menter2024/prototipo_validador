@@ -101,11 +101,13 @@ Módulo: app/modules/fuentes_online.py
 - Riesgo operativo por prioridad P0/P1/P2/P3.
 - API y pantalla para alertas de padrones críticos.
 - Script apto para scheduler diario.
+- Descarga controlada de fuentes públicas con evidencia, hash y manifest.
 
 Config: config/fuentes_catalogo.json
 Web: /fuentes
 API: /api/fuentes
 CLI: scripts/revisar_fuentes.py
+Descargas: scripts/descargar_fuentes.py
 
 ### Motor de decisión fiscal
 
@@ -212,6 +214,7 @@ Estructura:
     app/modules/padrones.py
     app/modules/padron_manifest.py
     app/modules/fuentes_catalogo.py
+    app/modules/descarga_fuentes.py
     app/modules/fuentes_online.py
     app/modules/riesgo_fiscal.py
     app/modules/matriz_tributaria.py
@@ -220,6 +223,7 @@ Estructura:
     app/modules/excel.py
     scripts/importar_padron.py
     scripts/revisar_fuentes.py
+    scripts/descargar_fuentes.py
     config/fuentes_catalogo.json
     padrones/
     salidas/

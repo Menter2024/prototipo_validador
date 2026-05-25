@@ -41,6 +41,7 @@
       </div>
       <button onclick="cargar()" class="text-blue-600 hover:underline text-sm">Actualizar</button>
     </div>
+    <div id="msg-descarga" class="hidden mb-4 rounded-lg px-4 py-3 text-sm"></div>
     <div id="alertas" class="space-y-2"></div>
   </section>
 
@@ -57,6 +58,7 @@
             <th class="text-left p-2">Período / vigencia</th>
             <th class="text-left p-2">Próxima revisión</th>
             <th class="text-left p-2">Acción</th>
+            <th class="text-left p-2">Descarga</th>
             <th class="text-left p-2">Fuente</th>
           </tr>
         </thead>
@@ -94,6 +96,35 @@ function kpi(label, value, cls) {
   </div>`;
 }
 
+function mostrarDescarga(ok, texto) {
+  const el = document.getElementById('msg-descarga');
+  el.className = ok
+    ? 'mb-4 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800'
+    : 'mb-4 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800';
+  el.textContent = texto;
+}
+
+async function revisarDescarga(fuenteId, download=false) {
+  mostrarDescarga(true, download ? 'Descargando fuente...' : 'Relevando candidato de descarga...');
+  const form = new FormData();
+  form.append('fuente_id', fuenteId);
+  form.append('dry_run', download ? 'false' : 'true');
+  const r = await fetch('/api/fuentes/descargar', { method: 'POST', body: form });
+  const data = await r.json();
+  if (!r.ok) {
+    mostrarDescarga(false, data.detail || 'No se pudo revisar la fuente.');
+    return;
+  }
+  if (data.status === 'candidato_detectado') {
+    mostrarDescarga(true, `Candidato detectado: ${data.candidato?.text || data.candidato?.url}`);
+  } else if (data.status === 'descargado') {
+    mostrarDescarga(true, `Descargado: ${data.bytes} bytes · SHA256 ${data.sha256?.slice(0, 12)}...`);
+  } else {
+    mostrarDescarga(false, data.detalle || data.status);
+  }
+  await cargar();
+}
+
 async function cargar() {
   const r = await fetch('/api/fuentes');
   const data = await r.json();
@@ -118,6 +149,10 @@ async function cargar() {
     const regimenes = (f.regimenes || []).join(', ');
     const vig = [f.periodo, f.vigencia_hasta].filter(Boolean).join(' · ') || '—';
     const url = f.url ? `<a href="${f.url}" target="_blank" class="text-blue-600 hover:underline">abrir</a>` : '—';
+    const descarga = f.descarga?.modo === 'pagina_publica_links'
+      ? `<button onclick="revisarDescarga('${f.id}', false)" class="text-blue-600 hover:underline">relevar</button>
+         <button onclick="revisarDescarga('${f.id}', true)" class="ml-2 text-emerald-600 hover:underline">descargar</button>`
+      : `<button onclick="revisarDescarga('${f.id}', false)" class="text-slate-500 hover:underline">ver plan</button>`;
     return `<tr class="border-b border-slate-100 align-top">
       <td class="p-2"><div class="font-semibold">${f.nombre}</div><div class="text-xs text-slate-500">${f.jurisdiccion} · ${f.organismo} · ${f.prioridad}</div></td>
       <td class="p-2">${regimenes}</td>
@@ -127,6 +162,7 @@ async function cargar() {
       <td class="p-2">${vig}<div class="text-xs text-slate-400">${f.registros ?? '—'} registros</div></td>
       <td class="p-2">${f.proxima_revision}</td>
       <td class="p-2 max-w-xs">${f.proxima_accion}</td>
+      <td class="p-2 whitespace-nowrap">${descarga}</td>
       <td class="p-2">${url}</td>
     </tr>`;
   }).join('');

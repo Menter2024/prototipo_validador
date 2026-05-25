@@ -54,6 +54,7 @@ A evaluar e implementar priorizando Web Services oficiales:
 
 ## Fase 5 — Automatización provincial/municipal
 
+- Descarga controlada de fuentes públicas. **Base implementada:** `POST /api/fuentes/descargar` y `scripts/descargar_fuentes.py`.
 - Misiones con navegador/adaptador.
 - Río Negro asistido por CAPTCHA.
 - Corrientes con credenciales o exportación.
