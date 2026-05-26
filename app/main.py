@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes, regimenes_catalogo
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -299,6 +299,27 @@ def fuentes_estado():
     return estado
 
 
+@app.get("/api/regimenes")
+def regimenes_estado(
+    nivel: str | None = None,
+    tipo: str | None = None,
+    prioridad: str | None = None,
+    automatizacion: str | None = None,
+    estado_integracion: str | None = None,
+    riesgo_operativo: str | None = None,
+):
+    fuentes_estado_actual = fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
+    return regimenes_catalogo.evaluar_regimenes(
+        fuentes_estado_actual,
+        nivel=nivel,
+        tipo=tipo,
+        prioridad=prioridad,
+        automatizacion=automatizacion,
+        estado_integracion=estado_integracion,
+        riesgo_operativo=riesgo_operativo,
+    )
+
+
 @app.get("/api/fuentes-pendientes")
 def listar_fuentes_pendientes(estado: str | None = None):
     return fuentes_pendientes.listar(SALIDAS_DIR, estado)
@@ -428,6 +449,11 @@ def padrones_admin():
 @app.get("/fuentes", response_class=HTMLResponse)
 def fuentes_page():
     return (STATIC_DIR / "fuentes.html").read_text(encoding="utf-8")
+
+
+@app.get("/regimenes", response_class=HTMLResponse)
+def regimenes_page():
+    return (STATIC_DIR / "regimenes.html").read_text(encoding="utf-8")
 
 
 @app.get("/fuentes-pendientes", response_class=HTMLResponse)

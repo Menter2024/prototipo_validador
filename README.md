@@ -117,6 +117,18 @@ API: /api/fuentes
 CLI: scripts/revisar_fuentes.py
 Descargas: scripts/descargar_fuentes.py
 Cola asistida: /fuentes-pendientes
+Regímenes: /regimenes
+
+### Catálogo de regímenes fiscales
+
+- Catálogo maestro nacional, COMARB/provincial, provincial IIBB y municipal.
+- Clasificación por nivel, tipo, prioridad, automatización y estado de integración.
+- API y pantalla para convertir la auditoría en backlog operativo vivo.
+
+Config: config/regimenes_catalogo.json
+Doc: docs/AUDITORIA_REGIMENES_ARGENTINA.md
+Web: /regimenes
+API: /api/regimenes
 
 ### Motor de decisión fiscal
 

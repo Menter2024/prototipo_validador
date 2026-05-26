@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Regímenes fiscales</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="gradient-menter text-white">
+  <div class="max-w-7xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Mapa de regímenes fiscales</div>
+    <div class="text-sm text-blue-100">Backlog operativo de retenciones, percepciones, recaudaciones e información</div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <div class="flex justify-between items-center gap-4 flex-wrap mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Catálogo maestro</h1>
+      <p class="text-slate-500 text-sm">Clasifica qué se puede automatizar, qué requiere credenciales y qué queda en cola asistida.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <a href="/fuentes" class="text-blue-600 hover:underline">Fuentes</a>
+      <a href="/padrones" class="text-blue-600 hover:underline">Padrones</a>
+      <a href="/" class="text-blue-600 hover:underline">← Validador</a>
+    </div>
+  </div>
+
+  <section id="kpis" class="grid md:grid-cols-5 gap-3 mb-6"></section>
+
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="grid md:grid-cols-6 gap-3 items-end">
+      <label class="block"><span class="text-xs font-semibold">Nivel</span><select id="nivel" class="mt-1 w-full border rounded px-2 py-2"><option value="">Todos</option></select></label>
+      <label class="block"><span class="text-xs font-semibold">Tipo</span><select id="tipo" class="mt-1 w-full border rounded px-2 py-2"><option value="">Todos</option></select></label>
+      <label class="block"><span class="text-xs font-semibold">Prioridad</span><select id="prioridad" class="mt-1 w-full border rounded px-2 py-2"><option value="">Todas</option></select></label>
+      <label class="block"><span class="text-xs font-semibold">Automatización</span><select id="automatizacion" class="mt-1 w-full border rounded px-2 py-2"><option value="">Todas</option></select></label>
+      <label class="block"><span class="text-xs font-semibold">Estado integración</span><select id="estado_integracion" class="mt-1 w-full border rounded px-2 py-2"><option value="">Todos</option></select></label>
+      <button onclick="cargar()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">Aplicar</button>
+    </div>
+  </section>
+
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600">
+          <tr>
+            <th class="text-left p-2">Régimen</th>
+            <th class="text-left p-2">Nivel</th>
+            <th class="text-left p-2">Tipo</th>
+            <th class="text-left p-2">Prioridad</th>
+            <th class="text-left p-2">Automatización</th>
+            <th class="text-left p-2">Backlog</th>
+            <th class="text-left p-2">Fuente/padrón</th>
+            <th class="text-left p-2">Evidencia</th>
+            <th class="text-left p-2">Links</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+let filtrosCargados = false;
+
+function badge(value) {
+  const cls = {
+    P0: 'bg-rose-100 text-rose-700', P1: 'bg-orange-100 text-orange-700', P2: 'bg-amber-100 text-amber-700', P3: 'bg-slate-100 text-slate-700',
+    operar_y_monitorear: 'bg-emerald-100 text-emerald-700', completar_fuente_o_padron: 'bg-orange-100 text-orange-700', integracion_prioritaria: 'bg-rose-100 text-rose-700',
+    cola_credenciales_exportacion: 'bg-violet-100 text-violet-700', relevar_huella_cliente: 'bg-blue-100 text-blue-700', monitoreo_normativo: 'bg-amber-100 text-amber-700', backlog_planificado: 'bg-slate-100 text-slate-700'
+  }[value] || 'bg-slate-100 text-slate-700';
+  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${value || '—'}</span>`;
+}
+
+function kpi(label, value, cls) {
+  return `<div class="bg-white rounded-xl shadow-sm p-4 border-l-4 ${cls}"><div class="text-xs uppercase tracking-wide text-slate-500">${label}</div><div class="text-2xl font-bold">${value}</div></div>`;
+}
+
+function fillSelect(id, values) {
+  const select = document.getElementById(id);
+  const current = select.value;
+  select.innerHTML = '<option value="">Todos</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
+  select.value = current;
+}
+
+function params() {
+  const p = new URLSearchParams();
+  ['nivel', 'tipo', 'prioridad', 'automatizacion', 'estado_integracion'].forEach(id => {
+    const v = document.getElementById(id).value;
+    if (v) p.set(id, v);
+  });
+  return p.toString();
+}
+
+async function cargar() {
+  const qs = params();
+  const r = await fetch('/api/regimenes' + (qs ? `?${qs}` : ''));
+  const data = await r.json();
+  const res = data.resumen || {};
+  document.getElementById('kpis').innerHTML = [
+    kpi('Regímenes', res.total_regimenes || 0, 'border-blue-500'),
+    kpi('P0/P1 pendientes', res.criticos_o_prioritarios_pendientes || 0, 'border-rose-500'),
+    kpi('Nacionales', res.por_nivel?.nacional || 0, 'border-slate-500'),
+    kpi('Provinciales', (res.por_nivel?.provincial || 0) + (res.por_nivel?.provincial_unificado || 0), 'border-amber-500'),
+    kpi('Municipales', res.por_nivel?.municipal || 0, 'border-violet-500'),
+  ].join('');
+
+  if (!filtrosCargados) {
+    Object.entries(data.filtros_disponibles || {}).forEach(([k, vals]) => {
+      if (document.getElementById(k)) fillSelect(k, vals);
+    });
+    filtrosCargados = true;
+  }
+
+  document.getElementById('tbody').innerHTML = (data.regimenes || []).map(r => {
+    const integ = r.integracion_fuente || {};
+    const fuente = integ.padron_key ? `${integ.padron_key} · ${integ.fuente_estado || '—'} · ${integ.vigencia_estado || '—'}` : (r.padron_fuente || '—');
+    const links = (r.fuentes || []).map((u, i) => `<a class="text-blue-600 hover:underline" href="${u}" target="_blank">${i + 1}</a>`).join(' ');
+    return `<tr class="border-b border-slate-100 align-top">
+      <td class="p-2"><div class="font-semibold">${r.nombre}</div><div class="text-xs text-slate-500 font-mono">${r.id}</div><div class="text-xs text-slate-500">${r.jurisdiccion} · ${r.organismo}</div></td>
+      <td class="p-2">${r.nivel}</td>
+      <td class="p-2">${r.tipo}</td>
+      <td class="p-2">${badge(r.prioridad)}</td>
+      <td class="p-2"><span class="text-xs">${r.automatizacion}</span></td>
+      <td class="p-2">${badge(r.backlog_estado)}</td>
+      <td class="p-2 text-xs">${fuente}</td>
+      <td class="p-2 text-xs">${r.evidencia_requerida}</td>
+      <td class="p-2">${links}</td>
+    </tr>`;
+  }).join('');
+}
+
+cargar();
+</script>
+</body>
+</html>
