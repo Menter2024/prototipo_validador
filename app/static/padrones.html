@@ -202,21 +202,52 @@ function renderPreview(data) {
     </div>`;
 }
 
+async function leerRespuesta(r) {
+  const contentType = r.headers.get('content-type') || '';
+  const texto = await r.text();
+  if (contentType.includes('application/json') && texto) {
+    try { return JSON.parse(texto); } catch (_) { return {detail: texto}; }
+  }
+  return {detail: texto || `${r.status} ${r.statusText || 'Error sin detalle'}`};
+}
+
+function mensajeHttp(status, detail) {
+  if (status === 503) {
+    return 'El servidor de demo no pudo procesar el padrón en este momento. Si usaste un archivo grande, probá primero con un fixture chico o reintentá luego del cold start/redeploy de Render.';
+  }
+  if (status === 413) {
+    return 'El archivo supera el límite del hosting de demo. Para padrones reales grandes conviene carga asistida o plan con más recursos.';
+  }
+  return detail || 'Error procesando padrón.';
+}
+
 async function enviarPadron(url, texto, opts = {}) {
   const formEl = document.getElementById('form-importar');
   const form = new FormData(formEl);
   if (opts.confirmarAdvertencias) {
     form.set('confirmar_advertencias', 'true');
   }
-  if (!document.getElementById('archivo').files.length) {
+  const archivoInput = document.getElementById('archivo');
+  if (!archivoInput.files.length) {
     mostrarMsg(false, 'Seleccioná un archivo.');
     return null;
   }
+  const archivo = archivoInput.files[0];
+  if (archivo.size > 8 * 1024 * 1024 && !confirm('El archivo pesa más de 8 MB. En Render Free puede demorar o fallar con 503. ¿Querés intentar igualmente?')) {
+    mostrarMsg(false, 'Carga cancelada. Probá primero con un archivo chico de demo.');
+    return null;
+  }
   mostrarMsg(true, texto);
-  const r = await fetch(url, { method: 'POST', body: form });
-  const data = await r.json();
+  let r;
+  try {
+    r = await fetch(url, { method: 'POST', body: form });
+  } catch (error) {
+    mostrarMsg(false, `No se pudo conectar con el servidor: ${error.message}`);
+    return null;
+  }
+  const data = await leerRespuesta(r);
   if (!r.ok) {
-    mostrarMsg(false, data.detail || 'Error procesando padrón.');
+    mostrarMsg(false, mensajeHttp(r.status, data.detail));
     return null;
   }
   return data;
