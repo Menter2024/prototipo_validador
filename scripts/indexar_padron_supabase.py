@@ -107,6 +107,7 @@ def main() -> int:
         supabase_mvp.insert_rows("padron_registros_demo", batch)
         total += len(batch)
 
+    supabase_mvp.update_rows("padron_versiones", {"id": f"eq.{version_id}"}, {"registros": total})
     print(f"OK padron_version_id={version_id} registros={total}")
     return 0
 

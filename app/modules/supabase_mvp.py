@@ -156,6 +156,18 @@ def insert_rows(table: str, payloads: list[dict[str, Any]], *, timeout: int = 12
     return {"enabled": True, "inserted": True, "table": table, "count": len(payloads)}
 
 
+def update_rows(table: str, filters: dict[str, str], payload: dict[str, Any], *, timeout: int = 30) -> dict[str, Any]:
+    cfg = get_config()
+    if not cfg:
+        return {"enabled": False, "updated": False, "reason": "Supabase no configurado"}
+    url = f"{cfg.url}/rest/v1/{table}"
+    headers = _headers(cfg, {"Content-Type": "application/json", "Prefer": "return=minimal"})
+    with httpx.Client(timeout=timeout) as client:
+        res = client.patch(url, headers=headers, params=filters, json=payload)
+        res.raise_for_status()
+    return {"enabled": True, "updated": True, "table": table}
+
+
 def buscar_padron_registro(cuit_limpio: str, provincia: str) -> dict[str, Any] | None:
     tid = tenant_id()
     if not tid:
