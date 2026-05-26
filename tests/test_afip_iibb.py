@@ -50,3 +50,28 @@ def test_sin_iibb_arca_no_descarta_inscripcion_local():
 
     assert data["inscripciones_iibb"]["jurisdicciones"] == []
     assert "no descarta inscripción local" in data["inscripciones_iibb"]["detalle"]
+
+
+def test_iibb_no_confunde_fecha_con_chaco_y_detecta_santa_fe():
+    resp = {
+        "personaReturn": {
+            "datosGenerales": {
+                "razonSocial": "MENTER S. A. S.",
+                "tipoPersona": "JURIDICA",
+                "estadoClave": "ACTIVO",
+                "fechaContratoSocial": "2024-06-28",
+                "domicilioFiscal": {"direccion": "CALLE 1", "localidad": "PARANA", "descripcionProvincia": "ENTRE RIOS"},
+            },
+            "datosRegimenGeneral": {
+                "impuesto": [{"descripcionImpuesto": "IIBB CONVENIO MULTILATERAL", "estadoImpuesto": "AC"}],
+                "jurisdicciones": [
+                    {"codigo": "908", "descripcionProvincia": "ENTRE RIOS"},
+                    {"codigo": "921", "descripcionProvincia": "SANTA FE"},
+                ],
+            },
+        }
+    }
+
+    data = afip_arca._parse_persona(resp)
+
+    assert data["inscripciones_iibb"]["jurisdicciones"] == ["Entre Ríos", "Santa Fe"]

@@ -58,3 +58,28 @@ def test_padrones_uses_supabase_when_local_file_missing(monkeypatch, tmp_path):
     assert res["EntreRios"]["status"] == "inscripto"
     assert res["EntreRios"]["fuente"] == "supabase"
     assert res["ARBA"]["status"] == "no_disponible"
+
+
+def test_padrones_prefers_supabase_over_local_file(monkeypatch, tmp_path):
+    from app.modules import padrones
+
+    (tmp_path / "PadronEntreRios.csv").write_text(
+        "cuit,alicuota_retencion,alicuota_percepcion\n20999999999,1,1\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(padrones.supabase_mvp, "buscar_padron_registro", lambda cuit, provincia: {
+        "encontrado": True,
+        "alicuota_retencion": "3,00",
+        "alicuota_percepcion": "3,00",
+        "vigencia_desde": "2026-05-01",
+        "vigencia_hasta": "2026-05-31",
+        "regimen": "",
+        "fuente": "supabase",
+    } if provincia == "EntreRios" else None)
+    monkeypatch.setattr(padrones.supabase_mvp, "provincia_tiene_padron_activo", lambda provincia: provincia == "EntreRios")
+
+    res = padrones.consultar_todos("30718869966", tmp_path)
+
+    assert res["EntreRios"]["status"] == "inscripto"
+    assert res["EntreRios"]["fuente"] == "supabase"
+    assert "3,00" in res["EntreRios"]["detalle"]

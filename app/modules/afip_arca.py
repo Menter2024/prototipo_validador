@@ -22,6 +22,7 @@ Si AFIPSDK_TOKEN está vacío, cae a modo demo.
 import os
 import time
 import base64
+import re
 from pathlib import Path
 import httpx
 from typing import Optional, Tuple
@@ -276,8 +277,7 @@ def _sin_acentos(valor: str) -> str:
 
 def _iter_textos(obj):
     if isinstance(obj, dict):
-        for k, v in obj.items():
-            yield str(k)
+        for v in obj.values():
             yield from _iter_textos(v)
     elif isinstance(obj, list):
         for item in obj:
@@ -289,6 +289,10 @@ def _iter_textos(obj):
 def _canon_provincia(valor: str) -> str:
     limpio = _sin_acentos(valor)
     return PROVINCIAS_CANON.get(limpio, valor.title())
+
+
+def _contiene_provincia(texto: str, provincia: str) -> bool:
+    return re.search(rf"(?<![A-Z]){re.escape(provincia)}(?![A-Z])", texto) is not None
 
 
 def _extraer_iibb(pr: dict, impuestos_total: list[dict]) -> dict:
@@ -321,7 +325,7 @@ def _extraer_iibb(pr: dict, impuestos_total: list[dict]) -> dict:
     if hay_iibb_contexto:
         joined = " | ".join(textos)
         for provincia in PROVINCIAS_AR:
-            if provincia in joined:
+            if _contiene_provincia(joined, provincia):
                 jurisdicciones.add(_canon_provincia(provincia))
 
     return {

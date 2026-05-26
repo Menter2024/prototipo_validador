@@ -8,6 +8,10 @@ Endpoint: https://apis.datos.gob.ar/georef/api/provincias
 import httpx
 
 
+def _sin_acentos(valor: str) -> str:
+    return (valor or "").translate(str.maketrans("áéíóúÁÉÍÓÚñÑ", "aeiouAEIOUnN")).upper()
+
+
 def listar_provincias() -> list:
     """Devuelve la lista oficial de provincias argentinas."""
     try:
@@ -25,9 +29,9 @@ def normalizar_provincia(texto: str) -> dict:
     if not texto:
         return {"provincia": None, "fuente": "georef.datos.gob.ar"}
     provincias = listar_provincias()
-    texto_up = texto.upper()
+    texto_up = _sin_acentos(texto)
     for p in provincias:
-        if p.upper() in texto_up:
+        if _sin_acentos(p) in texto_up:
             return {"provincia": p, "fuente": "georef.datos.gob.ar"}
     # CABA aparece a veces como "CIUDAD AUTONOMA"
     if "CABA" in texto_up or "CIUDAD AUTONOMA" in texto_up or "CIUDAD AUTÓNOMA" in texto_up:

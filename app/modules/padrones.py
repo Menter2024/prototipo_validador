@@ -195,36 +195,35 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
             continue
 
         archivo = padrones_dir / nombre_archivo
-        if archivo.exists():
-            res = buscar_en_padron(cuit_limpio, archivo)
-        else:
+        res = None
+        disponible_supabase = False
+        try:
+            res = supabase_mvp.buscar_padron_registro(cuit_limpio, provincia)
+            disponible_supabase = bool(res) or supabase_mvp.provincia_tiene_padron_activo(provincia)
+        except Exception:
             res = None
-            try:
-                res = supabase_mvp.buscar_padron_registro(cuit_limpio, provincia)
-            except Exception:
-                res = None
-            if not res:
-                disponible_supabase = False
-                try:
-                    disponible_supabase = supabase_mvp.provincia_tiene_padron_activo(provincia)
-                except Exception:
-                    disponible_supabase = False
-                if disponible_supabase:
-                    resultados[provincia] = {
-                        "status": "no_inscripto",
-                        "detalle": "El CUIT no figura en este padrón Supabase activo (no aplica retención/percepción).",
-                        "nombre": cfg["nombre"],
-                        "prioridad": cfg["prioridad"],
-                        "fuente": "supabase",
-                    }
-                else:
-                    resultados[provincia] = {
-                        "status": "no_disponible",
-                        "detalle": f"No se encuentra el archivo {nombre_archivo} en la carpeta ni padrón activo en Supabase.",
-                        "nombre": cfg["nombre"],
-                        "prioridad": cfg["prioridad"],
-                    }
-                continue
+
+        if not res and archivo.exists():
+            res = buscar_en_padron(cuit_limpio, archivo)
+
+        if not res and not archivo.exists():
+            resultados[provincia] = {
+                "status": "no_disponible",
+                "detalle": f"No se encuentra el archivo {nombre_archivo} en la carpeta ni padrón activo en Supabase.",
+                "nombre": cfg["nombre"],
+                "prioridad": cfg["prioridad"],
+            }
+            continue
+
+        if not res and disponible_supabase:
+            resultados[provincia] = {
+                "status": "no_inscripto",
+                "detalle": "El CUIT no figura en este padrón Supabase activo (no aplica retención/percepción).",
+                "nombre": cfg["nombre"],
+                "prioridad": cfg["prioridad"],
+                "fuente": "supabase",
+            }
+            continue
         if res and res.get("encontrado"):
             regimen = f" · Régimen: {res['regimen']}" if res.get("regimen") else ""
             resultados[provincia] = {
