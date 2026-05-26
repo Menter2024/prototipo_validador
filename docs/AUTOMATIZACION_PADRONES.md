@@ -68,5 +68,9 @@ Pero ARCA **no reemplaza** a los padrones o consultas provinciales: un contribuy
    - Base Sprint 2: AGIP releva/descarga desde página pública; ARBA/ATER quedan parametrizadas según credencial/publicación.
 2. Incorporar historial de ejecuciones de jobs y evidencias descargadas.
 3. Implementar parsers específicos para archivos descargados en formato no estándar (`.rar`, `.xls`, layouts fijos).
+   - Base implementada: ZIP/RAR, layout AGIP/CABA y fallback delimitado para Córdoba/Jujuy/Tucumán.
+   - Endurecimiento implementado: previsualización, controles de calidad, confirmación explícita para cargas observadas y manifest con hash/evidencia antes de operar mensualmente.
+   - Fixtures controlados versionados en `tests/fixtures/padrones_no_estandar/` para AGIP, Córdoba, Jujuy, Tucumán y ZIP malicioso.
+   - Pendiente: soporte `.xls` binario real o conversión controlada vía LibreOffice/servicio worker.
 4. Persistir resultados en base de datos multiempresa.
 5. Agregar alertas por mail/Slack/Teams cuando una fuente crítica esté vencida o sin carga.

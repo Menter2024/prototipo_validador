@@ -95,6 +95,7 @@ python scripts/importar_padron.py Tucuman /ruta/al/padron_original.csv
 Opciones:
 
 ```bash
+python scripts/importar_padron.py CABA archivo.rar
 python scripts/importar_padron.py CABA archivo.xlsx --sheet "Hoja1"
 python scripts/importar_padron.py ARBA archivo.txt --dry-run
 python scripts/importar_padron.py EntreRios archivo.csv --out-dir ./padrones
@@ -104,8 +105,16 @@ El importador:
 
 - Detecta CSV separado por coma, punto y coma, tab o `|`.
 - Lee XLSX.
+- Extrae ZIP y RAR; para RAR se requiere `unar`, `7z`, `bsdtar` o `unrar` disponible en el servidor/estación.
+- Parse específico AGIP/CABA para el diseño de registro separado por `;`: fechas, CUIT, alícuota de percepción y alícuota de retención.
+- Fallback para Córdoba, Jujuy, Tucumán y otros padrones delimitados sin cabecera con CUIT y alícuotas.
 - Para TXT sin cabecera, intenta detectar CUIT de 11 dígitos y hasta dos alícuotas por línea.
 - Deduplica CUITs.
+- Permite previsualizar sin escribir (`--dry-run` o botón web `Previsualizar`).
+- Calcula calidad de carga: filas origen, CUIT inválidos, duplicados, alícuotas/fechas inválidas, registros sin alícuota y variación contra padrón anterior.
+- Aplica perfiles por provincia para AGIP/CABA, Córdoba, Jujuy y Tucumán: layout esperado, vigencia requerida, tolerancia de caída y criterio sobre registros sin alícuota.
+- En la API/UI, las cargas `observado` requieren confirmación explícita antes de sobrescribir.
+- Guarda evidencia en `padrones_manifest.json`: SHA256, nombre/tipo del archivo original, extractor, archivo interno elegido, layout detectado y calidad.
 - Escribe el archivo destino con el nombre esperado por el validador.
 
 Provincias soportadas por importación de archivo:

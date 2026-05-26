@@ -1,7 +1,8 @@
 """Lectura normalizada de padrones provinciales de Ingresos Brutos."""
-from pathlib import Path
 import csv
 import io
+import re
+from pathlib import Path
 from typing import Optional
 
 
@@ -95,12 +96,12 @@ PADRONES_PROVINCIAS = {
 }
 
 ALIASES = {
-    "cuit": {"cuit", "cuit_contribuyente", "cuit sujeto", "cuit_sujeto", "nro_cuit", "numero_cuit", "numero de cuit"},
-    "alicuota_retencion": {"alicuota_retencion", "retencion", "ali_ret", "alic_ret", "alicuota retencion", "alícuota retención", "ret"},
-    "alicuota_percepcion": {"alicuota_percepcion", "percepcion", "ali_per", "alic_per", "alicuota percepcion", "alícuota percepción", "perc"},
-    "vigencia_desde": {"vigencia_desde", "desde", "fecha_desde", "fecha desde", "vig desde", "inicio"},
-    "vigencia_hasta": {"vigencia_hasta", "hasta", "fecha_hasta", "fecha hasta", "vig hasta", "fin"},
-    "regimen": {"regimen", "régimen", "tipo", "categoria", "categoría"},
+    "cuit": {"cuit", "cuil", "cuit/cuil", "cuit_contribuyente", "cuit sujeto", "cuit_sujeto", "nro_cuit", "nro cuit", "numero_cuit", "numero de cuit", "número de cuit"},
+    "alicuota_retencion": {"alicuota_retencion", "retencion", "retención", "ali_ret", "alic_ret", "alic ret", "alicuota retencion", "alícuota retención", "alicuota de retencion", "alícuota de retención", "alic retencion", "alic. ret.", "ret"},
+    "alicuota_percepcion": {"alicuota_percepcion", "percepcion", "percepción", "ali_per", "alic_per", "alic perc", "alicuota percepcion", "alícuota percepción", "alicuota de percepcion", "alícuota de percepción", "alic percepcion", "alic. perc.", "perc"},
+    "vigencia_desde": {"vigencia_desde", "desde", "fecha_desde", "fecha desde", "fecha vigencia desde", "vig desde", "vig. desde", "inicio"},
+    "vigencia_hasta": {"vigencia_hasta", "hasta", "fecha_hasta", "fecha hasta", "fecha vigencia hasta", "vig hasta", "vig. hasta", "fin"},
+    "regimen": {"regimen", "régimen", "tipo", "categoria", "categoría", "categoria fiscal", "categoría fiscal"},
 }
 
 _PADRON_CACHE: dict = {}
@@ -108,7 +109,8 @@ _PADRON_CACHE: dict = {}
 
 def _norm_header(valor: str) -> str:
     reemplazos = str.maketrans("áéíóúÁÉÍÓÚñÑ", "aeiouAEIOUnN")
-    return " ".join((valor or "").translate(reemplazos).strip().lower().replace("-", "_").split())
+    limpio = (valor or "").translate(reemplazos).strip().lower()
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", limpio).split())
 
 
 def _normalizar_row(row: dict) -> dict:

@@ -39,7 +39,18 @@ def backup_si_existe(archivo: Path) -> str | None:
     return str(backup)
 
 
-def registrar_carga(padrones_dir: Path, provincia: str, archivo: str, registros: int, origen: str, periodo: str | None, vigencia_hasta: str | None, backup: str | None) -> dict:
+def registrar_carga(
+    padrones_dir: Path,
+    provincia: str,
+    archivo: str,
+    registros: int,
+    origen: str,
+    periodo: str | None,
+    vigencia_hasta: str | None,
+    backup: str | None,
+    evidencia: dict | None = None,
+    calidad: dict | None = None,
+) -> dict:
     manifest = cargar_manifest(padrones_dir)
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     item = {
@@ -52,6 +63,10 @@ def registrar_carga(padrones_dir: Path, provincia: str, archivo: str, registros:
         "backup": backup,
         "cargado_en": now,
     }
+    if evidencia:
+        item.update(evidencia)
+    if calidad:
+        item["calidad"] = calidad
     manifest.setdefault("padrones", {})[provincia] = item
     manifest.setdefault("historial", []).insert(0, item)
     manifest["historial"] = manifest["historial"][:100]

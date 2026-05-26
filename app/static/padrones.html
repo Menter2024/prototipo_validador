@@ -24,7 +24,7 @@
     <div class="flex justify-between gap-4 flex-wrap mb-5">
       <div>
         <h1 class="text-2xl font-bold">Importar padrón</h1>
-        <p class="text-slate-500 text-sm">Soporta CSV, TXT, TSV, PSV y XLSX para provincias con padrón por archivo.</p>
+        <p class="text-slate-500 text-sm">Soporta CSV, TXT, TSV, PSV, XLSX, ZIP y RAR para provincias con padrón por archivo.</p>
       </div>
       <a href="/" class="text-blue-600 hover:underline text-sm">← Volver al validador</a>
     </div>
@@ -35,7 +35,7 @@
       </label>
       <label class="block md:col-span-2">
         <span class="text-sm font-semibold">Archivo original</span>
-        <input id="archivo" name="archivo" type="file" accept=".csv,.txt,.tsv,.psv,.xlsx,.xlsm" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 bg-white" />
+        <input id="archivo" name="archivo" type="file" accept=".csv,.txt,.tsv,.psv,.xlsx,.xlsm,.zip,.rar" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 bg-white" />
       </label>
       <label class="block">
         <span class="text-sm font-semibold">Hoja XLSX opcional</span>
@@ -49,11 +49,13 @@
         <span class="text-sm font-semibold">Vigencia hasta</span>
         <input name="vigencia_hasta" placeholder="2026-06-30" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
       </label>
-      <div class="md:col-span-4 flex justify-end">
+      <div class="md:col-span-4 flex justify-end gap-2">
+        <button id="btn-preview" type="button" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-lg">Previsualizar</button>
         <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg">Importar padrón</button>
       </div>
     </form>
     <div id="msg" class="hidden mt-4 rounded-lg px-4 py-3 text-sm"></div>
+    <div id="preview" class="hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50"></div>
   </section>
 
   <section class="bg-white rounded-xl shadow-sm p-6">
@@ -83,6 +85,7 @@
 
 <script>
 const importables = new Set(['archivo']);
+let ultimaPreview = null;
 
 function badge(status) {
   const cls = {
@@ -101,6 +104,9 @@ function vigenciaBadge(status) {
     por_vencer: 'bg-amber-100 text-amber-700',
     vencido: 'bg-rose-100 text-rose-700',
     sin_vigencia: 'bg-slate-100 text-slate-700',
+    aprobado: 'bg-emerald-100 text-emerald-700',
+    observado: 'bg-amber-100 text-amber-700',
+    bloqueado: 'bg-rose-100 text-rose-700',
   }[status] || 'bg-slate-100 text-slate-700';
   return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${status}</span>`;
 }
@@ -141,21 +147,94 @@ function mostrarMsg(ok, texto) {
   msg.textContent = texto;
 }
 
-document.getElementById('form-importar').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = new FormData(e.currentTarget);
+function renderPreview(data) {
+  ultimaPreview = data;
+  const calidad = data.calidad || {};
+  const evidencia = data.evidencia || {};
+  const preview = document.getElementById('preview');
+  const advertencias = (calidad.advertencias || []).map(a => `<li>${a}</li>`).join('');
+  const errores = (calidad.errores || []).map(a => `<li>${a}</li>`).join('');
+  const rows = (data.muestra || []).map(r => `<tr>
+    <td class="p-2 font-mono">${r.cuit}</td>
+    <td class="p-2">${r.alicuota_retencion || '—'}</td>
+    <td class="p-2">${r.alicuota_percepcion || '—'}</td>
+    <td class="p-2">${r.vigencia_desde || '—'} a ${r.vigencia_hasta || '—'}</td>
+    <td class="p-2">${r.regimen || '—'}</td>
+  </tr>`).join('');
+  preview.className = 'mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50';
+  preview.innerHTML = `
+    <div class="flex justify-between gap-3 flex-wrap mb-3">
+      <div>
+        <div class="text-sm uppercase tracking-wide text-slate-500">Previsualización</div>
+        <div class="font-bold">${data.nombre} · ${data.registros} registros válidos</div>
+      </div>
+      <div>${vigenciaBadge(calidad.estado || 'sin_vigencia')}</div>
+    </div>
+    <div class="grid md:grid-cols-4 gap-3 text-sm mb-3">
+      <div><b>Filas origen</b><br>${calidad.raw_registros ?? '—'}</div>
+      <div><b>Descartadas</b><br>${calidad.descartados_cuit_invalido ?? 0}</div>
+      <div><b>Duplicados</b><br>${calidad.duplicados ?? 0}</div>
+      <div><b>SHA256</b><br><span class="font-mono text-xs">${(evidencia.sha256 || '').slice(0, 16)}...</span></div>
+    </div>
+    <div class="text-xs text-slate-600 mb-3">Perfil: <b>${calidad.perfil || '—'}</b> · Layout: <b>${calidad.layout_detectado || evidencia.layout_detectado || '—'}</b></div>
+    ${errores ? `<div class="bg-rose-100 text-rose-800 rounded p-3 mb-3"><b>Errores</b><ul class="list-disc ml-5">${errores}</ul></div>` : ''}
+    ${advertencias ? `<div class="bg-amber-100 text-amber-800 rounded p-3 mb-3"><b>Advertencias</b><ul class="list-disc ml-5">${advertencias}</ul></div>` : ''}
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead class="bg-white text-slate-600"><tr><th class="text-left p-2">CUIT</th><th class="text-left p-2">Ret.</th><th class="text-left p-2">Perc.</th><th class="text-left p-2">Vigencia</th><th class="text-left p-2">Régimen</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+async function enviarPadron(url, texto, opts = {}) {
+  const formEl = document.getElementById('form-importar');
+  const form = new FormData(formEl);
+  if (opts.confirmarAdvertencias) {
+    form.set('confirmar_advertencias', 'true');
+  }
   if (!document.getElementById('archivo').files.length) {
     mostrarMsg(false, 'Seleccioná un archivo.');
-    return;
+    return null;
   }
-  mostrarMsg(true, 'Importando...');
-  const r = await fetch('/api/padrones/importar', { method: 'POST', body: form });
+  mostrarMsg(true, texto);
+  const r = await fetch(url, { method: 'POST', body: form });
   const data = await r.json();
   if (!r.ok) {
-    mostrarMsg(false, data.detail || 'Error importando padrón.');
+    mostrarMsg(false, data.detail || 'Error procesando padrón.');
+    return null;
+  }
+  return data;
+}
+
+document.getElementById('btn-preview').addEventListener('click', async () => {
+  const data = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando...');
+  if (!data) return;
+  mostrarMsg(true, `${data.nombre}: previsualización generada sin sobrescribir padrón.`);
+  renderPreview(data);
+});
+
+document.getElementById('archivo').addEventListener('change', () => {
+  ultimaPreview = null;
+  document.getElementById('preview').className = 'hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50';
+});
+
+document.getElementById('form-importar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!ultimaPreview) {
+    const preview = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando antes de importar...');
+    if (!preview) return;
+    renderPreview(preview);
+  }
+  const observado = ultimaPreview?.calidad?.estado === 'observado';
+  if (observado && !confirm('La previsualización tiene advertencias. ¿Confirmás sobrescribir el padrón igualmente?')) {
+    mostrarMsg(false, 'Importación cancelada. Revisá las advertencias antes de confirmar.');
     return;
   }
+  const data = await enviarPadron('/api/padrones/importar', 'Importando...', { confirmarAdvertencias: observado });
+  if (!data) return;
   mostrarMsg(true, `${data.nombre}: ${data.registros} registros importados.`);
+  renderPreview(data);
   await cargarEstado();
 });
 

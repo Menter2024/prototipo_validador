@@ -76,6 +76,8 @@ def _padrones_estado() -> list[dict]:
             item["periodo"] = meta.get("periodo", "")
             item["vigencia_hasta"] = meta.get("vigencia_hasta", "")
             item["vigencia_estado"] = padron_manifest.estado_vigencia(meta.get("vigencia_hasta"))
+            item["calidad_estado"] = meta.get("calidad", {}).get("estado", "")
+            item["sha256"] = meta.get("sha256", "")
         if cfg["tipo"] == "archivo":
             archivo = PADRONES_DIR / cfg["archivo"]
             if archivo.exists():
@@ -350,18 +352,51 @@ async def importar_padron_endpoint(
     sheet: str | None = Form(None),
     periodo: str | None = Form(None),
     vigencia_hasta: str | None = Form(None),
+    confirmar_advertencias: bool = Form(False),
 ):
     if not archivo.filename:
         raise HTTPException(status_code=400, detail="Archivo requerido.")
     ext = Path(archivo.filename).suffix.lower()
-    if ext not in {".csv", ".txt", ".tsv", ".psv", ".xlsx", ".xlsm"}:
-        raise HTTPException(status_code=400, detail="Formato no soportado. Usá CSV, TXT o XLSX.")
+    if ext not in {".csv", ".txt", ".tsv", ".psv", ".xlsx", ".xlsm", ".zip", ".rar"}:
+        raise HTTPException(status_code=400, detail="Formato no soportado. Usá CSV, TXT, XLSX, ZIP o RAR.")
     destino_tmp = UPLOADS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{Path(archivo.filename).name}"
     try:
         with destino_tmp.open("wb") as f:
             shutil.copyfileobj(archivo.file, f)
-        resultado = importar_padron(provincia, destino_tmp, PADRONES_DIR, sheet or None, False, periodo, vigencia_hasta)
+        resultado = importar_padron(
+            provincia,
+            destino_tmp,
+            PADRONES_DIR,
+            sheet or None,
+            False,
+            periodo,
+            vigencia_hasta,
+            aceptar_observado=confirmar_advertencias,
+        )
         return {"ok": True, **resultado, "estado": _padrones_estado()}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/padrones/previsualizar")
+async def previsualizar_padron_endpoint(
+    provincia: str = Form(...),
+    archivo: UploadFile = File(...),
+    sheet: str | None = Form(None),
+    periodo: str | None = Form(None),
+    vigencia_hasta: str | None = Form(None),
+):
+    if not archivo.filename:
+        raise HTTPException(status_code=400, detail="Archivo requerido.")
+    ext = Path(archivo.filename).suffix.lower()
+    if ext not in {".csv", ".txt", ".tsv", ".psv", ".xlsx", ".xlsm", ".zip", ".rar"}:
+        raise HTTPException(status_code=400, detail="Formato no soportado. Usá CSV, TXT, XLSX, ZIP o RAR.")
+    destino_tmp = UPLOADS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_preview_{Path(archivo.filename).name}"
+    try:
+        with destino_tmp.open("wb") as f:
+            shutil.copyfileobj(archivo.file, f)
+        resultado = importar_padron(provincia, destino_tmp, PADRONES_DIR, sheet or None, True, periodo, vigencia_hasta)
+        return {"ok": True, **resultado}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

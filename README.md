@@ -75,10 +75,15 @@ Módulos: app/modules/padrones.py y app/modules/padron_manifest.py
 
 ### Importador y lifecycle de padrones
 
-- CSV, TXT, TSV, PSV, XLSX y XLSM.
+- CSV, TXT, TSV, PSV, XLSX, XLSM, ZIP y RAR.
 - Separadores coma, punto y coma, tab y pipe.
 - UTF-8 y Latin-1.
 - Alias de columnas y deduplicación de CUIT.
+- Extracción de comprimidos y parsers no estándar para AGIP/CABA, Córdoba, Jujuy y Tucumán.
+- Previsualización antes de sobrescribir: muestra registros válidos, descartes, duplicados, muestra normalizada y advertencias.
+- Si la carga queda observada, la API/UI exige confirmación explícita antes de sobrescribir el padrón.
+- Perfiles de calidad por padrón/provincia para AGIP/CABA, Córdoba, Jujuy y Tucumán.
+- Evidencia de importación: hash SHA256, archivo original, tipo, extractor/layout detectado y calidad en manifest.
 - Backup automático antes de sobrescribir.
 - Período, vigencia, historial y estado de vigencia.
 
