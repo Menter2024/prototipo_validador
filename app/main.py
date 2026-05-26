@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes, regimenes_catalogo, regimenes_aplicables, accesos_fiscales
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes, regimenes_catalogo, regimenes_aplicables, accesos_fiscales, supabase_mvp
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -291,6 +291,17 @@ def info():
         "padrones_dir": str(PADRONES_DIR),
         "padrones_disponibles": sorted(p.name for p in PADRONES_DIR.glob("*.csv")) if PADRONES_DIR.exists() else [],
         "salidas_dir": str(SALIDAS_DIR),
+        "supabase": supabase_mvp.status(),
+    }
+
+
+@app.get("/api/mvp/status")
+def mvp_status():
+    return {
+        "storage": "supabase" if supabase_mvp.enabled() else "local",
+        "supabase": supabase_mvp.status(),
+        "padrones_locales": len(_padrones_estado()),
+        "salidas_dir": str(SALIDAS_DIR),
     }
 
 
@@ -377,7 +388,12 @@ async def crear_acceso(
             tmp,
             evidencia.filename if evidencia else None,
         )
-        return {"ok": True, "acceso": acceso}
+        supabase_sync = {"enabled": False, "synced": False}
+        try:
+            supabase_sync = supabase_mvp.sync_acceso(acceso)
+        except Exception as sync_error:
+            supabase_sync = {"enabled": supabase_mvp.enabled(), "synced": False, "error": str(sync_error)}
+        return {"ok": True, "acceso": acceso, "supabase_sync": supabase_sync}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -454,8 +470,9 @@ async def importar_padron_endpoint(
             vigencia_hasta,
             aceptar_observado=confirmar_advertencias,
         )
+        supabase_sync = {"enabled": False, "synced": False}
         if cliente and cuit_agente:
-            accesos_fiscales.crear_o_actualizar(
+            acceso = accesos_fiscales.crear_o_actualizar(
                 SALIDAS_DIR,
                 cliente,
                 cuit_agente,
@@ -470,7 +487,21 @@ async def importar_padron_endpoint(
                 destino_tmp,
                 archivo.filename,
             )
-        return {"ok": True, **resultado, "estado": _padrones_estado()}
+            try:
+                supabase_mvp.sync_acceso(acceso)
+            except Exception:
+                pass
+        try:
+            supabase_sync = supabase_mvp.sync_padron_importado(
+                archivo_local=destino_tmp,
+                provincia=provincia,
+                resultado_importacion=resultado,
+                cliente=cliente or "CCU",
+                fuente_id=fuente_id,
+            )
+        except Exception as sync_error:
+            supabase_sync = {"enabled": supabase_mvp.enabled(), "synced": False, "error": str(sync_error)}
+        return {"ok": True, **resultado, "estado": _padrones_estado(), "supabase_sync": supabase_sync}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

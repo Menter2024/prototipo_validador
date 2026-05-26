@@ -25,6 +25,12 @@ services:
         value: ./padrones
       - key: SALIDAS_DIR
         value: ./salidas
+      - key: SUPABASE_URL
+        value: https://szpmuxncfdbzpfkngizk.supabase.co
+      - key: SUPABASE_STORAGE_BUCKET
+        value: menter-fiscal
+      - key: SUPABASE_TENANT_SLUG
+        value: ccu
       # Secretas: se setean a mano en el dashboard de Render
       - key: AFIPSDK_TOKEN
         sync: false
@@ -35,4 +41,6 @@ services:
       - key: BASIC_AUTH_USER
         sync: false
       - key: BASIC_AUTH_PASS
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
