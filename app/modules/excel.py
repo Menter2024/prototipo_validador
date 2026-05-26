@@ -277,15 +277,86 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
     for col, w in zip("ABCDEFGH", [18, 24, 18, 34, 14, 14, 18, 50]):
         s5.column_dimensions[col].width = w
 
-    # ---- Hoja 6: Trazabilidad
-    s6 = wb.create_sheet("Trazabilidad")
-    s6["A1"] = "Trazabilidad de la consulta"
+    # ---- Hoja 6: Regímenes aplicables
+    s6 = wb.create_sheet("Regímenes")
+    s6["A1"] = "Mapa de obligaciones potenciales por proveedor"
     s6["A1"].font = TITLE_FONT
-    s6.merge_cells("A1:E1")
+    s6.merge_cells("A1:J1")
 
-    hdrs6 = ["CUIT", "Timestamp", "Modo AFIP", "Mensaje validador", "Provincia normalizada"]
+    hdrs6 = ["CUIT", "Razón Social", "Régimen", "Nivel", "Jurisdicción", "Tipo", "Clasificación", "Evidencia requerida", "Próxima acción", "Motivos"]
     for i, h in enumerate(hdrs6):
         _hdr(s6.cell(row=3, column=i + 1), h)
+
+    row = 4
+    for r in resultados:
+        razon = r.get("afip", {}).get("razon_social", "—")
+        for item in r.get("regimenes_aplicables", {}).get("items", []):
+            vals = [
+                r.get("cuit", "—"),
+                razon,
+                item.get("nombre", "—"),
+                item.get("nivel", "—"),
+                item.get("jurisdiccion", "—"),
+                item.get("tipo", "—"),
+                item.get("clasificacion", "—"),
+                item.get("evidencia_requerida", "—"),
+                item.get("proxima_accion", "—"),
+                " · ".join(item.get("motivos", [])) or "—",
+            ]
+            status = {
+                "aplicable": "ok",
+                "potencial": "warn",
+                "pendiente_evidencia": "warn",
+                "no_integrable_cola_asistida": "error",
+            }.get(item.get("clasificacion"))
+            for i, v in enumerate(vals):
+                _cell(s6.cell(row=row, column=i + 1), v, status if i == 6 else None)
+            row += 1
+
+    for col, w in zip("ABCDEFGHIJ", [18, 32, 42, 18, 28, 22, 24, 42, 60, 60]):
+        s6.column_dimensions[col].width = w
+
+    # ---- Hoja 7: Accesos y evidencias requeridas
+    s7 = wb.create_sheet("Accesos")
+    s7["A1"] = "Accesos fiscales y evidencias requeridas"
+    s7["A1"].font = TITLE_FONT
+    s7.merge_cells("A1:H1")
+
+    hdrs7 = ["CUIT proveedor", "Régimen/Fuente", "Organismo", "Jurisdicción", "Clasificación", "Evidencia requerida", "Próxima acción", "Motivo"]
+    for i, h in enumerate(hdrs7):
+        _hdr(s7.cell(row=3, column=i + 1), h)
+
+    row = 4
+    for r in resultados:
+        for item in r.get("regimenes_aplicables", {}).get("items", []):
+            if item.get("clasificacion") not in {"pendiente_evidencia", "no_integrable_cola_asistida"}:
+                continue
+            vals = [
+                r.get("cuit", "—"),
+                item.get("nombre", "—"),
+                item.get("organismo", "—"),
+                item.get("jurisdiccion", "—"),
+                item.get("clasificacion", "—"),
+                item.get("evidencia_requerida", "—"),
+                item.get("proxima_accion", "—"),
+                " · ".join(item.get("motivos", [])) or "—",
+            ]
+            for i, v in enumerate(vals):
+                _cell(s7.cell(row=row, column=i + 1), v, "warn" if i == 4 else None)
+            row += 1
+
+    for col, w in zip("ABCDEFGH", [18, 42, 24, 24, 24, 44, 60, 60]):
+        s7.column_dimensions[col].width = w
+
+    # ---- Hoja 8: Trazabilidad
+    s8 = wb.create_sheet("Trazabilidad")
+    s8["A1"] = "Trazabilidad de la consulta"
+    s8["A1"].font = TITLE_FONT
+    s8.merge_cells("A1:E1")
+
+    hdrs8 = ["CUIT", "Timestamp", "Modo AFIP", "Mensaje validador", "Provincia normalizada"]
+    for i, h in enumerate(hdrs8):
+        _hdr(s8.cell(row=3, column=i + 1), h)
 
     for ri, r in enumerate(resultados):
         row = 4 + ri
@@ -297,10 +368,10 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
             r.get("georef", {}).get("provincia", "—") or "—",
         ]
         for i, v in enumerate(vals):
-            _cell(s6.cell(row=row, column=i + 1), v)
+            _cell(s8.cell(row=row, column=i + 1), v)
 
     for col, w in zip("ABCDE", [18, 22, 12, 50, 28]):
-        s6.column_dimensions[col].width = w
+        s8.column_dimensions[col].width = w
 
     ruta_salida.parent.mkdir(parents=True, exist_ok=True)
     wb.save(ruta_salida)

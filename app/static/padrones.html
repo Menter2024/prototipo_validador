@@ -26,7 +26,10 @@
         <h1 class="text-2xl font-bold">Importar padrón</h1>
         <p class="text-slate-500 text-sm">Soporta CSV, TXT, TSV, PSV, XLSX, ZIP y RAR para provincias con padrón por archivo.</p>
       </div>
-      <a href="/" class="text-blue-600 hover:underline text-sm">← Volver al validador</a>
+      <div class="flex gap-3 text-sm">
+        <a href="/" class="text-blue-600 hover:underline">← Volver al validador</a>
+        <a href="/accesos" class="text-blue-600 hover:underline">Accesos fiscales</a>
+      </div>
     </div>
     <form id="form-importar" class="grid md:grid-cols-4 gap-3 items-end">
       <label class="block">
@@ -48,6 +51,18 @@
       <label class="block">
         <span class="text-sm font-semibold">Vigencia hasta</span>
         <input name="vigencia_hasta" placeholder="2026-06-30" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Cliente / grupo</span>
+        <input name="cliente" value="CCU" placeholder="CCU" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">CUIT agente</span>
+        <input name="cuit_agente" placeholder="XX-XXXXXXXX-X" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Fuente ID</span>
+        <input name="fuente_id" placeholder="arba_iibb / comarb_sircreb" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
       </label>
       <div class="md:col-span-4 flex justify-end gap-2">
         <button id="btn-preview" type="button" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-lg">Previsualizar</button>

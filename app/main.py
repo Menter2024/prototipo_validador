@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes, regimenes_catalogo
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes, regimenes_catalogo, regimenes_aplicables, accesos_fiscales
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -169,6 +169,12 @@ async def _procesar_cuit(cuit: str) -> dict:
     return resultado
 
 
+def _agregar_regimenes_aplicables(resultados: list[dict]) -> None:
+    fuentes_estado_actual = fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
+    for resultado in resultados:
+        resultado["regimenes_aplicables"] = regimenes_aplicables.generar(resultado, fuentes_estado_actual)
+
+
 @app.post("/api/validar")
 async def validar_endpoint(req: ValidarRequest):
     if not req.cuits:
@@ -178,6 +184,7 @@ async def validar_endpoint(req: ValidarRequest):
 
     tareas = [_procesar_cuit(c) for c in req.cuits]
     resultados = await asyncio.gather(*tareas)
+    _agregar_regimenes_aplicables(resultados)
 
     # Generar Excel
     filename = f"validacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
@@ -232,6 +239,7 @@ async def validar_excel_endpoint(
         raise HTTPException(status_code=400, detail="Máximo 500 CUITs por lote en esta versión.")
 
     resultados = await asyncio.gather(*[_procesar_cuit(c) for c in cuits])
+    _agregar_regimenes_aplicables(resultados)
     filename = f"validacion_lote_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
@@ -325,6 +333,55 @@ def listar_fuentes_pendientes(estado: str | None = None):
     return fuentes_pendientes.listar(SALIDAS_DIR, estado)
 
 
+@app.get("/api/accesos")
+def listar_accesos(cliente: str | None = None, cuit_agente: str | None = None, organismo: str | None = None):
+    fuentes_estado_actual = fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
+    return {
+        **accesos_fiscales.listar(SALIDAS_DIR, cliente, cuit_agente, organismo),
+        "requisitos": accesos_fiscales.matriz_requisitos(SALIDAS_DIR, fuentes_estado_actual),
+    }
+
+
+@app.post("/api/accesos")
+async def crear_acceso(
+    cliente: str = Form(...),
+    cuit_agente: str = Form(...),
+    organismo: str = Form(...),
+    servicio: str = Form(...),
+    tipo_acceso: str = Form(...),
+    estado: str = Form("pendiente"),
+    fuente_id: str = Form(""),
+    alcance: str = Form(""),
+    responsable: str = Form(""),
+    notas: str = Form(""),
+    evidencia: UploadFile | None = File(None),
+):
+    tmp = None
+    try:
+        if evidencia and evidencia.filename:
+            tmp = UPLOADS_DIR / f"acceso_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{Path(evidencia.filename).name}"
+            with tmp.open("wb") as f:
+                shutil.copyfileobj(evidencia.file, f)
+        acceso = accesos_fiscales.crear_o_actualizar(
+            SALIDAS_DIR,
+            cliente,
+            cuit_agente,
+            organismo,
+            servicio,
+            tipo_acceso,
+            estado,
+            fuente_id,
+            alcance,
+            responsable,
+            notas,
+            tmp,
+            evidencia.filename if evidencia else None,
+        )
+        return {"ok": True, "acceso": acceso}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 @app.post("/api/fuentes-pendientes/{item_id}/actualizar")
 async def actualizar_fuente_pendiente(
     item_id: str,
@@ -374,6 +431,9 @@ async def importar_padron_endpoint(
     periodo: str | None = Form(None),
     vigencia_hasta: str | None = Form(None),
     confirmar_advertencias: bool = Form(False),
+    cliente: str = Form(""),
+    cuit_agente: str = Form(""),
+    fuente_id: str = Form(""),
 ):
     if not archivo.filename:
         raise HTTPException(status_code=400, detail="Archivo requerido.")
@@ -394,6 +454,22 @@ async def importar_padron_endpoint(
             vigencia_hasta,
             aceptar_observado=confirmar_advertencias,
         )
+        if cliente and cuit_agente:
+            accesos_fiscales.crear_o_actualizar(
+                SALIDAS_DIR,
+                cliente,
+                cuit_agente,
+                provincia,
+                f"Carga de padrón {provincia}",
+                "archivo_manual",
+                "exportacion_manual",
+                fuente_id,
+                "Carga manual de archivo oficial de padrón.",
+                "",
+                f"Archivo cargado: {archivo.filename}. Período: {periodo or 's/d'}.",
+                destino_tmp,
+                archivo.filename,
+            )
         return {"ok": True, **resultado, "estado": _padrones_estado()}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -459,6 +535,11 @@ def regimenes_page():
 @app.get("/fuentes-pendientes", response_class=HTMLResponse)
 def fuentes_pendientes_page():
     return (STATIC_DIR / "fuentes_pendientes.html").read_text(encoding="utf-8")
+
+
+@app.get("/accesos", response_class=HTMLResponse)
+def accesos_page():
+    return (STATIC_DIR / "accesos.html").read_text(encoding="utf-8")
 
 
 @app.get("/legajos", response_class=HTMLResponse)

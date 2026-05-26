@@ -7,6 +7,12 @@
 salidas/*.xlsx
 salidas/evidencias/
 salidas/fuentes_pendientes.json
+padrones/originales/
+padrones/backups/
+padrones/padrones_manifest.json
+playwright/.auth/
+*.storage_state.json
+trace.zip
 
 # Python
 __pycache__/

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Accesos fiscales</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="bg-gradient-to-r from-blue-700 to-slate-800 text-white">
+  <div class="max-w-6xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Accesos fiscales y CUITs agente</div>
+    <div class="text-sm text-blue-100">Gestión segura de autorizaciones, exportaciones y evidencias por cliente/grupo económico.</div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <div class="mb-4 text-sm">
+    <a href="/" class="text-blue-600 hover:underline">← Volver al validador</a>
+    <span class="text-slate-300 mx-2">·</span>
+    <a href="/padrones" class="text-blue-600 hover:underline">Padrones</a>
+    <span class="text-slate-300 mx-2">·</span>
+    <a href="/fuentes" class="text-blue-600 hover:underline">Fuentes</a>
+  </div>
+
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <h1 class="text-2xl font-bold mb-2">Alta / actualización de acceso</h1>
+    <p class="text-sm text-slate-500 mb-4">No cargues claves personales. Registrá autorización, exportación oficial, usuario técnico o evidencia de servicio delegado.</p>
+    <form id="form-acceso" class="grid md:grid-cols-3 gap-3" enctype="multipart/form-data">
+      <input name="cliente" value="CCU" class="border rounded p-2" placeholder="Cliente / grupo económico" required>
+      <input name="cuit_agente" class="border rounded p-2" placeholder="CUIT agente / sociedad" required>
+      <input name="organismo" class="border rounded p-2" placeholder="Organismo: ARBA, COMARB, ARCA..." required>
+      <input name="servicio" class="border rounded p-2" placeholder="Servicio: SIRCREB, SIRE, PARP..." required>
+      <input name="fuente_id" class="border rounded p-2" placeholder="fuente_id opcional">
+      <select name="tipo_acceso" class="border rounded p-2" required>
+        <option value="archivo_manual">archivo_manual</option>
+        <option value="credencial_delegada">credencial_delegada</option>
+        <option value="login_asistido">login_asistido</option>
+        <option value="publico">publico</option>
+        <option value="no_automatizable">no_automatizable</option>
+      </select>
+      <select name="estado" class="border rounded p-2">
+        <option value="pendiente">pendiente</option>
+        <option value="autorizado">autorizado</option>
+        <option value="credencial_cargada">credencial_cargada</option>
+        <option value="exportacion_manual">exportacion_manual</option>
+        <option value="login_asistido">login_asistido</option>
+        <option value="bloqueado">bloqueado</option>
+        <option value="revocado">revocado</option>
+      </select>
+      <input name="responsable" class="border rounded p-2" placeholder="Responsable interno">
+      <input name="alcance" class="border rounded p-2" placeholder="Alcance: sólo descarga padrones">
+      <textarea name="notas" class="border rounded p-2 md:col-span-2" placeholder="Notas / condiciones de uso"></textarea>
+      <input name="evidencia" type="file" class="border rounded p-2">
+      <div class="md:col-span-3 flex justify-end">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 font-semibold">Guardar acceso</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="grid md:grid-cols-4 gap-3 mb-6" id="kpis"></section>
+
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <h2 class="text-xl font-bold mb-3">Accesos registrados</h2>
+    <div id="accesos" class="space-y-3 text-sm"></div>
+  </section>
+
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="text-xl font-bold mb-3">Requisitos pendientes por fuente crítica</h2>
+    <div id="requisitos" class="overflow-x-auto"></div>
+  </section>
+</main>
+
+<script>
+async function cargar() {
+  const r = await fetch('/api/accesos');
+  const data = await r.json();
+  const res = data.resumen || {};
+  const kpis = [
+    ['Total', res.total || 0, 'bg-slate-100 text-slate-800'],
+    ['Pendientes', res.pendientes || 0, 'bg-amber-100 text-amber-800'],
+    ['Autorizados', res.autorizados || 0, 'bg-emerald-100 text-emerald-800'],
+    ['Bloqueados', res.bloqueados || 0, 'bg-rose-100 text-rose-800'],
+  ];
+  document.getElementById('kpis').innerHTML = kpis.map(([l,v,c]) => `<div class="${c} rounded-xl p-4"><div class="text-xs uppercase">${l}</div><div class="text-2xl font-bold">${v}</div></div>`).join('');
+  document.getElementById('accesos').innerHTML = (data.accesos || []).map(a => `
+    <div class="border rounded-lg p-3">
+      <div class="flex justify-between gap-2">
+        <div><b>${a.cliente}</b> · ${a.cuit_agente} · ${a.organismo} / ${a.servicio}</div>
+        <span class="bg-slate-100 rounded px-2 py-1 text-xs">${a.estado}</span>
+      </div>
+      <div class="text-slate-600 mt-1">Tipo: ${a.tipo_acceso} · Fuente: ${a.fuente_id || '—'} · Responsable: ${a.responsable || '—'}</div>
+      <div class="text-slate-500">${a.notas || ''}</div>
+    </div>`).join('') || '<div class="text-slate-500">Sin accesos registrados.</div>';
+  const reqs = data.requisitos?.items || [];
+  document.getElementById('requisitos').innerHTML = `
+    <table class="w-full text-xs">
+      <thead class="bg-slate-100"><tr><th class="text-left p-2">Prioridad</th><th class="text-left p-2">Fuente</th><th class="text-left p-2">Organismo</th><th class="text-left p-2">Acceso requerido</th><th class="text-left p-2">Estado</th><th class="text-left p-2">Acción</th></tr></thead>
+      <tbody>${reqs.map(i => `<tr class="border-b"><td class="p-2">${i.prioridad}</td><td class="p-2">${i.nombre}</td><td class="p-2">${i.organismo}</td><td class="p-2">${i.tipo_acceso_requerido}</td><td class="p-2">${i.estado_acceso}</td><td class="p-2">${i.proxima_accion}</td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+document.getElementById('form-acceso').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  const r = await fetch('/api/accesos', {method:'POST', body: fd});
+  if (!r.ok) {
+    const err = await r.json();
+    alert(err.detail || 'Error');
+    return;
+  }
+  ev.target.reset();
+  ev.target.cliente.value = 'CCU';
+  await cargar();
+});
+
+cargar();
+</script>
+</body>
+</html>

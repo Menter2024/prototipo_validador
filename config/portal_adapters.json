@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "actualizado": "2026-05-26",
+  "criterio": "Adaptadores de navegación auditada para descargar padrones o capturar evidencia desde portales oficiales. No eluden CAPTCHA, MFA ni restricciones del sitio.",
+  "adapters": [
+    {
+      "id": "jujuy_iibb_padron_publico",
+      "fuente_id": "jujuy_iibb",
+      "nombre": "Jujuy · Descarga pública padrón alícuotas IIBB",
+      "jurisdiccion": "Jujuy",
+      "tipo": "public_download",
+      "url": "https://www.rentasjujuyonline.gob.ar/cedulavirtual/consultaalicuotasretper.aspx",
+      "requiere_login": false,
+      "requiere_captcha": false,
+      "variables_requeridas": ["periodo_slash"],
+      "acciones": [
+        {"type": "goto", "url": "{url}", "wait_until": "networkidle"},
+        {"type": "screenshot", "filename": "inicio.png"},
+        {"type": "fill", "selector": "#vPERIODO", "value": "{periodo_slash}"},
+        {"type": "click_download", "selector": "#BUTTON1", "filename": "jujuy_padron_iibb_{periodo}.xlsx"},
+        {"type": "screenshot", "filename": "post_descarga.png"}
+      ],
+      "evidencia": ["archivo_descargado", "sha256", "capturas", "trace", "html_final"],
+      "nota": "Formulario GeneXus oficial. Si no dispara descarga por cambios del portal, ejecutar en modo headed y revisar trace."
+    },
+    {
+      "id": "agip_caba_regimenes_generales_publico",
+      "fuente_id": "agip_caba_iibb",
+      "nombre": "CABA · AGIP padrón regímenes generales",
+      "jurisdiccion": "CABA",
+      "tipo": "public_download",
+      "url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
+      "requiere_login": false,
+      "requiere_captcha": false,
+      "variables_requeridas": ["vigencia_text"],
+      "acciones": [
+        {"type": "goto", "url": "{url}", "wait_until": "networkidle"},
+        {"type": "screenshot", "filename": "inicio.png"},
+        {"type": "click_download", "selector": "text=Padrón de Regímenes Generales - Vigencia {vigencia_text}", "filename": "agip_caba_regimenes_generales_{periodo}.rar"},
+        {"type": "save_html", "filename": "final.html"}
+      ],
+      "evidencia": ["archivo_descargado", "sha256", "capturas", "trace", "html_final"],
+      "nota": "Fallback recomendado si curl falla por TLS; Playwright usa motor de navegador real."
+    },
+    {
+      "id": "agip_caba_alicuotas_diferenciales_publico",
+      "fuente_id": "agip_caba_iibb",
+      "nombre": "CABA · AGIP alícuotas diferenciales regímenes particulares",
+      "jurisdiccion": "CABA",
+      "tipo": "public_download",
+      "url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
+      "requiere_login": false,
+      "requiere_captcha": false,
+      "variables_requeridas": ["vigencia_text"],
+      "acciones": [
+        {"type": "goto", "url": "{url}", "wait_until": "networkidle"},
+        {"type": "screenshot", "filename": "inicio.png"},
+        {"type": "click_download", "selector": "text=Padrón de Alícuotas Diferenciales Regímenes Particulares - Vigencia {vigencia_text}", "filename": "agip_caba_alicuotas_diferenciales_{periodo}.rar"},
+        {"type": "save_html", "filename": "final.html"}
+      ],
+      "evidencia": ["archivo_descargado", "sha256", "capturas", "trace", "html_final"],
+      "nota": "Descarga pública oficial si el sitio responde correctamente desde la red del ejecutor."
+    },
+    {
+      "id": "misiones_iibb_constancia_publica",
+      "fuente_id": "misiones_iibb_online",
+      "nombre": "Misiones · Constancia IIBB pública por CUIT",
+      "jurisdiccion": "Misiones",
+      "tipo": "public_query",
+      "url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
+      "requiere_login": false,
+      "requiere_captcha": false,
+      "variables_requeridas": ["cuit"],
+      "acciones": [
+        {"type": "goto", "url": "{url}", "wait_until": "networkidle"},
+        {"type": "screenshot", "filename": "inicio.png"},
+        {"type": "save_html", "filename": "inicio.html"}
+      ],
+      "evidencia": ["capturas", "html_final", "trace"],
+      "nota": "Adaptador inicial de evidencia. Falta confirmar selector vigente del campo CUIT antes de automatizar submit."
+    },
+    {
+      "id": "arba_iibb_padron_autenticado",
+      "fuente_id": "arba_iibb",
+      "nombre": "ARBA · Régimen por sujeto autenticado",
+      "jurisdiccion": "Buenos Aires",
+      "tipo": "authenticated_download",
+      "url": "https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto",
+      "requiere_login": true,
+      "requiere_captcha": false,
+      "variables_requeridas": ["periodo"],
+      "acciones": [
+        {"type": "goto", "url": "{url}", "wait_until": "networkidle"},
+        {"type": "screenshot", "filename": "landing.png"}
+      ],
+      "evidencia": ["capturas", "trace", "archivo_exportado_si_corresponde"],
+      "nota": "No ejecutar sin autorización/CIT/servicio delegado. Primer flujo previsto: login asistido + exportación oficial."
+    },
+    {
+      "id": "comarb_sircreb_autenticado",
+      "fuente_id": "comarb_sircreb",
+      "nombre": "COMARB · SIRCREB padrón autenticado",
+      "jurisdiccion": "Convenio Multilateral",
+      "tipo": "authenticated_download",
+      "url": "https://www.ca.gob.ar/index.php/sistemas/sircreb",
+      "requiere_login": true,
+      "requiere_captcha": false,
+      "variables_requeridas": ["periodo"],
+      "acciones": [
+        {"type": "goto", "url": "{url}", "wait_until": "networkidle"},
+        {"type": "screenshot", "filename": "landing.png"}
+      ],
+      "evidencia": ["capturas", "trace", "archivo_exportado_si_corresponde"],
+      "nota": "Requiere clave fiscal/Portal Federal y rol agente; no intentar sin autorización expresa."
+    },
+    {
+      "id": "rionegro_iibb_captcha_asistido",
+      "fuente_id": "rionegro_iibb_online",
+      "nombre": "Río Negro · consulta con CAPTCHA",
+      "jurisdiccion": "Río Negro",
+      "tipo": "captcha_blocked",
+      "url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
+      "requiere_login": false,
+      "requiere_captcha": true,
+      "variables_requeridas": ["cuit"],
+      "acciones": [],
+      "evidencia": ["captura_asistida"],
+      "nota": "Bloqueado por CAPTCHA. Debe ir a cola asistida; no se automatiza resolución."
+    }
+  ]
+}

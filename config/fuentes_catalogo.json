@@ -1,7 +1,315 @@
 {
   "version": 1,
-  "actualizado": "2026-05-25",
+  "actualizado": "2026-05-26",
   "fuentes": [
+    {
+      "id": "arba_iibb",
+      "padron_key": "ARBA",
+      "nombre": "Buenos Aires / ARBA · Régimen por sujeto",
+      "jurisdiccion": "Buenos Aires",
+      "organismo": "ARBA",
+      "alcance": "Ingresos Brutos · retención/percepción por sujeto",
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "padron_descargable",
+      "prioridad": "P0",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto",
+      "metodo_actualizacion": "descarga_archivo_importador",
+      "automatizacion": "archivo_normalizado",
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "requiere_credenciales",
+        "landing_url": "https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto",
+        "credencial": "CIT o Web Service ARBA",
+        "nota": "ARBA publica el padrón mensual y servicio web, pero la obtención operativa requiere habilitación/credencial del agente."
+      },
+      "tipo_acceso": "requiere_credenciales",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "agip_caba_iibb",
+      "padron_key": "CABA",
+      "nombre": "CABA / AGIP · Alícuotas padrón",
+      "jurisdiccion": "CABA",
+      "organismo": "AGIP",
+      "alcance": "Ingresos Brutos · retención/percepción",
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "padron_descargable",
+      "prioridad": "P0",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
+      "metodo_actualizacion": "descarga_archivo_importador",
+      "automatizacion": "archivo_normalizado",
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "pagina_publica_links",
+        "landing_url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
+        "link_text_regex": "Padrón de Regímenes Generales - Vigencia",
+        "extensiones": [
+          ".zip",
+          ".txt",
+          ".rar"
+        ],
+        "nota": "AGIP publica el enlace vigente en la página de Agentes de Recaudación."
+      },
+      "tipo_acceso": "pagina_publica_links",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "comarb_sircip",
+      "nombre": "COMARB · SIRCIP",
+      "jurisdiccion": "Convenio Multilateral",
+      "organismo": "Comisión Arbitral",
+      "alcance": "Sistema unificado de percepciones IIBB y padrón de contribuyentes alcanzados",
+      "regimenes": [
+        "iibb",
+        "percepcion",
+        "convenio_multilateral"
+      ],
+      "clase": "portal_credenciales",
+      "prioridad": "P0",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.ca.gob.ar/sistemas/sircip",
+      "metodo_actualizacion": "portal_federal_tributario_descarga",
+      "automatizacion": "requiere_credenciales",
+      "tipo_acceso": "clave_fiscal_afip_portal_federal",
+      "evidencia_requerida": "archivo_original_hash_acuse_captura",
+      "requisitos_obtencion": [
+        "CUIT agente/contribuyente habilitado",
+        "Clave fiscal ARCA y servicio COMARB delegado",
+        "Acceso al módulo Agentes/Consultas correspondiente"
+      ],
+      "condiciones_automatizacion": [
+        "Usar sesión delegada por cliente/agente",
+        "Descargar padrón mensual desde Descargas o módulo equivalente",
+        "Si hay MFA/CAPTCHA, derivar a cola asistida"
+      ],
+      "mantenimiento_seguro": [
+        "archivo_original",
+        "sha256",
+        "periodo",
+        "vigencia",
+        "captura_descarga",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado_no_integrado",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.ca.gob.ar/sistemas/sircip",
+        "credencial": "Clave fiscal ARCA / Portal Federal Tributario",
+        "nota": "Fuente COMARB oficial; descarga operativa requiere autorización del agente o contribuyente."
+      }
+    },
+    {
+      "id": "comarb_sircreb",
+      "nombre": "COMARB · SIRCREB",
+      "jurisdiccion": "Convenio Multilateral",
+      "organismo": "Comisión Arbitral",
+      "alcance": "Recaudación bancaria IIBB sobre acreditaciones",
+      "regimenes": [
+        "iibb",
+        "recaudacion_bancaria",
+        "convenio_multilateral"
+      ],
+      "clase": "portal_credenciales",
+      "prioridad": "P0",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.ca.gob.ar/index.php/sistemas/sircreb",
+      "metodo_actualizacion": "portal_federal_tributario_descarga",
+      "automatizacion": "requiere_credenciales",
+      "tipo_acceso": "clave_fiscal_afip_portal_federal",
+      "evidencia_requerida": "archivo_original_hash_acuse_captura",
+      "requisitos_obtencion": [
+        "CUIT agente/contribuyente habilitado",
+        "Clave fiscal ARCA y servicio COMARB delegado",
+        "Acceso al módulo Agentes/Consultas correspondiente"
+      ],
+      "condiciones_automatizacion": [
+        "Usar sesión delegada por cliente/agente",
+        "Descargar padrón mensual desde Descargas o módulo equivalente",
+        "Si hay MFA/CAPTCHA, derivar a cola asistida"
+      ],
+      "mantenimiento_seguro": [
+        "archivo_original",
+        "sha256",
+        "periodo",
+        "vigencia",
+        "captura_descarga",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado_no_integrado",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.ca.gob.ar/index.php/sistemas/sircreb",
+        "credencial": "Clave fiscal ARCA / Portal Federal Tributario",
+        "nota": "Fuente COMARB oficial; descarga operativa requiere autorización del agente o contribuyente."
+      }
+    },
+    {
+      "id": "comarb_sircupa",
+      "nombre": "COMARB · SIRCUPA",
+      "jurisdiccion": "Convenio Multilateral",
+      "organismo": "Comisión Arbitral",
+      "alcance": "Recaudación IIBB sobre acreditaciones en cuentas de pago/PSP",
+      "regimenes": [
+        "iibb",
+        "recaudacion_psp",
+        "convenio_multilateral"
+      ],
+      "clase": "portal_credenciales",
+      "prioridad": "P0",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.ca.gob.ar/sistemas/sircupa",
+      "metodo_actualizacion": "portal_federal_tributario_descarga",
+      "automatizacion": "requiere_credenciales",
+      "tipo_acceso": "clave_fiscal_afip_portal_federal",
+      "evidencia_requerida": "archivo_original_hash_acuse_captura",
+      "requisitos_obtencion": [
+        "CUIT agente/contribuyente habilitado",
+        "Clave fiscal ARCA y servicio COMARB delegado",
+        "Acceso al módulo Agentes/Consultas correspondiente"
+      ],
+      "condiciones_automatizacion": [
+        "Usar sesión delegada por cliente/agente",
+        "Descargar padrón mensual desde Descargas o módulo equivalente",
+        "Si hay MFA/CAPTCHA, derivar a cola asistida"
+      ],
+      "mantenimiento_seguro": [
+        "archivo_original",
+        "sha256",
+        "periodo",
+        "vigencia",
+        "captura_descarga",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado_no_integrado",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.ca.gob.ar/sistemas/sircupa",
+        "credencial": "Clave fiscal ARCA / Portal Federal Tributario",
+        "nota": "Fuente COMARB oficial; descarga operativa requiere autorización del agente o contribuyente."
+      }
+    },
+    {
+      "id": "ater_entrerios_iibb",
+      "padron_key": "EntreRios",
+      "nombre": "Entre Ríos / ATER · Agentes y alícuotas",
+      "jurisdiccion": "Entre Ríos",
+      "organismo": "ATER",
+      "alcance": "Ingresos Brutos · retención/percepción",
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "padron_descargable",
+      "prioridad": "P0",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.ater.gov.ar/ater2/NominasAgentes.asp",
+      "metodo_actualizacion": "descarga_archivo_importador",
+      "automatizacion": "archivo_normalizado",
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "monitoreo_publicacion",
+        "landing_url": "https://www.ater.gov.ar/ater2/NominasAgentes.asp",
+        "nota": "La normativa ATER indica nóminas semestrales publicadas en abril y octubre; requiere monitoreo y/o archivo oficial exportado."
+      },
+      "tipo_acceso": "monitoreo_publicacion",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "arca_apoc",
+      "nombre": "ARCA · Control APOC / comprobantes apócrifos",
+      "jurisdiccion": "Nacional",
+      "organismo": "ARCA",
+      "alcance": "Señal de riesgo sobre usinas/facturación apócrifa y controles preventivos de proveedor",
+      "regimenes": [
+        "riesgo_fiscal",
+        "proveedores_apocrifos"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P0",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://www.arca.gob.ar/facturacion/default.asp",
+      "metodo_actualizacion": "consulta_por_cuit_o_evidencia_manual",
+      "automatizacion": "requiere_navegador",
+      "tipo_acceso": "consulta_publica_o_clave_fiscal_segun_servicio",
+      "evidencia_requerida": "respuesta_consulta_captura_timestamp",
+      "requisitos_obtencion": [
+        "CUIT proveedor",
+        "Disponibilidad del servicio ARCA aplicable",
+        "Captura/evidencia cuando no haya API estable"
+      ],
+      "condiciones_automatizacion": [
+        "No eludir CAPTCHA",
+        "Tratar hallazgo como alerta de riesgo, no como determinación automática concluyente"
+      ],
+      "mantenimiento_seguro": [
+        "captura_html",
+        "timestamp",
+        "hash_evidencia",
+        "revalidacion_periodica"
+      ],
+      "estado_integracion": "pendiente_relevar_endpoint",
+      "descarga": {
+        "modo": "requiere_navegador",
+        "landing_url": "https://www.arca.gob.ar/facturacion/default.asp",
+        "nota": "Requiere relevamiento técnico del servicio vigente y cola asistida si hay controles interactivos."
+      }
+    },
     {
       "id": "arca_constancia",
       "nombre": "ARCA · Constancia de inscripción",
@@ -23,41 +331,80 @@
       "metodo_actualizacion": "AFIPSDK / Web Service",
       "automatizacion": "automatizada",
       "evidencia_requerida": "respuesta_api_constancia",
-      "nota": "La constancia ARCA informa inscripción en Convenio Multilateral y jurisdicciones declaradas; los padrones provinciales se usan para alícuotas."
-    },
-    {
-      "id": "arba_iibb",
-      "padron_key": "ARBA",
-      "nombre": "Buenos Aires / ARBA · Régimen por sujeto",
-      "jurisdiccion": "Buenos Aires",
-      "organismo": "ARBA",
-      "alcance": "Ingresos Brutos · retención/percepción por sujeto",
-      "regimenes": [
-        "iibb",
-        "retencion",
-        "percepcion"
+      "nota": "La constancia ARCA informa inscripción en Convenio Multilateral y jurisdicciones declaradas; los padrones provinciales se usan para alícuotas.",
+      "tipo_acceso": "publico",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
       ],
-      "clase": "padron_descargable",
-      "prioridad": "P1",
-      "frecuencia": "mensual",
-      "dias_alerta": 7,
-      "url": "https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto",
-      "metodo_actualizacion": "descarga_archivo_importador",
-      "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest",
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado",
       "descarga": {
-        "modo": "requiere_credenciales",
-        "landing_url": "https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto",
-        "credencial": "CIT o Web Service ARBA",
-        "nota": "ARBA publica el padrón mensual y servicio web, pero la obtención operativa requiere habilitación/credencial del agente."
+        "modo": "publico",
+        "landing_url": "https://www.afip.gob.ar/ws/",
+        "nota": "Fuente oficial catalogada; ver requisitos_obtencion y condiciones_automatizacion."
       }
     },
     {
-      "id": "agip_caba_iibb",
-      "padron_key": "CABA",
-      "nombre": "CABA / AGIP · Alícuotas padrón",
-      "jurisdiccion": "CABA",
-      "organismo": "AGIP",
+      "id": "arca_sire",
+      "nombre": "ARCA · SIRE retenciones/percepciones",
+      "jurisdiccion": "Nacional",
+      "organismo": "ARCA",
+      "alcance": "Sistema Integral de Retenciones Electrónicas; presentación/certificación de retenciones y percepciones nacionales",
+      "regimenes": [
+        "retencion",
+        "percepcion",
+        "informacion",
+        "iva",
+        "ganancias",
+        "seguridad_social"
+      ],
+      "clase": "portal_credenciales",
+      "prioridad": "P0",
+      "frecuencia": "por_operacion_y_vencimiento",
+      "url": "https://arca.gob.ar/sire/",
+      "metodo_actualizacion": "portal_clave_fiscal_exportacion",
+      "automatizacion": "requiere_credenciales",
+      "tipo_acceso": "clave_fiscal_servicio_delegado",
+      "evidencia_requerida": "acuse_presentacion_certificados_sire_captura",
+      "requisitos_obtencion": [
+        "CUIT agente con clave fiscal",
+        "Servicio SIRE habilitado/delegado",
+        "Certificados/acuse exportables por período"
+      ],
+      "condiciones_automatizacion": [
+        "No calcular alícuotas desde SIRE; usarlo para certificación/evidencia",
+        "Automatizar sólo con delegación expresa y secrets cifrados"
+      ],
+      "mantenimiento_seguro": [
+        "acuse_pdf",
+        "captura_portal",
+        "hash_exportacion",
+        "log_acceso",
+        "conciliacion_con_regimenes_aplicables"
+      ],
+      "estado_integracion": "catalogado_no_integrado",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://arca.gob.ar/sire/",
+        "credencial": "Clave fiscal ARCA con servicio SIRE",
+        "nota": "Portal nacional para certificación/presentación; requiere operación por agente."
+      }
+    },
+    {
+      "id": "santafe_iibb",
+      "padron_key": "SantaFe",
+      "nombre": "Santa Fe · Padrón IIBB",
+      "jurisdiccion": "Santa Fe",
+      "organismo": "API Santa Fe",
       "alcance": "Ingresos Brutos · retención/percepción",
       "regimenes": [
         "iibb",
@@ -65,50 +412,259 @@
         "percepcion"
       ],
       "clase": "padron_descargable",
-      "prioridad": "P1",
+      "prioridad": "P0",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
+      "url": "https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284",
       "metodo_actualizacion": "descarga_archivo_importador",
       "automatizacion": "archivo_normalizado",
       "evidencia_requerida": "archivo_original_hash_manifest",
       "descarga": {
-        "modo": "pagina_publica_links",
-        "landing_url": "https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion",
-        "link_text_regex": "Padrón de Regímenes Generales - Vigencia",
-        "extensiones": [
-          ".zip",
-          ".txt",
-          ".rar"
-        ],
-        "nota": "AGIP publica el enlace vigente en la página de Agentes de Recaudación."
-      }
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284",
+        "credencial": "SIAT/API Santa Fe",
+        "nota": "Santa Fe informa PARP consultable ingresando al Sistema Integral de Administración Tributaria."
+      },
+      "tipo_acceso": "portal_credenciales",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
     },
     {
-      "id": "ater_entrerios_iibb",
-      "padron_key": "EntreRios",
-      "nombre": "Entre Ríos / ATER · Agentes y alícuotas",
-      "jurisdiccion": "Entre Ríos",
-      "organismo": "ATER",
-      "alcance": "Ingresos Brutos · retención/percepción",
+      "id": "chubut_iibb_agentes",
+      "nombre": "Chubut · ARECH agentes retención/percepción",
+      "jurisdiccion": "Chubut",
+      "organismo": "ARECH Chubut",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
       "regimenes": [
         "iibb",
+        "inscripcion",
         "retencion",
         "percepcion"
       ],
-      "clase": "padron_descargable",
+      "clase": "consulta_online",
+      "prioridad": "P1",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://www.dgrchubut.gov.ar/agentes-de-retencion-y-percepcion/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://www.dgrchubut.gov.ar/agentes-de-retencion-y-percepcion/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "comarb_sifere_padron",
+      "nombre": "COMARB · Padrón Web / SIFERE consultas",
+      "jurisdiccion": "Convenio Multilateral",
+      "organismo": "Comisión Arbitral",
+      "alcance": "Constancia e información de inscripción Convenio Multilateral",
+      "regimenes": [
+        "iibb",
+        "convenio_multilateral",
+        "inscripcion",
+        "informacion"
+      ],
+      "clase": "portal_credenciales",
       "prioridad": "P1",
       "frecuencia": "mensual",
       "dias_alerta": 7,
-      "url": "https://www.ater.gov.ar/ater2/NominasAgentes.asp",
-      "metodo_actualizacion": "descarga_archivo_importador",
-      "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest",
+      "url": "https://www.ca.gob.ar/sistemas/padron-web-padron-federal",
+      "metodo_actualizacion": "portal_federal_tributario_descarga",
+      "automatizacion": "requiere_credenciales",
+      "tipo_acceso": "clave_fiscal_afip_portal_federal",
+      "evidencia_requerida": "archivo_original_hash_acuse_captura",
+      "requisitos_obtencion": [
+        "CUIT agente/contribuyente habilitado",
+        "Clave fiscal ARCA y servicio COMARB delegado",
+        "Acceso al módulo Agentes/Consultas correspondiente"
+      ],
+      "condiciones_automatizacion": [
+        "Usar sesión delegada por cliente/agente",
+        "Descargar padrón mensual desde Descargas o módulo equivalente",
+        "Si hay MFA/CAPTCHA, derivar a cola asistida"
+      ],
+      "mantenimiento_seguro": [
+        "archivo_original",
+        "sha256",
+        "periodo",
+        "vigencia",
+        "captura_descarga",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado_no_integrado",
       "descarga": {
-        "modo": "monitoreo_publicacion",
-        "landing_url": "https://www.ater.gov.ar/ater2/NominasAgentes.asp",
-        "nota": "La normativa ATER indica nóminas semestrales publicadas en abril y octubre; requiere monitoreo y/o archivo oficial exportado."
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.ca.gob.ar/sistemas/padron-web-padron-federal",
+        "credencial": "Clave fiscal ARCA / Portal Federal Tributario",
+        "nota": "Fuente COMARB oficial; descarga operativa requiere autorización del agente o contribuyente."
       }
+    },
+    {
+      "id": "comarb_sircar",
+      "nombre": "COMARB · SIRCAR",
+      "jurisdiccion": "Convenio Multilateral",
+      "organismo": "Comisión Arbitral",
+      "alcance": "Retenciones/percepciones IIBB de agentes en jurisdicciones adheridas",
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion",
+        "convenio_multilateral"
+      ],
+      "clase": "portal_credenciales",
+      "prioridad": "P1",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.ca.gob.ar/sistemas/sircar",
+      "metodo_actualizacion": "portal_federal_tributario_descarga",
+      "automatizacion": "requiere_credenciales",
+      "tipo_acceso": "clave_fiscal_afip_portal_federal",
+      "evidencia_requerida": "archivo_original_hash_acuse_captura",
+      "requisitos_obtencion": [
+        "CUIT agente/contribuyente habilitado",
+        "Clave fiscal ARCA y servicio COMARB delegado",
+        "Acceso al módulo Agentes/Consultas correspondiente"
+      ],
+      "condiciones_automatizacion": [
+        "Usar sesión delegada por cliente/agente",
+        "Descargar padrón mensual desde Descargas o módulo equivalente",
+        "Si hay MFA/CAPTCHA, derivar a cola asistida"
+      ],
+      "mantenimiento_seguro": [
+        "archivo_original",
+        "sha256",
+        "periodo",
+        "vigencia",
+        "captura_descarga",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado_no_integrado",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.ca.gob.ar/sistemas/sircar",
+        "credencial": "Clave fiscal ARCA / Portal Federal Tributario",
+        "nota": "Fuente COMARB oficial; descarga operativa requiere autorización del agente o contribuyente."
+      }
+    },
+    {
+      "id": "comarb_sirtac",
+      "nombre": "COMARB · SIRTAC",
+      "jurisdiccion": "Convenio Multilateral",
+      "organismo": "Comisión Arbitral",
+      "alcance": "Recaudación IIBB sobre tarjetas/medios de pago",
+      "regimenes": [
+        "iibb",
+        "recaudacion_tarjetas",
+        "convenio_multilateral"
+      ],
+      "clase": "portal_credenciales",
+      "prioridad": "P1",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.ca.gob.ar/sistemas/sirtac",
+      "metodo_actualizacion": "portal_federal_tributario_descarga",
+      "automatizacion": "requiere_credenciales",
+      "tipo_acceso": "clave_fiscal_afip_portal_federal",
+      "evidencia_requerida": "archivo_original_hash_acuse_captura",
+      "requisitos_obtencion": [
+        "CUIT agente/contribuyente habilitado",
+        "Clave fiscal ARCA y servicio COMARB delegado",
+        "Acceso al módulo Agentes/Consultas correspondiente"
+      ],
+      "condiciones_automatizacion": [
+        "Usar sesión delegada por cliente/agente",
+        "Descargar padrón mensual desde Descargas o módulo equivalente",
+        "Si hay MFA/CAPTCHA, derivar a cola asistida"
+      ],
+      "mantenimiento_seguro": [
+        "archivo_original",
+        "sha256",
+        "periodo",
+        "vigencia",
+        "captura_descarga",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado_no_integrado",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.ca.gob.ar/sistemas/sirtac",
+        "credencial": "Clave fiscal ARCA / Portal Federal Tributario",
+        "nota": "Fuente COMARB oficial; descarga operativa requiere autorización del agente o contribuyente."
+      }
+    },
+    {
+      "id": "corrientes_iibb_online",
+      "padron_key": "Corrientes",
+      "nombre": "Corrientes / DGR · Consulta con clave",
+      "jurisdiccion": "Corrientes",
+      "organismo": "DGR Corrientes",
+      "alcance": "Inscripción IIBB / padrones bajo acceso",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "portal_credenciales",
+      "prioridad": "P1",
+      "frecuencia": "segun_exportacion_cliente",
+      "url": "https://www.dgrcorrientes.gov.ar/rentascorrientes/consultarContenido.do?categoria=199",
+      "metodo_actualizacion": "credenciales_o_exportacion",
+      "automatizacion": "requiere_credenciales",
+      "evidencia_requerida": "archivo_exportado_o_captura",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.dgrcorrientes.gov.ar/rentascorrientes/consultarContenido.do?categoria=199",
+        "credencial": "usuario registrado/CAV",
+        "nota": "DGR Corrientes indica que las alícuotas se consultan como usuario registrado en Portal del Contribuyente > IIBB Agentes."
+      },
+      "tipo_acceso": "portal_credenciales",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
     },
     {
       "id": "cordoba_iibb",
@@ -123,7 +679,7 @@
         "percepcion"
       ],
       "clase": "padron_descargable",
-      "prioridad": "P2",
+      "prioridad": "P1",
       "frecuencia": "mensual",
       "dias_alerta": 7,
       "url": "https://www.rentascordoba.gob.ar/cms/ms-agentes/",
@@ -143,6 +699,328 @@
           ".rar"
         ],
         "nota": "Rentas Córdoba publica listados y consulta de alícuotas para agentes; se releva enlace público y se guarda evidencia."
+      },
+      "tipo_acceso": "pagina_publica_links",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "jujuy_iibb",
+      "padron_key": "Jujuy",
+      "nombre": "Jujuy · Padrón IIBB",
+      "jurisdiccion": "Jujuy",
+      "organismo": "DPR Jujuy",
+      "alcance": "Ingresos Brutos · retención/percepción",
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "padron_descargable",
+      "prioridad": "P1",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://rentasjujuy.gob.ar/agentes-ingresos-brutos/",
+      "metodo_actualizacion": "descarga_archivo_importador",
+      "automatizacion": "archivo_normalizado",
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "pagina_publica_links",
+        "landing_url": "https://rentasjujuy.gob.ar/agentes-ingresos-brutos/",
+        "link_text_regex": "(Descarga de Padr[oó]n|Padr[oó]n|Al[ií]cuotas|N[oó]mina)",
+        "extensiones": [
+          ".zip",
+          ".txt",
+          ".csv",
+          ".xlsx",
+          ".xls",
+          ".rar"
+        ],
+        "nota": "DPR Jujuy informa consulta/descarga de padrón con alícuotas para retención-percepción."
+      },
+      "tipo_acceso": "pagina_publica_links",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "mendoza_iibb",
+      "padron_key": "Mendoza",
+      "nombre": "Mendoza · Padrón IIBB",
+      "jurisdiccion": "Mendoza",
+      "organismo": "ATM Mendoza",
+      "alcance": "Ingresos Brutos · retención/percepción",
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "padron_descargable",
+      "prioridad": "P1",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.atm.mendoza.gov.ar/portalatm/zoneTop/preguntasFrecuentes/agentes/agentes.jsp",
+      "metodo_actualizacion": "descarga_archivo_importador",
+      "automatizacion": "archivo_normalizado",
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "portal_credenciales",
+        "landing_url": "https://www.atm.mendoza.gov.ar/",
+        "credencial": "Clave Fiscal/portal ATM del agente",
+        "nota": "La operación de agentes se canaliza por servicios ATM/SIRCAR; requiere credenciales o exportación."
+      },
+      "tipo_acceso": "portal_credenciales",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "misiones_iibb_online",
+      "padron_key": "Misiones",
+      "nombre": "Misiones / ATM · Constancia IIBB",
+      "jurisdiccion": "Misiones",
+      "organismo": "ATM Misiones",
+      "alcance": "Inscripción IIBB por CUIT",
+      "regimenes": [
+        "iibb",
+        "inscripcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P1",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
+      "metodo_actualizacion": "consulta_por_cuit",
+      "automatizacion": "requiere_navegador",
+      "evidencia_requerida": "captura_respuesta_html",
+      "descarga": {
+        "modo": "requiere_navegador",
+        "landing_url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
+        "nota": "Consulta pública por CUIT; endpoint directo bloquea acceso sin navegador. Requiere Playwright o cola asistida."
+      },
+      "tipo_acceso": "requiere_navegador",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "rionegro_iibb_online",
+      "padron_key": "RioNegro",
+      "nombre": "Río Negro · Inscripciones contribuyente",
+      "jurisdiccion": "Río Negro",
+      "organismo": "Agencia de Recaudación Río Negro",
+      "alcance": "Inscripción IIBB por CUIT",
+      "regimenes": [
+        "iibb",
+        "inscripcion"
+      ],
+      "clase": "portal_captcha",
+      "prioridad": "P1",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
+      "metodo_actualizacion": "consulta_asistida",
+      "automatizacion": "requiere_captcha",
+      "evidencia_requerida": "captura_asistida",
+      "descarga": {
+        "modo": "requiere_captcha",
+        "landing_url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
+        "nota": "Fuente con CAPTCHA; requiere cola asistida y captura."
+      },
+      "tipo_acceso": "requiere_captcha",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "tucuman_iibb",
+      "padron_key": "Tucuman",
+      "nombre": "Tucumán · Padrón IIBB",
+      "jurisdiccion": "Tucumán",
+      "organismo": "DGR Tucumán",
+      "alcance": "Ingresos Brutos · retención/percepción",
+      "regimenes": [
+        "iibb",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "padron_descargable",
+      "prioridad": "P1",
+      "frecuencia": "mensual",
+      "dias_alerta": 7,
+      "url": "https://www.rentastucuman.gob.ar/",
+      "metodo_actualizacion": "descarga_archivo_importador",
+      "automatizacion": "archivo_normalizado",
+      "evidencia_requerida": "archivo_original_hash_manifest",
+      "descarga": {
+        "modo": "pagina_publica_links",
+        "landing_url": "https://www.rentastucuman.gob.ar/",
+        "link_text_regex": "(Padr[oó]n de Contribuyentes|Coeficiente|RG 23/02|Agentes de Retenci[oó]n)",
+        "extensiones": [
+          ".zip",
+          ".txt",
+          ".csv",
+          ".xlsx",
+          ".xls",
+          ".rar",
+          ".pdf"
+        ],
+        "nota": "DGR Tucumán publica normativa y transferencias de padrones vinculadas a RG 23/02; se releva enlace público y se evidencia."
+      },
+      "tipo_acceso": "pagina_publica_links",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
+    },
+    {
+      "id": "catamarca_iibb_online",
+      "nombre": "Catamarca · ARCAT IIBB/agentes",
+      "jurisdiccion": "Catamarca",
+      "organismo": "ARCAT",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P2",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://arcat.gob.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://arcat.gob.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "chaco_iibb_online",
+      "nombre": "Chaco · ATP agentes IIBB",
+      "jurisdiccion": "Chaco",
+      "organismo": "ATP Chaco",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P2",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://atp.chaco.gob.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://atp.chaco.gob.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
       }
     },
     {
@@ -169,155 +1047,281 @@
         "modo": "archivo_cliente",
         "landing_url": "https://www.formosa.gob.ar/tramite/120/inscripcion_como_agente_de_percepcion_del_impuesto_sobre_los_ingresos_brutos",
         "nota": "No se verificó padrón mensual público normalizado; circuito previsto por archivo/exportación del cliente o relevamiento asistido."
-      }
+      },
+      "tipo_acceso": "archivo_cliente",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
+      ],
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
     },
     {
-      "id": "jujuy_iibb",
-      "padron_key": "Jujuy",
-      "nombre": "Jujuy · Padrón IIBB",
-      "jurisdiccion": "Jujuy",
-      "organismo": "DPR Jujuy",
-      "alcance": "Ingresos Brutos · retención/percepción",
+      "id": "lapampa_iibb_online",
+      "nombre": "La Pampa · DGR/ATM agentes IIBB",
+      "jurisdiccion": "La Pampa",
+      "organismo": "DGR La Pampa",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
       "regimenes": [
         "iibb",
+        "inscripcion",
         "retencion",
         "percepcion"
-      ],
-      "clase": "padron_descargable",
-      "prioridad": "P2",
-      "frecuencia": "mensual",
-      "dias_alerta": 7,
-      "url": "https://rentasjujuy.gob.ar/agentes-ingresos-brutos/",
-      "metodo_actualizacion": "descarga_archivo_importador",
-      "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest",
-      "descarga": {
-        "modo": "pagina_publica_links",
-        "landing_url": "https://rentasjujuy.gob.ar/agentes-ingresos-brutos/",
-        "link_text_regex": "(Descarga de Padr[oó]n|Padr[oó]n|Al[ií]cuotas|N[oó]mina)",
-        "extensiones": [
-          ".zip",
-          ".txt",
-          ".csv",
-          ".xlsx",
-          ".xls",
-          ".rar"
-        ],
-        "nota": "DPR Jujuy informa consulta/descarga de padrón con alícuotas para retención-percepción."
-      }
-    },
-    {
-      "id": "mendoza_iibb",
-      "padron_key": "Mendoza",
-      "nombre": "Mendoza · Padrón IIBB",
-      "jurisdiccion": "Mendoza",
-      "organismo": "ATM Mendoza",
-      "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": [
-        "iibb",
-        "retencion",
-        "percepcion"
-      ],
-      "clase": "padron_descargable",
-      "prioridad": "P2",
-      "frecuencia": "mensual",
-      "dias_alerta": 7,
-      "url": "https://www.atm.mendoza.gov.ar/portalatm/zoneTop/preguntasFrecuentes/agentes/agentes.jsp",
-      "metodo_actualizacion": "descarga_archivo_importador",
-      "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest",
-      "descarga": {
-        "modo": "portal_credenciales",
-        "landing_url": "https://www.atm.mendoza.gov.ar/",
-        "credencial": "Clave Fiscal/portal ATM del agente",
-        "nota": "La operación de agentes se canaliza por servicios ATM/SIRCAR; requiere credenciales o exportación."
-      }
-    },
-    {
-      "id": "santafe_iibb",
-      "padron_key": "SantaFe",
-      "nombre": "Santa Fe · Padrón IIBB",
-      "jurisdiccion": "Santa Fe",
-      "organismo": "API Santa Fe",
-      "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": [
-        "iibb",
-        "retencion",
-        "percepcion"
-      ],
-      "clase": "padron_descargable",
-      "prioridad": "P2",
-      "frecuencia": "mensual",
-      "dias_alerta": 7,
-      "url": "https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284",
-      "metodo_actualizacion": "descarga_archivo_importador",
-      "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest",
-      "descarga": {
-        "modo": "portal_credenciales",
-        "landing_url": "https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284",
-        "credencial": "SIAT/API Santa Fe",
-        "nota": "Santa Fe informa PARP consultable ingresando al Sistema Integral de Administración Tributaria."
-      }
-    },
-    {
-      "id": "tucuman_iibb",
-      "padron_key": "Tucuman",
-      "nombre": "Tucumán · Padrón IIBB",
-      "jurisdiccion": "Tucumán",
-      "organismo": "DGR Tucumán",
-      "alcance": "Ingresos Brutos · retención/percepción",
-      "regimenes": [
-        "iibb",
-        "retencion",
-        "percepcion"
-      ],
-      "clase": "padron_descargable",
-      "prioridad": "P2",
-      "frecuencia": "mensual",
-      "dias_alerta": 7,
-      "url": "https://www.rentastucuman.gob.ar/",
-      "metodo_actualizacion": "descarga_archivo_importador",
-      "automatizacion": "archivo_normalizado",
-      "evidencia_requerida": "archivo_original_hash_manifest",
-      "descarga": {
-        "modo": "pagina_publica_links",
-        "landing_url": "https://www.rentastucuman.gob.ar/",
-        "link_text_regex": "(Padr[oó]n de Contribuyentes|Coeficiente|RG 23/02|Agentes de Retenci[oó]n)",
-        "extensiones": [
-          ".zip",
-          ".txt",
-          ".csv",
-          ".xlsx",
-          ".xls",
-          ".rar",
-          ".pdf"
-        ],
-        "nota": "DGR Tucumán publica normativa y transferencias de padrones vinculadas a RG 23/02; se releva enlace público y se evidencia."
-      }
-    },
-    {
-      "id": "misiones_iibb_online",
-      "padron_key": "Misiones",
-      "nombre": "Misiones / ATM · Constancia IIBB",
-      "jurisdiccion": "Misiones",
-      "organismo": "ATM Misiones",
-      "alcance": "Inscripción IIBB por CUIT",
-      "regimenes": [
-        "iibb",
-        "inscripcion"
       ],
       "clase": "consulta_online",
-      "prioridad": "P3",
+      "prioridad": "P2",
       "frecuencia": "alta_y_revalidacion",
-      "url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
-      "metodo_actualizacion": "consulta_por_cuit",
-      "automatizacion": "requiere_navegador",
-      "evidencia_requerida": "captura_respuesta_html",
+      "url": "https://www.dgr.lapampa.gob.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
       "descarga": {
-        "modo": "requiere_navegador",
-        "landing_url": "https://sinclavefiscal.atm.misiones.gob.ar/sc/ingresos-brutos/constancia-inscripcion",
-        "nota": "Consulta pública por CUIT; endpoint directo bloquea acceso sin navegador. Requiere Playwright o cola asistida."
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://www.dgr.lapampa.gob.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "larioja_iibb_online",
+      "nombre": "La Rioja · DGIP agentes IIBB",
+      "jurisdiccion": "La Rioja",
+      "organismo": "DGIP La Rioja",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P2",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://dgip.larioja.gob.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://dgip.larioja.gob.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "salta_iibb_online",
+      "nombre": "Salta · DGR agentes IIBB",
+      "jurisdiccion": "Salta",
+      "organismo": "DGR Salta",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P2",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://www.dgrsalta.gov.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://www.dgrsalta.gov.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "sanjuan_iibb_online",
+      "nombre": "San Juan · Rentas agentes IIBB",
+      "jurisdiccion": "San Juan",
+      "organismo": "DGR San Juan",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P2",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://rentas.dgrsj.gob.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://rentas.dgrsj.gob.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "sanluis_iibb_online",
+      "nombre": "San Luis · Rentas agentes IIBB",
+      "jurisdiccion": "San Luis",
+      "organismo": "DPIP San Luis",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P2",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://dpip.sanluis.gov.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p2",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://dpip.sanluis.gov.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "municipal_padrones_huella_cliente",
+      "nombre": "Municipal · padrones/tasas por huella del cliente",
+      "jurisdiccion": "Municipal",
+      "organismo": "Municipios/Comunas",
+      "alcance": "TISH, DReI, Comercio e Industria, tasas locales y regímenes de retención/percepción/información municipales",
+      "regimenes": [
+        "municipal",
+        "tish",
+        "drei",
+        "retencion",
+        "percepcion",
+        "informacion"
+      ],
+      "clase": "cola_asistida",
+      "prioridad": "P3",
+      "frecuencia": "segun_huella_cliente",
+      "url": "https://www.argentina.gob.ar/municipios",
+      "metodo_actualizacion": "relevamiento_por_cliente_municipio",
+      "automatizacion": "priorizar_por_huella_cliente",
+      "tipo_acceso": "variable_por_municipio",
+      "evidencia_requerida": "ordenanza_portal_municipal_constancia_captura",
+      "requisitos_obtencion": [
+        "Mapa de sucursales/operaciones del cliente",
+        "Municipios con compras/ventas relevantes",
+        "Ordenanza o portal oficial municipal"
+      ],
+      "condiciones_automatizacion": [
+        "No intentar cobertura municipal masiva inicial",
+        "Priorizar municipios por volumen/riesgo",
+        "Usar cola asistida ante portales fragmentados"
+      ],
+      "mantenimiento_seguro": [
+        "ordenanza_pdf",
+        "captura_portal",
+        "vigencia_normativa",
+        "revision_semestral"
+      ],
+      "estado_integracion": "marco_general",
+      "descarga": {
+        "modo": "cola_asistida",
+        "landing_url": "https://www.argentina.gob.ar/municipios",
+        "nota": "Los municipios no tienen estándar único; se integran por huella operativa del cliente."
       }
     },
     {
@@ -342,57 +1346,150 @@
         "modo": "consulta_online_cuit",
         "landing_url": "https://rentasneuquenweb.gob.ar/nqn/SCF/cons_inscripcion.php",
         "nota": "Ya existe adaptador automático por CUIT para constancia de inscripción."
-      }
-    },
-    {
-      "id": "rionegro_iibb_online",
-      "padron_key": "RioNegro",
-      "nombre": "Río Negro · Inscripciones contribuyente",
-      "jurisdiccion": "Río Negro",
-      "organismo": "Agencia de Recaudación Río Negro",
-      "alcance": "Inscripción IIBB por CUIT",
-      "regimenes": [
-        "iibb",
-        "inscripcion"
+      },
+      "tipo_acceso": "consulta_online_cuit",
+      "requisitos_obtencion": [
+        "Verificar fuente oficial y conservar evidencia de acceso/descarga."
       ],
-      "clase": "portal_captcha",
-      "prioridad": "P3",
-      "frecuencia": "alta_y_revalidacion",
-      "url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
-      "metodo_actualizacion": "consulta_asistida",
-      "automatizacion": "requiere_captcha",
-      "evidencia_requerida": "captura_asistida",
-      "descarga": {
-        "modo": "requiere_captcha",
-        "landing_url": "https://agenciaws.rionegro.gov.ar/InscripcionesContribuyente/",
-        "nota": "Fuente con CAPTCHA; requiere cola asistida y captura."
-      }
+      "condiciones_automatizacion": [
+        "Respetar condiciones del portal; no eludir CAPTCHA ni controles de acceso."
+      ],
+      "mantenimiento_seguro": [
+        "guardar_original",
+        "sha256",
+        "manifest",
+        "validacion_calidad",
+        "comparacion_periodo_anterior"
+      ],
+      "estado_integracion": "catalogado"
     },
     {
-      "id": "corrientes_iibb_online",
-      "padron_key": "Corrientes",
-      "nombre": "Corrientes / DGR · Consulta con clave",
-      "jurisdiccion": "Corrientes",
-      "organismo": "DGR Corrientes",
-      "alcance": "Inscripción IIBB / padrones bajo acceso",
+      "id": "santacruz_iibb_online",
+      "nombre": "Santa Cruz · ASIP agentes IIBB",
+      "jurisdiccion": "Santa Cruz",
+      "organismo": "ASIP Santa Cruz",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
       "regimenes": [
         "iibb",
         "inscripcion",
         "retencion",
         "percepcion"
       ],
-      "clase": "portal_credenciales",
+      "clase": "consulta_online",
       "prioridad": "P3",
-      "frecuencia": "segun_exportacion_cliente",
-      "url": "https://www.dgrcorrientes.gov.ar/rentascorrientes/consultarContenido.do?categoria=199",
-      "metodo_actualizacion": "credenciales_o_exportacion",
-      "automatizacion": "requiere_credenciales",
-      "evidencia_requerida": "archivo_exportado_o_captura",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://asip.gob.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p3",
       "descarga": {
-        "modo": "portal_credenciales",
-        "landing_url": "https://www.dgrcorrientes.gov.ar/rentascorrientes/consultarContenido.do?categoria=199",
-        "credencial": "usuario registrado/CAV",
-        "nota": "DGR Corrientes indica que las alícuotas se consultan como usuario registrado en Portal del Contribuyente > IIBB Agentes."
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://asip.gob.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "santiago_iibb_online",
+      "nombre": "Santiago del Estero · DGR agentes IIBB",
+      "jurisdiccion": "Santiago del Estero",
+      "organismo": "DGR Santiago del Estero",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P3",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://www.dgrsantiago.gov.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p3",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://www.dgrsantiago.gov.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
+      }
+    },
+    {
+      "id": "tierradelfuego_iibb_online",
+      "nombre": "Tierra del Fuego · AREF agentes IIBB",
+      "jurisdiccion": "Tierra del Fuego",
+      "organismo": "AREF Tierra del Fuego",
+      "alcance": "Ingresos Brutos · inscripción, agentes, retención/percepción y/o certificados según portal jurisdiccional",
+      "regimenes": [
+        "iibb",
+        "inscripcion",
+        "retencion",
+        "percepcion"
+      ],
+      "clase": "consulta_online",
+      "prioridad": "P3",
+      "frecuencia": "alta_y_revalidacion",
+      "url": "https://www.aref.gob.ar/",
+      "metodo_actualizacion": "relevamiento_asistido_o_exportacion_cliente",
+      "automatizacion": "pendiente_automatizacion",
+      "tipo_acceso": "portal_jurisdiccional_a_relevar",
+      "evidencia_requerida": "url_oficial_captura_archivo_exportado_si_existe",
+      "requisitos_obtencion": [
+        "Confirmar servicio oficial vigente",
+        "Determinar si existe padrón mensual descargable, consulta por CUIT o sólo portal con clave",
+        "Registrar requisitos de agente/credenciales"
+      ],
+      "condiciones_automatizacion": [
+        "Priorizar consulta/descarga pública si existe",
+        "Si requiere clave/MFA/CAPTCHA, pasar a cola asistida",
+        "No usar datos no oficiales"
+      ],
+      "mantenimiento_seguro": [
+        "captura_relevamiento",
+        "manifest",
+        "hash_evidencia",
+        "revision_trimestral_hasta_integracion"
+      ],
+      "estado_integracion": "pendiente_relevamiento_p3",
+      "descarga": {
+        "modo": "pendiente_relevamiento",
+        "landing_url": "https://www.aref.gob.ar/",
+        "nota": "Fuente oficial base identificada; falta confirmar endpoint/padrón específico y condiciones de acceso."
       }
     }
   ]

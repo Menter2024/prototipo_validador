@@ -16,3 +16,6 @@ dependencies = [
 dev = [
   "pytest>=8.0",
 ]
+automation = [
+  "playwright>=1.44",
+]

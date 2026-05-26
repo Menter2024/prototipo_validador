@@ -69,6 +69,10 @@
       <span class="text-slate-300">·</span>
       <a href="/fuentes-pendientes" class="text-blue-600 hover:text-blue-800 underline">Fuentes pendientes</a>
       <span class="text-slate-300">·</span>
+      <a href="/accesos" class="text-blue-600 hover:text-blue-800 underline">Accesos fiscales</a>
+      <span class="text-slate-300">·</span>
+      <a href="/regimenes" class="text-blue-600 hover:text-blue-800 underline">Regímenes fiscales</a>
+      <span class="text-slate-300">·</span>
       <a href="/legajos" class="text-blue-600 hover:text-blue-800 underline">Ver legajos</a>
       <span class="text-slate-300">·</span>
       <a href="/lotes" class="text-blue-600 hover:text-blue-800 underline">Carga masiva Excel</a>
@@ -169,6 +173,14 @@ function padronBadgeClass(status) {
   if (status === 'no_disponible') return 'bg-slate-100 text-slate-700';
   if (status === 'consulta_manual') return 'bg-blue-100 text-blue-700';
   if (status === 'requiere_credenciales') return 'bg-violet-100 text-violet-700';
+  return 'bg-slate-100 text-slate-700';
+}
+
+function regimenBadgeClass(clasificacion) {
+  if (clasificacion === 'aplicable') return 'bg-emerald-100 text-emerald-700';
+  if (clasificacion === 'potencial') return 'bg-amber-100 text-amber-700';
+  if (clasificacion === 'pendiente_evidencia') return 'bg-blue-100 text-blue-700';
+  if (clasificacion === 'no_integrable_cola_asistida') return 'bg-violet-100 text-violet-700';
   return 'bg-slate-100 text-slate-700';
 }
 
@@ -279,6 +291,16 @@ function renderResults(data) {
         <td class="p-2">${item.accion}</td>
       </tr>`).join('');
     const matriz_alertas = (matriz.alertas || []).map(a => `<li>${a}</li>`).join('');
+    const regimenes = r.regimenes_aplicables || {items: [], resumen: {total: 0}, criterio: 'Sin mapa de regímenes disponible.'};
+    const regimenes_html = (regimenes.items || []).map(item => `
+      <tr class="border-b border-slate-100">
+        <td class="p-2 font-semibold">${item.nombre}</td>
+        <td class="p-2">${item.jurisdiccion}</td>
+        <td class="p-2">${item.tipo}</td>
+        <td class="p-2"><span class="${regimenBadgeClass(item.clasificacion)} text-xs font-semibold px-2 py-1 rounded">${item.clasificacion}</span></td>
+        <td class="p-2">${item.evidencia_requerida || '—'}</td>
+        <td class="p-2">${item.proxima_accion || '—'}</td>
+      </tr>`).join('');
 
     card.innerHTML = `
       <div class="flex justify-between items-start mb-4">
@@ -327,6 +349,18 @@ function renderResults(data) {
         <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Fuentes online sin padrón mensual</div>
         <div class="text-xs text-slate-500 mb-2">Estas fuentes quedan preparadas para automatización/asistencia. Hoy se registran con link directo y estado técnico.</div>
         ${fuentes_html || '<div class="text-sm text-slate-500">No se consultaron fuentes online.</div>'}
+      </div>
+      <div class="mt-4">
+        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Mapa de obligaciones potenciales</div>
+        <div class="text-xs text-slate-500 mb-2">${regimenes.criterio} · ${regimenes.resumen?.total || 0} régimen(es) derivados.</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-100 text-slate-600">
+              <tr><th class="text-left p-2">Régimen</th><th class="text-left p-2">Jurisdicción</th><th class="text-left p-2">Tipo</th><th class="text-left p-2">Clasificación</th><th class="text-left p-2">Evidencia</th><th class="text-left p-2">Próxima acción</th></tr>
+            </thead>
+            <tbody>${regimenes_html || '<tr><td class="p-2 text-slate-500" colspan="6">Sin regímenes derivados.</td></tr>'}</tbody>
+          </table>
+        </div>
       </div>
       <div class="mt-4">
         <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Matriz tributaria sugerida</div>
