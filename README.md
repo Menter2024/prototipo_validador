@@ -104,12 +104,14 @@ Módulo: app/modules/fuentes_online.py
 - Script apto para scheduler diario.
 - Descarga controlada de fuentes públicas con evidencia, hash y manifest.
 - Circuito definido para fuentes restantes: público, credenciales, archivo cliente, consulta CUIT, navegador o CAPTCHA.
+- Cola de fuentes pendientes/asistidas para resolver CAPTCHA, credenciales, navegador y verificaciones manuales con evidencia.
 
 Config: config/fuentes_catalogo.json
 Web: /fuentes
 API: /api/fuentes
 CLI: scripts/revisar_fuentes.py
 Descargas: scripts/descargar_fuentes.py
+Cola asistida: /fuentes-pendientes
 
 ### Motor de decisión fiscal
 
@@ -191,6 +193,7 @@ Módulo: app/modules/excel.py
 | /lotes | Carga masiva desde Excel/CSV |
 | /padrones | Administración de padrones provinciales |
 | /fuentes | Monitor de fuentes fiscales y alertas |
+| /fuentes-pendientes | Cola de fuentes asistidas por CUIT/proveedor |
 | /legajos | Historial de legajos fiscales |
 | /legajos/{id} | Detalle y evidencia de un legajo |
 | /api/info | Diagnóstico no sensible en JSON |
@@ -217,6 +220,7 @@ Estructura:
     app/modules/padron_manifest.py
     app/modules/fuentes_catalogo.py
     app/modules/descarga_fuentes.py
+    app/modules/fuentes_pendientes.py
     app/modules/fuentes_online.py
     app/modules/riesgo_fiscal.py
     app/modules/matriz_tributaria.py

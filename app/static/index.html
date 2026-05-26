@@ -67,6 +67,8 @@
       <span class="text-slate-300">·</span>
       <a href="/fuentes" class="text-blue-600 hover:text-blue-800 underline">Monitor de fuentes</a>
       <span class="text-slate-300">·</span>
+      <a href="/fuentes-pendientes" class="text-blue-600 hover:text-blue-800 underline">Fuentes pendientes</a>
+      <span class="text-slate-300">·</span>
       <a href="/legajos" class="text-blue-600 hover:text-blue-800 underline">Ver legajos</a>
       <span class="text-slate-300">·</span>
       <a href="/lotes" class="text-blue-600 hover:text-blue-800 underline">Carga masiva Excel</a>
@@ -184,7 +186,7 @@ function renderResults(data) {
     : '<strong>AFIP/ARCA live activo.</strong> Al menos una consulta respondió con datos reales en tiempo real.';
 
   document.getElementById('result-summary').textContent =
-    `${data.total_procesados} CUIT(s) procesados · modo ${data.modo_general.toUpperCase()}`;
+    `${data.total_procesados} CUIT(s) procesados · modo ${data.modo_general.toUpperCase()} · ${data.tareas_asistidas || 0} tarea(s) asistida(s)`;
 
   document.getElementById('btn-descarga').href = '/api/excel/' + data.excel;
   document.getElementById('btn-legajo').href = '/legajos/' + data.legajo_id;

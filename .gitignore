@@ -6,6 +6,7 @@
 # Resultados generados localmente
 salidas/*.xlsx
 salidas/evidencias/
+salidas/fuentes_pendientes.json
 
 # Python
 __pycache__/

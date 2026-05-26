@@ -38,6 +38,7 @@ Prioridad alta para producción real.
 - Requerimiento de documentación.
 - Revalidación programada.
 - Alertas de padrones vencidos. **Base implementada:** `GET /api/fuentes`, `/fuentes` y `scripts/revisar_fuentes.py`.
+- Cola de fuentes asistidas. **Base implementada:** `/fuentes-pendientes` con estados, notas, legajo y evidencia.
 - Alertas por proveedores bloqueados.
 
 ## Fase 4 — Fuentes nacionales ARCA ampliadas

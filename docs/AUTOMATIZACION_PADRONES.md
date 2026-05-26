@@ -34,6 +34,7 @@ La implementación evita simular automatización donde el organismo exige creden
   - Río Negro: CAPTCHA asistido.
 - ARCA/AFIP ahora normaliza señales de IIBB/Convenio Multilateral desde la constancia de inscripción.
 - La matriz tributaria incorpora jurisdicciones IIBB informadas por ARCA como condición a cruzar contra padrones provinciales.
+- Cola `/fuentes-pendientes` para gestionar intervenciones humanas con estado, nota, legajo asociado y evidencia adjunta.
 
 ### Criterio Convenio Multilateral
 
@@ -66,7 +67,6 @@ Pero ARCA **no reemplaza** a los padrones o consultas provinciales: un contribuy
 1. Automatizar descarga ARBA/AGIP/ATER donde exista archivo público estable.
    - Base Sprint 2: AGIP releva/descarga desde página pública; ARBA/ATER quedan parametrizadas según credencial/publicación.
 2. Incorporar historial de ejecuciones de jobs y evidencias descargadas.
-3. Crear cola `/fuentes-pendientes` para consultas asistidas de Misiones/Río Negro/Corrientes.
-4. Implementar parsers específicos para archivos descargados en formato no estándar (`.rar`, `.xls`, layouts fijos).
-5. Persistir resultados en base de datos multiempresa.
-6. Agregar alertas por mail/Slack/Teams cuando una fuente crítica esté vencida o sin carga.
+3. Implementar parsers específicos para archivos descargados en formato no estándar (`.rar`, `.xls`, layouts fijos).
+4. Persistir resultados en base de datos multiempresa.
+5. Agregar alertas por mail/Slack/Teams cuando una fuente crítica esté vencida o sin carga.

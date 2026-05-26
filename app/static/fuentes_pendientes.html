@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Fuentes pendientes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="gradient-menter text-white">
+  <div class="max-w-7xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Fuentes pendientes/asistidas</div>
+    <div class="text-sm text-blue-100">Cola de trabajo para CAPTCHA, credenciales, navegador y verificaciones manuales</div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <div class="flex justify-between items-center gap-4 flex-wrap mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Bandeja de intervención fiscal</h1>
+      <p class="text-slate-500 text-sm">Cada validación genera automáticamente tareas cuando una fuente no puede resolverse de forma automática.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <a href="/fuentes" class="text-blue-600 hover:underline">Monitor de fuentes</a>
+      <a href="/" class="text-blue-600 hover:underline">← Validador</a>
+    </div>
+  </div>
+
+  <section id="kpis" class="grid md:grid-cols-5 gap-3 mb-6"></section>
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex justify-between gap-3 flex-wrap mb-4">
+      <div class="flex gap-2">
+        <button onclick="cargar('')" class="text-blue-600 hover:underline text-sm">Todas</button>
+        <button onclick="cargar('pendiente')" class="text-blue-600 hover:underline text-sm">Pendientes</button>
+        <button onclick="cargar('en_proceso')" class="text-blue-600 hover:underline text-sm">En proceso</button>
+        <button onclick="cargar('resuelto')" class="text-blue-600 hover:underline text-sm">Resueltas</button>
+      </div>
+      <button onclick="cargar(filtroActual)" class="text-blue-600 hover:underline text-sm">Actualizar</button>
+    </div>
+    <div id="msg" class="hidden mb-4 rounded-lg px-4 py-3 text-sm"></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600">
+          <tr>
+            <th class="text-left p-2">Proveedor</th>
+            <th class="text-left p-2">Fuente</th>
+            <th class="text-left p-2">Requerimiento</th>
+            <th class="text-left p-2">Estado</th>
+            <th class="text-left p-2">Creado</th>
+            <th class="text-left p-2">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+let filtroActual = '';
+
+function badge(value) {
+  const cls = {
+    pendiente: 'bg-amber-100 text-amber-700',
+    en_proceso: 'bg-blue-100 text-blue-700',
+    resuelto: 'bg-emerald-100 text-emerald-700',
+    descartado: 'bg-slate-100 text-slate-700',
+    error: 'bg-rose-100 text-rose-700',
+  }[value] || 'bg-slate-100 text-slate-700';
+  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${value}</span>`;
+}
+
+function kpi(label, value, cls) {
+  return `<div class="bg-white rounded-xl shadow-sm p-4 border-l-4 ${cls}">
+    <div class="text-xs uppercase tracking-wide text-slate-500">${label}</div>
+    <div class="text-2xl font-bold">${value}</div>
+  </div>`;
+}
+
+function showMsg(ok, text) {
+  const el = document.getElementById('msg');
+  el.className = ok ? 'mb-4 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800' : 'mb-4 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800';
+  el.textContent = text;
+}
+
+async function actualizar(id) {
+  const estado = document.getElementById(`estado-${id}`).value;
+  const nota = document.getElementById(`nota-${id}`).value;
+  const evidencia = document.getElementById(`evid-${id}`).files[0];
+  const form = new FormData();
+  form.append('estado', estado);
+  form.append('nota', nota);
+  if (evidencia) form.append('evidencia', evidencia);
+  const r = await fetch(`/api/fuentes-pendientes/${id}/actualizar`, { method: 'POST', body: form });
+  const data = await r.json();
+  if (!r.ok) return showMsg(false, data.detail || 'No se pudo actualizar la tarea.');
+  showMsg(true, 'Tarea actualizada.');
+  await cargar(filtroActual);
+}
+
+async function cargar(estado='') {
+  filtroActual = estado;
+  const r = await fetch('/api/fuentes-pendientes' + (estado ? `?estado=${estado}` : ''));
+  const data = await r.json();
+  const s = data.resumen || {};
+  document.getElementById('kpis').innerHTML = [
+    kpi('Total', s.total ?? 0, 'border-slate-500'),
+    kpi('Pendientes', s.pendientes ?? 0, 'border-amber-500'),
+    kpi('En proceso', s.en_proceso ?? 0, 'border-blue-500'),
+    kpi('Resueltas', s.resueltos ?? 0, 'border-emerald-500'),
+    kpi('Errores', s.errores ?? 0, 'border-rose-500'),
+  ].join('');
+
+  const items = data.items || [];
+  document.getElementById('tbody').innerHTML = items.length ? items.map(i => {
+    const url = i.url ? `<a href="${i.url}" target="_blank" class="text-blue-600 hover:underline">abrir fuente</a>` : '';
+    const legajo = i.legajo_id ? `<a href="/legajos/${i.legajo_id}" class="text-blue-600 hover:underline">ver legajo</a>` : '';
+    return `<tr class="border-b border-slate-100 align-top">
+      <td class="p-2"><div class="font-semibold">${i.razon_social || '—'}</div><div class="font-mono text-xs text-slate-500">${i.cuit || '—'}</div><div class="text-xs">${legajo}</div></td>
+      <td class="p-2"><div class="font-semibold">${i.nombre || i.fuente}</div><div class="text-xs text-slate-500">${i.fuente} · ${i.prioridad}</div>${url}</td>
+      <td class="p-2"><div>${i.tipo_requerimiento}</div><div class="text-xs text-slate-500 max-w-md">${i.detalle || ''}</div></td>
+      <td class="p-2">${badge(i.estado)}</td>
+      <td class="p-2">${i.creado_en || '—'}<div class="text-xs text-slate-400">Act. ${i.actualizado_en || '—'}</div></td>
+      <td class="p-2 min-w-80">
+        <div class="grid grid-cols-2 gap-2">
+          <select id="estado-${i.id}" class="border border-slate-300 rounded px-2 py-1">
+            ${['pendiente','en_proceso','resuelto','descartado','error'].map(e => `<option value="${e}" ${i.estado===e?'selected':''}>${e}</option>`).join('')}
+          </select>
+          <input id="evid-${i.id}" type="file" class="text-xs" />
+          <input id="nota-${i.id}" placeholder="Nota/evidencia" class="border border-slate-300 rounded px-2 py-1 col-span-2" />
+          <button onclick="actualizar('${i.id}')" class="bg-blue-600 hover:bg-blue-700 text-white rounded px-3 py-1 col-span-2">Guardar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="p-4 text-slate-500">No hay tareas para este filtro.</td></tr>';
+}
+
+cargar();
+</script>
+</body>
+</html>

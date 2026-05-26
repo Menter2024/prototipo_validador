@@ -66,7 +66,7 @@ document.getElementById('form').addEventListener('submit', async e => {
   if (!r.ok) return msg(false, data.detail || 'Error procesando lote.');
   msg(true, 'Lote procesado correctamente.');
   document.getElementById('res').classList.remove('hidden');
-  document.getElementById('summary').textContent = `${data.total_procesados} procesados · ${data.total_validos} CUIT válidos · ${data.total_observados} observados`;
+  document.getElementById('summary').textContent = `${data.total_procesados} procesados · ${data.total_validos} CUIT válidos · ${data.total_observados} observados · ${data.tareas_asistidas || 0} tarea(s) asistida(s)`;
   document.getElementById('excel').href = '/api/excel/' + data.excel;
   document.getElementById('legajo').href = '/legajos/' + data.legajo_id;
 });

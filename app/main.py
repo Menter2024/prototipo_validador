@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -182,11 +182,13 @@ async def validar_endpoint(req: ValidarRequest):
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
     legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR)
+    tareas_asistidas = fuentes_pendientes.crear_desde_resultados(SALIDAS_DIR, resultados, legajo["id"])
 
     return {
         "resultados": resultados,
         "excel": filename,
         "legajo_id": legajo["id"],
+        "tareas_asistidas": len(tareas_asistidas),
         "modo_general": "live" if any(r.get("modo_afip") == "live" for r in resultados) else "demo",
         "total_procesados": len(resultados),
         "total_validos": sum(1 for r in resultados if r.get("valido")),
@@ -232,10 +234,12 @@ async def validar_excel_endpoint(
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
     legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR)
+    tareas_asistidas = fuentes_pendientes.crear_desde_resultados(SALIDAS_DIR, resultados, legajo["id"])
     return {
         "resultados": resultados,
         "excel": filename,
         "legajo_id": legajo["id"],
+        "tareas_asistidas": len(tareas_asistidas),
         "modo_general": "live" if any(r.get("modo_afip") == "live" for r in resultados) else "demo",
         "total_procesados": len(resultados),
         "total_validos": sum(1 for r in resultados if r.get("valido")),
@@ -291,6 +295,39 @@ def fuentes_estado():
     estado = fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
     estado["descargas"] = descarga_fuentes.cargar_manifest(EVIDENCIAS_FUENTES_DIR).get("descargas", [])[:20]
     return estado
+
+
+@app.get("/api/fuentes-pendientes")
+def listar_fuentes_pendientes(estado: str | None = None):
+    return fuentes_pendientes.listar(SALIDAS_DIR, estado)
+
+
+@app.post("/api/fuentes-pendientes/{item_id}/actualizar")
+async def actualizar_fuente_pendiente(
+    item_id: str,
+    estado: str = Form(...),
+    nota: str = Form(""),
+    evidencia: UploadFile | None = File(None),
+):
+    tmp = None
+    try:
+        if evidencia and evidencia.filename:
+            tmp = UPLOADS_DIR / f"evidencia_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{Path(evidencia.filename).name}"
+            with tmp.open("wb") as f:
+                shutil.copyfileobj(evidencia.file, f)
+        item = fuentes_pendientes.actualizar(
+            SALIDAS_DIR,
+            item_id,
+            estado,
+            nota,
+            tmp,
+            evidencia.filename if evidencia else None,
+        )
+        if not item:
+            raise HTTPException(status_code=404, detail="Tarea asistida no encontrada.")
+        return {"ok": True, "item": item}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/api/fuentes/descargar")
@@ -356,6 +393,11 @@ def padrones_admin():
 @app.get("/fuentes", response_class=HTMLResponse)
 def fuentes_page():
     return (STATIC_DIR / "fuentes.html").read_text(encoding="utf-8")
+
+
+@app.get("/fuentes-pendientes", response_class=HTMLResponse)
+def fuentes_pendientes_page():
+    return (STATIC_DIR / "fuentes_pendientes.html").read_text(encoding="utf-8")
 
 
 @app.get("/legajos", response_class=HTMLResponse)
