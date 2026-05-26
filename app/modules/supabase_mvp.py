@@ -142,6 +142,59 @@ def insert_row(table: str, payload: dict[str, Any]) -> dict[str, Any]:
     return {"enabled": True, "inserted": True, "table": table, "data": data}
 
 
+def insert_rows(table: str, payloads: list[dict[str, Any]], *, timeout: int = 120) -> dict[str, Any]:
+    cfg = get_config()
+    if not cfg:
+        return {"enabled": False, "inserted": False, "reason": "Supabase no configurado"}
+    if not payloads:
+        return {"enabled": True, "inserted": True, "table": table, "count": 0}
+    url = f"{cfg.url}/rest/v1/{table}"
+    headers = _headers(cfg, {"Content-Type": "application/json", "Prefer": "return=minimal"})
+    with httpx.Client(timeout=timeout) as client:
+        res = client.post(url, headers=headers, json=payloads)
+        res.raise_for_status()
+    return {"enabled": True, "inserted": True, "table": table, "count": len(payloads)}
+
+
+def buscar_padron_registro(cuit_limpio: str, provincia: str) -> dict[str, Any] | None:
+    tid = tenant_id()
+    if not tid:
+        return None
+    rows = select_rows("padron_registros_demo", {
+        "select": "cuit,jurisdiccion,regimen,alicuota_retencion,alicuota_percepcion,vigencia_desde,vigencia_hasta,datos",
+        "tenant_id": f"eq.{tid}",
+        "cuit": f"eq.{cuit_limpio}",
+        "jurisdiccion": f"eq.{provincia}",
+        "limit": "1",
+    })
+    if not rows:
+        return None
+    row = rows[0]
+    return {
+        "encontrado": True,
+        "alicuota_retencion": row.get("alicuota_retencion") or "—",
+        "alicuota_percepcion": row.get("alicuota_percepcion") or "—",
+        "vigencia_desde": row.get("vigencia_desde") or "",
+        "vigencia_hasta": row.get("vigencia_hasta") or "",
+        "regimen": row.get("regimen") or "",
+        "fuente": "supabase",
+    }
+
+
+def provincia_tiene_padron_activo(provincia: str) -> bool:
+    tid = tenant_id()
+    if not tid:
+        return False
+    rows = select_rows("padron_versiones", {
+        "select": "id",
+        "tenant_id": f"eq.{tid}",
+        "provincia": f"eq.{provincia}",
+        "estado": "eq.activo",
+        "limit": "1",
+    })
+    return bool(rows)
+
+
 def sync_padron_importado(
     *,
     archivo_local: Path,

@@ -32,3 +32,29 @@ def test_migration_has_rls_and_private_bucket():
     assert "menter-fiscal" in sql
     assert "public, file_size_limit" in sql
     assert "No se crean políticas públicas" in sql
+
+
+def test_padrones_uses_supabase_when_local_file_missing(monkeypatch, tmp_path):
+    from app.modules import padrones
+
+    def fake_buscar(cuit, provincia):
+        if provincia != "EntreRios":
+            return None
+        return {
+            "encontrado": True,
+            "alicuota_retencion": "1.00",
+            "alicuota_percepcion": "2.00",
+            "vigencia_desde": "2026-05-01",
+            "vigencia_hasta": "2026-05-31",
+            "regimen": "ATER",
+            "fuente": "supabase",
+        }
+
+    monkeypatch.setattr(padrones.supabase_mvp, "buscar_padron_registro", fake_buscar)
+    monkeypatch.setattr(padrones.supabase_mvp, "provincia_tiene_padron_activo", lambda provincia: provincia == "EntreRios")
+
+    res = padrones.consultar_todos("30546689979", tmp_path)
+
+    assert res["EntreRios"]["status"] == "inscripto"
+    assert res["EntreRios"]["fuente"] == "supabase"
+    assert res["ARBA"]["status"] == "no_disponible"
