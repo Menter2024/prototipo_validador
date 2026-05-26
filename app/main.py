@@ -205,7 +205,8 @@ async def validar_endpoint(req: ValidarRequest):
         "total_observados": sum(
             1
             for r in resultados
-            if (not r.get("valido"))
+            if r.get("decision_fiscal", {}).get("estado") != "APROBABLE"
+            or (not r.get("valido"))
             or r.get("afip", {}).get("en_apoc")
             or (
                 r.get("afip", {}).get("estado_clave") not in (None, "—", "ACTIVO")
