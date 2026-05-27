@@ -1,6 +1,7 @@
 (function () {
   const pages = [
     ["/dashboard", "Dashboard"],
+    ["/piloto-ccu", "Piloto CCU"],
     ["/", "Consultar"],
     ["/lotes", "Carga masiva"],
     ["/legajos", "Legajos"],

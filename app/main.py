@@ -549,6 +549,11 @@ def dashboard_page():
     return (STATIC_DIR / "dashboard.html").read_text(encoding="utf-8")
 
 
+@app.get("/piloto-ccu", response_class=HTMLResponse)
+def piloto_ccu_page():
+    return (STATIC_DIR / "piloto_ccu.html").read_text(encoding="utf-8")
+
+
 @app.get("/manual", response_class=HTMLResponse)
 def manual_page():
     return (STATIC_DIR / "manual.html").read_text(encoding="utf-8")

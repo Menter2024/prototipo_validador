@@ -206,6 +206,7 @@ Módulo: app/modules/excel.py
 | Ruta | Uso |
 |---|---|
 | /dashboard | Dashboard ejecutivo de piloto y próximas acciones por rol |
+| /piloto-ccu | Checklist vivo de readiness para prueba piloto CCU |
 | / | Validación individual o múltiple por texto |
 | /configuracion | Configuración guiada de cliente, cobertura, padrones, fuentes y accesos |
 | /manual | Manual de usuario y operación imprimible/PDF |
@@ -298,6 +299,7 @@ Para producción enterprise se debe agregar:
 ## Documentación complementaria
 
 - docs/MANUAL_USUARIO.md
+- docs/PILOTO_CCU_READINESS.md
 - docs/ARQUITECTURA_ENTERPRISE.md
 - docs/OPERACION_TRIBUTARIA.md
 - docs/ROADMAP_ENTERPRISE.md
