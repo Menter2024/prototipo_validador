@@ -149,8 +149,53 @@ section.bg-white, .bg-white.rounded-xl, .bg-white.rounded-lg {
 .border-slate-300:focus, textarea:focus, input:focus, select:focus { border-color: var(--menter-gold) !important; }
 footer { color: var(--menter-muted) !important; }
 
+.menter-nav-group { position: relative; }
+.menter-nav-group summary {
+  list-style: none;
+  cursor: pointer;
+  color: rgba(251, 247, 235, .78);
+  font-size: 12px;
+  font-weight: 650;
+  padding: 9px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.menter-nav-group summary::-webkit-details-marker { display: none; }
+.menter-nav-group summary:hover { color: #fff; background: rgba(244, 207, 103, .12); }
+.menter-nav-group summary.active {
+  color: #111;
+  background: linear-gradient(135deg, var(--menter-gold-2), var(--menter-gold));
+}
+.menter-nav-group div {
+  position: absolute;
+  right: 0;
+  top: 38px;
+  min-width: 180px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(5, 5, 5, .98);
+  border: 1px solid rgba(244, 207, 103, .22);
+  box-shadow: 0 18px 40px rgba(5,5,5,.28);
+  display: grid;
+  gap: 4px;
+}
+.menter-nav-group div a { display: block; text-align: left; }
+.menter-detail {
+  border: 1px solid rgba(143, 95, 18, .12);
+  border-radius: 16px;
+  background: #fffdf8;
+  padding: 14px 16px;
+}
+.menter-detail summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: #2b2418;
+}
+.menter-detail summary::marker { color: var(--menter-gold); }
+
 @media (max-width: 960px) {
   .menter-appbar-inner { grid-template-columns: 1fr; gap: 12px; }
   .menter-nav { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
   .menter-badge { display: none; }
+  .menter-nav-group div { position: static; margin-top: 6px; }
 }

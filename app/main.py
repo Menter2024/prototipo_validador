@@ -544,9 +544,19 @@ def index():
     return (STATIC_DIR / "index.html").read_text(encoding="utf-8")
 
 
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page():
+    return (STATIC_DIR / "dashboard.html").read_text(encoding="utf-8")
+
+
 @app.get("/info", response_class=HTMLResponse)
 def info_page():
     return (STATIC_DIR / "info.html").read_text(encoding="utf-8")
+
+
+@app.get("/configuracion", response_class=HTMLResponse)
+def configuracion_page():
+    return (STATIC_DIR / "configuracion.html").read_text(encoding="utf-8")
 
 
 @app.get("/padrones", response_class=HTMLResponse)

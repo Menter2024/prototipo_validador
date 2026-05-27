@@ -58,7 +58,8 @@
 
     <textarea id="cuit-input" rows="5"
       class="w-full border border-slate-300 rounded-lg p-4 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      placeholder="33-69345023-9&#10;30-50001091-2"></textarea>
+      placeholder="Pegá uno o varios CUITs de proveedores&#10;33-69345023-9&#10;30-50001091-2"></textarea>
+    <div id="input-error" class="hidden mt-3 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 px-4 py-3 text-sm"></div>
 
     <div class="flex flex-wrap items-center gap-3 mt-4 text-sm">
       <button onclick="cargarMenter()" class="bg-slate-900 text-white rounded-full px-4 py-2 font-semibold">Demo Menter</button>
@@ -110,55 +111,58 @@
 </footer>
 
 <script>
+const friendly = {
+  REVISION_MANUAL: 'Requiere revisión',
+  requiere_credenciales: 'Falta acceso autorizado',
+  pendiente_automatizacion: 'Pendiente de automatizar',
+  requiere_navegador: 'Requiere navegador asistido',
+  requiere_captcha: 'Requiere validación manual',
+  consulta_manual: 'Consulta manual',
+  no_integrable_cola_asistida: 'Requiere gestión manual',
+  no_disponible: 'Fuente no cargada',
+  inscripto: 'Inscripto / alcanzado',
+  no_inscripto: 'Sin hallazgos',
+  aplicable: 'Aplicable',
+  potencial: 'Potencial',
+  pendiente_evidencia: 'Falta evidencia',
+};
+function label(v) { return friendly[v] || String(v || '—').replaceAll('_', ' '); }
 function cargarEjemplos() {
-  // CUITs reales conocidos para demo pública
   document.getElementById('cuit-input').value = '30-71886996-6\n33-69345023-9\n30-50001091-2\n30-54668997-9';
+  showInputMsg('', true);
 }
-
 function cargarMenter() {
   document.getElementById('cuit-input').value = '30-71886996-6';
+  showInputMsg('', true);
 }
-
+function showInputMsg(text, ok=false) {
+  const el = document.getElementById('input-error');
+  if (!text) { el.classList.add('hidden'); return; }
+  el.className = ok
+    ? 'mt-3 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-3 text-sm'
+    : 'mt-3 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 px-4 py-3 text-sm';
+  el.textContent = text;
+}
 function show(id) {
-  ['view-input', 'view-loading', 'view-results'].forEach(v => {
-    document.getElementById(v).classList.add('hidden');
-  });
+  ['view-input', 'view-loading', 'view-results'].forEach(v => document.getElementById(v).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
-
 async function validar() {
   const raw = document.getElementById('cuit-input').value;
   const cuits = raw.split(/\r?\n|,|;/).map(s => s.trim()).filter(Boolean);
-  if (cuits.length === 0) {
-    alert('Ingresá al menos un CUIT.');
-    return;
-  }
+  if (!cuits.length) return showInputMsg('Ingresá al menos un CUIT para validar.');
+  showInputMsg('', true);
   show('view-loading');
-
   try {
-    const r = await fetch('/api/validar', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({cuits}),
-    });
-    if (!r.ok) {
-      const err = await r.json();
-      alert('Error: ' + (err.detail || r.statusText));
-      show('view-input');
-      return;
-    }
-    const data = await r.json();
+    const r = await fetch('/api/validar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cuits})});
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { show('view-input'); return showInputMsg(data.detail || r.statusText || 'No se pudo validar.'); }
     renderResults(data);
   } catch (e) {
-    alert('Error de conexión: ' + e.message);
     show('view-input');
+    showInputMsg('No se pudo conectar con el servidor. Reintentá en unos segundos.');
   }
 }
-
-function statusColor(s) {
-  return s === 'ok' ? 'emerald' : s === 'warn' ? 'amber' : 'rose';
-}
-
 function padronBadgeClass(status) {
   if (status === 'inscripto') return 'bg-amber-100 text-amber-700';
   if (status === 'no_inscripto') return 'bg-emerald-100 text-emerald-700';
@@ -167,7 +171,6 @@ function padronBadgeClass(status) {
   if (status === 'requiere_credenciales') return 'bg-violet-100 text-violet-700';
   return 'bg-slate-100 text-slate-700';
 }
-
 function regimenBadgeClass(clasificacion) {
   if (clasificacion === 'aplicable') return 'bg-emerald-100 text-emerald-700';
   if (clasificacion === 'potencial') return 'bg-amber-100 text-amber-700';
@@ -175,205 +178,96 @@ function regimenBadgeClass(clasificacion) {
   if (clasificacion === 'no_integrable_cola_asistida') return 'bg-violet-100 text-violet-700';
   return 'bg-slate-100 text-slate-700';
 }
-
+function decisionClass(estado) {
+  return {
+    APROBABLE: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    OBSERVADO: 'bg-amber-100 text-amber-800 border-amber-200',
+    REVISION_MANUAL: 'bg-blue-100 text-blue-800 border-blue-200',
+    BLOQUEAR: 'bg-rose-100 text-rose-800 border-rose-200',
+  }[estado] || 'bg-slate-100 text-slate-800 border-slate-200';
+}
+function nextAction(decision, r) {
+  if (!r.valido) return 'Corregir CUIT antes de avanzar.';
+  if (decision.estado === 'APROBABLE') return 'Aprobar proveedor y guardar legajo.';
+  if (decision.estado === 'BLOQUEAR') return 'Bloquear alta y derivar a Compliance/Impuestos.';
+  return (decision.recomendaciones || [])[0] || 'Derivar a revisión de Impuestos.';
+}
 function renderResults(data) {
   show('view-results');
-
-  // Banner modo
   const banner = document.getElementById('modo-banner');
   banner.classList.remove('hidden');
-  banner.className = data.modo_general === 'demo'
-    ? 'bg-amber-100 border-b border-amber-300 text-amber-900 text-sm'
-    : 'bg-emerald-100 border-b border-emerald-300 text-emerald-900 text-sm';
+  banner.className = data.modo_general === 'demo' ? 'bg-amber-100 border-b border-amber-300 text-amber-900 text-sm' : 'bg-emerald-100 border-b border-emerald-300 text-emerald-900 text-sm';
   banner.querySelector('div').innerHTML = data.modo_general === 'demo'
-    ? '<strong>Modo demo activo.</strong> AFIP/ARCA devolvió datos de demostración o fallback.'
-    : '<strong>AFIP/ARCA live activo.</strong> Al menos una consulta respondió con datos reales en tiempo real.';
-
-  document.getElementById('result-summary').textContent =
-    `${data.total_procesados} CUIT(s) procesados · modo ${data.modo_general.toUpperCase()} · ${data.tareas_asistidas || 0} tarea(s) asistida(s)`;
-
+    ? '<strong>Modo demo activo.</strong> Algunas fuentes pueden usar fallback de demostración.'
+    : '<strong>Fuentes live activas.</strong> La consulta incluye datos en tiempo real cuando están disponibles.';
+  document.getElementById('result-summary').textContent = `${data.total_procesados} proveedor(es) · ${data.total_observados ?? 0} observado(s) · ${data.tareas_asistidas || 0} acción(es) pendiente(s)`;
   document.getElementById('btn-descarga').href = '/api/excel/' + data.excel;
   document.getElementById('btn-legajo').href = '/legajos/' + data.legajo_id;
-
   const kpis = [
     ['Procesados', data.total_procesados ?? data.resultados.length, 'bg-slate-100 text-slate-800'],
-    ['CUIT válidos', data.total_validos ?? data.resultados.filter(r => r.valido).length, 'bg-emerald-100 text-emerald-800'],
-    ['AFIP live', data.total_live ?? data.resultados.filter(r => r.modo_afip === 'live').length, 'bg-blue-100 text-blue-800'],
-    ['Observados', data.total_observados ?? 0, 'bg-amber-100 text-amber-800'],
+    ['Aptos técnicamente', data.total_validos ?? data.resultados.filter(r => r.valido).length, 'bg-emerald-100 text-emerald-800'],
+    ['Con fuente live', data.total_live ?? data.resultados.filter(r => r.modo_afip === 'live').length, 'bg-blue-100 text-blue-800'],
+    ['Requieren acción', (data.total_observados ?? 0) + (data.tareas_asistidas || 0), 'bg-amber-100 text-amber-800'],
   ];
-  document.getElementById('kpi-container').innerHTML = kpis.map(([label, value, cls]) => `
-    <div class="${cls} rounded-xl p-4">
-      <div class="text-xs uppercase tracking-wider opacity-75">${label}</div>
-      <div class="text-2xl font-bold">${value}</div>
-    </div>`).join('');
-
+  document.getElementById('kpi-container').innerHTML = kpis.map(([label, value, cls]) => `<div class="${cls} rounded-xl p-4"><div class="text-xs uppercase tracking-wider opacity-75">${label}</div><div class="text-2xl font-bold">${value}</div></div>`).join('');
   const cont = document.getElementById('results-container');
   cont.innerHTML = '';
-
   for (const r of data.resultados) {
     const card = document.createElement('div');
     card.className = 'bg-white rounded-xl shadow-sm p-6';
-
-    const validBadge = r.valido
-      ? '<span class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded">CUIT VÁLIDO</span>'
-      : '<span class="bg-rose-100 text-rose-700 text-xs font-semibold px-2 py-1 rounded">CUIT INVÁLIDO</span>';
-
     const afip = r.afip || {};
-    const decision = r.decision_fiscal || {estado:'REVISION_MANUAL', label:'REVISIÓN MANUAL', motivos:['Sin decisión fiscal disponible.'], recomendaciones:['Revisar manualmente.']};
+    const decision = r.decision_fiscal || {estado:'REVISION_MANUAL', label:'Requiere revisión', motivos:['Sin decisión fiscal disponible.'], recomendaciones:['Revisar manualmente.']};
+    decision.label = label(decision.estado === 'REVISION_MANUAL' ? 'REVISION_MANUAL' : decision.label);
     const modo = (r.modo_afip || 'demo').toLowerCase();
-    const sourceBadge = `<span class="source-${modo} text-xs font-semibold px-2 py-1 rounded">${modo.toUpperCase()}</span>`;
-    const apoc = afip.en_apoc === true
-      ? '<span class="text-rose-700 font-bold">SÍ — REVISAR</span>'
-      : (afip.en_apoc === false ? '<span class="text-emerald-700">NO</span>' : '<span class="text-slate-500">—</span>');
+    const sourceBadge = `<span class="source-${modo} text-xs font-semibold px-2 py-1 rounded">${modo === 'live' ? 'Fuente live' : 'Demo/fallback'}</span>`;
+    const apoc = afip.en_apoc === true ? '<span class="text-rose-700 font-bold">Sí — revisar</span>' : (afip.en_apoc === false ? '<span class="text-emerald-700">No</span>' : '<span class="text-slate-500">—</span>');
     const iibbArca = afip.inscripciones_iibb || {};
-    const iibbArcaTxt = (iibbArca.jurisdicciones || []).length
-      ? `${iibbArca.regimen || 'IIBB'}: ${(iibbArca.jurisdicciones || []).join(', ')}`
-      : 'Sin jurisdicciones CM/IIBB normalizadas en ARCA; validar padrones provinciales para inscripciones locales.';
-
-    let padrones_html = '';
+    const iibbArcaTxt = (iibbArca.jurisdicciones || []).length ? `${iibbArca.regimen || 'IIBB'}: ${(iibbArca.jurisdicciones || []).join(', ')}` : 'Sin jurisdicciones CM/IIBB normalizadas en ARCA.';
     const pads = r.padrones || {};
-    for (const prov in pads) {
-      const p = pads[prov];
+    const padrones_html = Object.entries(pads).map(([prov, p]) => {
       const icon = p.status === 'inscripto' ? '!' : p.status === 'no_inscripto' ? '✓' : (p.status === 'consulta_manual' ? '↗' : p.status === 'requiere_credenciales' ? '🔒' : '·');
-      const badgeClass = padronBadgeClass(p.status);
       const link = p.url ? ` <a class="text-blue-600 hover:underline" target="_blank" href="${p.url}">abrir fuente</a>` : '';
-      const cargar = p.status === 'no_disponible'
-        ? ' <a class="text-blue-600 hover:underline" href="/padrones">cargar padrón</a>'
-        : '';
-      padrones_html += `
-        <div class="flex items-start gap-2 py-1 text-sm">
-          <span class="w-5 h-5 rounded-full ${badgeClass} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
-          <span class="font-semibold w-24 flex-shrink-0">${prov}</span>
-          <span class="text-slate-600">${p.detalle || ''}${link}${cargar}</span>
-        </div>`;
-    }
-
-    let fuentes_html = '';
+      const cargar = p.status === 'no_disponible' ? ' <a class="text-blue-600 hover:underline" href="/padrones">cargar padrón</a>' : '';
+      return `<div class="flex items-start gap-2 py-1 text-sm"><span class="w-5 h-5 rounded-full ${padronBadgeClass(p.status)} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span><span class="font-semibold w-24 flex-shrink-0">${prov}</span><span class="text-slate-600"><b>${label(p.status)}.</b> ${p.detalle || ''}${link}${cargar}</span></div>`;
+    }).join('');
     const fuentes = r.fuentes_online || {};
-    for (const key in fuentes) {
-      const f = fuentes[key];
-      const cls = ['encontrado'].includes(f.estado)
-        ? 'bg-amber-100 text-amber-700'
-        : ['no_encontrado'].includes(f.estado)
-          ? 'bg-emerald-100 text-emerald-700'
-          : ['pendiente_automatizacion', 'requiere_navegador'].includes(f.estado)
-        ? 'bg-blue-100 text-blue-700'
-        : ['requiere_captcha', 'revisar'].includes(f.estado)
-          ? 'bg-amber-100 text-amber-700'
-          : f.estado === 'error'
-            ? 'bg-rose-100 text-rose-700'
-            : 'bg-violet-100 text-violet-700';
-      const icon = f.estado === 'encontrado' ? '!' : f.estado === 'no_encontrado' ? '✓' : ['pendiente_automatizacion', 'requiere_navegador'].includes(f.estado) ? '↗' : f.estado === 'requiere_captcha' ? '!' : f.estado === 'error' ? '×' : '🔒';
-      fuentes_html += `
-        <div class="flex items-start gap-2 py-1 text-sm">
-          <span class="w-5 h-5 rounded-full ${cls} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span>
-          <span class="font-semibold w-24 flex-shrink-0">${key}</span>
-          <span class="text-slate-600">${f.detalle || ''} <a class="text-blue-600 hover:underline" target="_blank" href="${f.url_consulta}">abrir fuente</a></span>
-        </div>`;
-    }
-
+    const fuentes_html = Object.entries(fuentes).map(([key, f]) => {
+      const cls = f.estado === 'encontrado' ? 'bg-amber-100 text-amber-700' : f.estado === 'no_encontrado' ? 'bg-emerald-100 text-emerald-700' : ['pendiente_automatizacion','requiere_navegador'].includes(f.estado) ? 'bg-blue-100 text-blue-700' : f.estado === 'error' ? 'bg-rose-100 text-rose-700' : 'bg-violet-100 text-violet-700';
+      const icon = f.estado === 'no_encontrado' ? '✓' : f.estado === 'error' ? '×' : f.estado === 'requiere_credenciales' ? '🔒' : '!';
+      return `<div class="flex items-start gap-2 py-1 text-sm"><span class="w-5 h-5 rounded-full ${cls} flex items-center justify-center font-bold text-xs flex-shrink-0">${icon}</span><span class="font-semibold w-24 flex-shrink-0">${key}</span><span class="text-slate-600"><b>${label(f.estado)}.</b> ${f.detalle || ''} ${f.url_consulta ? `<a class="text-blue-600 hover:underline" target="_blank" href="${f.url_consulta}">abrir fuente</a>` : ''}</span></div>`;
+    }).join('');
     const matriz = r.matriz_tributaria || {items: [], alertas: [], resumen: 'Sin matriz tributaria disponible'};
-    const matriz_html = matriz.items.map(item => `
-      <tr class="border-b border-slate-100">
-        <td class="p-2 font-semibold">${item.jurisdiccion}</td>
-        <td class="p-2">${item.impuesto}</td>
-        <td class="p-2">${item.condicion}</td>
-        <td class="p-2">${item.retencion}</td>
-        <td class="p-2">${item.percepcion}</td>
-        <td class="p-2">${item.accion}</td>
-      </tr>`).join('');
+    const matriz_html = (matriz.items || []).map(item => `<tr class="border-b border-slate-100"><td class="p-2 font-semibold">${item.jurisdiccion}</td><td class="p-2">${item.impuesto}</td><td class="p-2">${item.condicion}</td><td class="p-2">${item.retencion}</td><td class="p-2">${item.percepcion}</td><td class="p-2">${item.accion}</td></tr>`).join('');
     const matriz_alertas = (matriz.alertas || []).map(a => `<li>${a}</li>`).join('');
     const regimenes = r.regimenes_aplicables || {items: [], resumen: {total: 0}, criterio: 'Sin mapa de regímenes disponible.'};
-    const regimenes_html = (regimenes.items || []).map(item => `
-      <tr class="border-b border-slate-100">
-        <td class="p-2 font-semibold">${item.nombre}</td>
-        <td class="p-2">${item.jurisdiccion}</td>
-        <td class="p-2">${item.tipo}</td>
-        <td class="p-2"><span class="${regimenBadgeClass(item.clasificacion)} text-xs font-semibold px-2 py-1 rounded">${item.clasificacion}</span></td>
-        <td class="p-2">${item.evidencia_requerida || '—'}</td>
-        <td class="p-2">${item.proxima_accion || '—'}</td>
-      </tr>`).join('');
-
+    const regimenes_html = (regimenes.items || []).map(item => `<tr class="border-b border-slate-100"><td class="p-2 font-semibold">${item.nombre}</td><td class="p-2">${item.jurisdiccion}</td><td class="p-2">${item.tipo}</td><td class="p-2"><span class="${regimenBadgeClass(item.clasificacion)} text-xs font-semibold px-2 py-1 rounded">${label(item.clasificacion)}</span></td><td class="p-2">${item.evidencia_requerida || '—'}</td><td class="p-2">${item.proxima_accion || '—'}</td></tr>`).join('');
+    const validBadge = r.valido ? '<span class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded">CUIT válido</span>' : '<span class="bg-rose-100 text-rose-700 text-xs font-semibold px-2 py-1 rounded">CUIT inválido</span>';
     card.innerHTML = `
-      <div class="flex justify-between items-start mb-4">
-        <div>
-          <div class="font-mono text-lg font-bold text-slate-800">${r.cuit}</div>
-          <div class="text-sm text-slate-500">${r.tipo_persona} · ${r.mensaje_validador}</div>
+      <div class="grid md:grid-cols-[1.5fr_1fr] gap-4 mb-5">
+        <div class="rounded-2xl border p-5 ${decisionClass(decision.estado)}">
+          <div class="text-xs uppercase tracking-wider opacity-75 mb-1">Decisión recomendada</div>
+          <div class="text-2xl font-extrabold">${decision.label}</div>
+          <div class="mt-2 text-sm"><b>Próxima acción:</b> ${nextAction(decision, r)}</div>
+          <ul class="text-sm list-disc ml-5 mt-2">${(decision.motivos || []).slice(0, 3).map(m => `<li>${m}</li>`).join('')}</ul>
         </div>
-        <div class="flex gap-2 flex-wrap justify-end">${validBadge}<span class="decision-${decision.estado} text-xs font-semibold px-2 py-1 rounded">${decision.label}</span></div>
-      </div>
-
-      <div class="bg-white border border-slate-200 rounded-lg p-3 mb-4">
-        <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Decisión fiscal sugerida</div>
-        <div class="font-bold">${decision.label}</div>
-        <ul class="text-sm text-slate-600 list-disc ml-5 mt-1">
-          ${decision.motivos.map(m => `<li>${m}</li>`).join('')}
-        </ul>
-        <div class="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1">Recomendación</div>
-        <ul class="text-sm text-slate-600 list-disc ml-5">
-          ${decision.recomendaciones.map(m => `<li>${m}</li>`).join('')}
-        </ul>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-4 mb-4">
-        <div class="md:col-span-2 bg-slate-50 rounded-lg p-3">
-          <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">AFIP / ARCA ${sourceBadge}</div>
-          <div class="font-bold text-slate-800">${afip.razon_social || '—'}</div>
-          <div class="text-sm text-slate-600">${afip.actividad_principal || '—'}</div>
-          <div class="text-sm text-slate-600">${afip.domicilio_fiscal || '—'}</div>
-          <div class="text-sm text-slate-600 mt-1">IVA: ${afip.condicion_iva || '—'} · Ganancias: ${afip.condicion_ganancias || '—'}</div>
-          <div class="text-sm text-slate-600 mt-1">IIBB / Convenio Multilateral en ARCA: ${iibbArcaTxt}</div>
-        </div>
-        <div class="bg-slate-50 rounded-lg p-3">
-          <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Estado</div>
-          <div class="text-lg font-bold text-slate-800">${afip.estado_clave || '—'}</div>
-          <div class="text-sm text-slate-600 mt-2">En base APOC: ${apoc}</div>
-          <div class="text-sm text-slate-600">Provincia: ${(r.georef && r.georef.provincia) || '—'}</div>
+        <div class="rounded-2xl bg-slate-50 p-5">
+          <div class="flex justify-between gap-2 items-start">${validBadge}${sourceBadge}</div>
+          <div class="font-mono text-lg font-bold text-slate-800 mt-3">${r.cuit}</div>
+          <div class="font-bold text-slate-800">${afip.razon_social || 'Proveedor sin razón social disponible'}</div>
+          <div class="text-sm text-slate-600">${r.tipo_persona || '—'} · ${afip.estado_clave || 'Estado ARCA no informado'}</div>
         </div>
       </div>
-
-      <div>
-        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Padrones de Ingresos Brutos</div>
-        <div class="text-xs text-slate-500 mb-2">Si un padrón figura como no cargado, subilo desde “Administrar padrones” y tocá “Revalidar”.</div>
-        ${padrones_html || '<div class="text-sm text-slate-500">No se consultaron padrones (CUIT inválido).</div>'}
-      </div>
-      <div class="mt-4">
-        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Fuentes online sin padrón mensual</div>
-        <div class="text-xs text-slate-500 mb-2">Estas fuentes quedan preparadas para automatización/asistencia. Hoy se registran con link directo y estado técnico.</div>
-        ${fuentes_html || '<div class="text-sm text-slate-500">No se consultaron fuentes online.</div>'}
-      </div>
-      <div class="mt-4">
-        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Mapa de obligaciones potenciales</div>
-        <div class="text-xs text-slate-500 mb-2">${regimenes.criterio} · ${regimenes.resumen?.total || 0} régimen(es) derivados.</div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs">
-            <thead class="bg-slate-100 text-slate-600">
-              <tr><th class="text-left p-2">Régimen</th><th class="text-left p-2">Jurisdicción</th><th class="text-left p-2">Tipo</th><th class="text-left p-2">Clasificación</th><th class="text-left p-2">Evidencia</th><th class="text-left p-2">Próxima acción</th></tr>
-            </thead>
-            <tbody>${regimenes_html || '<tr><td class="p-2 text-slate-500" colspan="6">Sin regímenes derivados.</td></tr>'}</tbody>
-          </table>
-        </div>
-      </div>
-      <div class="mt-4">
-        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Matriz tributaria sugerida</div>
-        <div class="text-xs text-slate-500 mb-2">${matriz.resumen}</div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs">
-            <thead class="bg-slate-100 text-slate-600">
-              <tr><th class="text-left p-2">Jurisdicción</th><th class="text-left p-2">Impuesto</th><th class="text-left p-2">Condición</th><th class="text-left p-2">Ret.</th><th class="text-left p-2">Perc.</th><th class="text-left p-2">Acción</th></tr>
-            </thead>
-            <tbody>${matriz_html}</tbody>
-          </table>
-        </div>
-        ${matriz_alertas ? `<ul class="text-xs text-amber-700 list-disc ml-5 mt-2">${matriz_alertas}</ul>` : ''}
-      </div>
-    `;
+      <div class="space-y-3">
+        <details class="menter-detail" open><summary>Resumen fiscal y ARCA</summary><div class="grid md:grid-cols-3 gap-4 mt-3"><div class="md:col-span-2 bg-slate-50 rounded-lg p-3"><div class="font-bold text-slate-800">${afip.razon_social || '—'}</div><div class="text-sm text-slate-600">${afip.actividad_principal || '—'}</div><div class="text-sm text-slate-600">${afip.domicilio_fiscal || '—'}</div><div class="text-sm text-slate-600 mt-1">IVA: ${afip.condicion_iva || '—'} · Ganancias: ${afip.condicion_ganancias || '—'}</div><div class="text-sm text-slate-600 mt-1">IIBB / Convenio Multilateral: ${iibbArcaTxt}</div></div><div class="bg-slate-50 rounded-lg p-3"><div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Riesgos</div><div class="text-sm text-slate-600">APOC: ${apoc}</div><div class="text-sm text-slate-600">Provincia: ${(r.georef && r.georef.provincia) || '—'}</div></div></div></details>
+        <details class="menter-detail"><summary>Padrones y fuentes oficiales</summary><div class="mt-3"><div class="text-xs uppercase tracking-wider text-slate-500 mb-2">Padrones IIBB</div>${padrones_html || '<div class="text-sm text-slate-500">No se consultaron padrones.</div>'}<div class="text-xs uppercase tracking-wider text-slate-500 mt-4 mb-2">Fuentes online</div>${fuentes_html || '<div class="text-sm text-slate-500">No se consultaron fuentes online.</div>'}</div></details>
+        <details class="menter-detail"><summary>Obligaciones y matriz tributaria</summary><div class="mt-3 text-xs text-slate-500 mb-2">${regimenes.criterio} · ${regimenes.resumen?.total || 0} régimen(es) derivados.</div><div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-slate-100 text-slate-600"><tr><th class="text-left p-2">Régimen</th><th class="text-left p-2">Jurisdicción</th><th class="text-left p-2">Tipo</th><th class="text-left p-2">Clasificación</th><th class="text-left p-2">Evidencia</th><th class="text-left p-2">Próxima acción</th></tr></thead><tbody>${regimenes_html || '<tr><td class="p-2 text-slate-500" colspan="6">Sin regímenes derivados.</td></tr>'}</tbody></table></div><div class="text-xs text-slate-500 mt-4 mb-2">${matriz.resumen}</div><div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-slate-100 text-slate-600"><tr><th class="text-left p-2">Jurisdicción</th><th class="text-left p-2">Impuesto</th><th class="text-left p-2">Condición</th><th class="text-left p-2">Ret.</th><th class="text-left p-2">Perc.</th><th class="text-left p-2">Acción</th></tr></thead><tbody>${matriz_html || '<tr><td class="p-2 text-slate-500" colspan="6">Sin matriz disponible.</td></tr>'}</tbody></table></div>${matriz_alertas ? `<ul class="text-xs text-amber-700 list-disc ml-5 mt-2">${matriz_alertas}</ul>` : ''}</details>
+      </div>`;
     cont.appendChild(card);
   }
 }
-
 function reset() {
   show('view-input');
+  document.getElementById('modo-banner').classList.add('hidden');
 }
 </script>
 

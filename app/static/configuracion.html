@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Configuración guiada</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/static/menter.css" />
+<script defer src="/static/menter-ui.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="bg-slate-900 text-white">
+  <div class="max-w-6xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Configuración guiada</div>
+    <div class="text-sm text-slate-300">Checklist de cobertura fiscal para operar con cliente, CUITs agente, padrones, fuentes y accesos.</div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <section class="grid lg:grid-cols-[1.1fr_.9fr] gap-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between gap-4 flex-wrap mb-5">
+        <div>
+          <h1 class="text-2xl font-bold">Asistente de puesta en marcha</h1>
+          <p class="text-slate-500 text-sm">Completá lo mínimo para que Compras/Cuentas a Pagar puedan consultar sin entender la operación fiscal.</p>
+        </div>
+        <button onclick="cargar()" class="text-blue-600 hover:underline text-sm">Actualizar diagnóstico</button>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <label class="block">
+          <span class="text-sm font-semibold">Cliente / grupo económico</span>
+          <input id="cliente" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="CCU" value="CCU" />
+        </label>
+        <label class="block">
+          <span class="text-sm font-semibold">CUITs agente</span>
+          <input id="cuits" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="Separados por coma" />
+        </label>
+        <label class="block md:col-span-2">
+          <span class="text-sm font-semibold">Jurisdicciones prioritarias</span>
+          <div id="jurisdicciones" class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm"></div>
+        </label>
+      </div>
+      <div id="save-msg" class="hidden mt-4 rounded-lg px-4 py-3 text-sm"></div>
+      <div class="mt-5 flex gap-3 flex-wrap">
+        <button onclick="guardarSetup()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2 font-semibold">Guardar configuración local</button>
+        <a href="/padrones" class="bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg px-5 py-2 font-semibold">Cargar padrón</a>
+        <a href="/accesos" class="bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg px-5 py-2 font-semibold">Registrar acceso</a>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="text-xs uppercase tracking-wide text-slate-500">Cobertura fiscal</div>
+      <div class="flex items-end gap-3 mt-2"><div id="score" class="text-5xl font-extrabold">—</div><div id="score-label" class="pb-2 text-sm font-semibold text-slate-500">calculando</div></div>
+      <div class="h-3 bg-slate-100 rounded-full mt-5 overflow-hidden"><div id="score-bar" class="h-full rounded-full bg-amber-500" style="width:0%"></div></div>
+      <div id="score-detail" class="mt-4 space-y-2 text-sm"></div>
+    </div>
+  </section>
+  <section id="steps" class="grid md:grid-cols-5 gap-3 mb-6"></section>
+  <section class="grid lg:grid-cols-3 gap-6">
+    <div class="bg-white rounded-xl shadow-sm p-6 lg:col-span-2"><h2 class="text-xl font-bold mb-3">Checklist accionable</h2><div id="checklist" class="space-y-3"></div></div>
+    <div class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Próximas acciones</h2><div id="acciones" class="space-y-3 text-sm"></div></div>
+  </section>
+  <section class="bg-white rounded-xl shadow-sm p-6 mt-6">
+    <div class="flex justify-between gap-4 flex-wrap mb-4"><div><h2 class="text-xl font-bold">Fuentes críticas y padrones</h2><p class="text-sm text-slate-500">Vista simplificada: qué está listo, qué falta cargar y qué requiere autorización.</p></div><div class="flex gap-3 text-sm"><a href="/fuentes" class="text-blue-600 hover:underline">Ver monitor completo</a><a href="/info" class="text-blue-600 hover:underline">Diagnóstico técnico</a></div></div>
+    <div id="fuentes" class="grid md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+  </section>
+</main>
+<script>
+const LS_KEY = 'menter.configuracion.guiada.v1';
+const labels = { disponible:'Listo', vigente:'Vigente', operativa:'Operativa', automatizada:'Automatizada', no_disponible:'Falta cargar', pendiente_carga:'Falta cargar', vencido:'Vencido', por_vencer:'Por vencer', requiere_credenciales:'Falta acceso', requiere_captcha:'Manual/CAPTCHA', pendiente_navegador:'Navegador asistido', consulta_manual:'Consulta manual', sin_vigencia:'Sin vigencia', error:'Error' };
+function friendly(v) { return labels[v] || String(v || '—').replaceAll('_', ' '); }
+function cls(status) {
+  if (['disponible','vigente','operativa','automatizada'].includes(status)) return 'bg-emerald-100 text-emerald-800';
+  if (['por_vencer','sin_vigencia','consulta_manual'].includes(status)) return 'bg-amber-100 text-amber-800';
+  if (['requiere_credenciales','requiere_captcha','pendiente_navegador'].includes(status)) return 'bg-violet-100 text-violet-800';
+  if (['vencido','pendiente_carga','no_disponible','error'].includes(status)) return 'bg-rose-100 text-rose-800';
+  return 'bg-slate-100 text-slate-800';
+}
+function badge(status) { return `<span class="${cls(status)} text-xs font-semibold px-2 py-1 rounded">${friendly(status)}</span>`; }
+function getSetup() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (_) { return {}; } }
+function setMsg(ok, text) { const el = document.getElementById('save-msg'); el.className = ok ? 'mt-4 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800' : 'mt-4 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800'; el.textContent = text; }
+function guardarSetup() { const jurisdicciones = [...document.querySelectorAll('[name="jur"]:checked')].map(x => x.value); localStorage.setItem(LS_KEY, JSON.stringify({cliente: cliente.value.trim(), cuits: cuits.value.trim(), jurisdicciones})); setMsg(true, 'Configuración guardada en este navegador.'); cargar(); }
+function step(title, status, desc) { return `<div class="bg-white rounded-xl shadow-sm p-4 border-t-4 ${status === 'ok' ? 'border-emerald-500' : status === 'warn' ? 'border-amber-500' : 'border-rose-500'}"><div class="text-xs uppercase text-slate-500">${title}</div><div class="font-bold mt-1">${status === 'ok' ? 'Completo' : status === 'warn' ? 'Parcial' : 'Pendiente'}</div><div class="text-xs text-slate-500 mt-1">${desc}</div></div>`; }
+function checklistItem(ok, title, desc, actionHref, actionText) { return `<div class="border border-slate-200 rounded-xl p-4 flex justify-between gap-4 flex-wrap"><div><div class="font-bold">${ok ? '✓' : '•'} ${title}</div><div class="text-sm text-slate-500">${desc}</div></div>${actionHref ? `<a href="${actionHref}" class="text-blue-600 hover:underline text-sm font-semibold">${actionText}</a>` : ''}</div>`; }
+function sourceCard(f) { const status = f.estado || f.vigencia_estado || 'sin_vigencia'; const action = f.proxima_accion || (status === 'pendiente_carga' ? 'Cargar padrón oficial.' : 'Revisar fuente.'); return `<div class="border border-slate-200 rounded-xl p-4"><div class="flex justify-between gap-2"><div class="font-bold">${f.nombre}</div>${badge(status)}</div><div class="text-xs text-slate-500 mt-1">${f.jurisdiccion || f.organismo || ''} · ${f.prioridad || ''}</div><div class="text-sm text-slate-600 mt-3">${action}</div></div>`; }
+function scoreLabel(score) { if (score >= 85) return ['Alta','bg-emerald-500']; if (score >= 60) return ['Media','bg-amber-500']; return ['Inicial','bg-rose-500']; }
+async function cargar() {
+  const setup = getSetup(); cliente.value = setup.cliente || cliente.value || 'CCU'; cuits.value = setup.cuits || cuits.value || '';
+  const [info, padronesData, fuentesData, accesosData] = await Promise.all([fetch('/api/info').then(r => r.json()), fetch('/api/padrones').then(r => r.json()), fetch('/api/fuentes').then(r => r.json()), fetch('/api/accesos').then(r => r.json())]);
+  const padrones = padronesData.padrones || [], fuentes = fuentesData.fuentes || [], reqs = accesosData.requisitos?.items || [];
+  const jurisdicciones = padrones.filter(p => p.tipo === 'archivo').slice(0, 9);
+  document.getElementById('jurisdicciones').innerHTML = jurisdicciones.map(p => `<label class="flex items-center gap-2 border rounded-lg px-3 py-2"><input name="jur" type="checkbox" value="${p.key}" ${(setup.jurisdicciones || []).includes(p.key) ? 'checked' : ''}> <span>${p.nombre}</span></label>`).join('');
+  const selected = setup.jurisdicciones?.length ? setup.jurisdicciones : jurisdicciones.slice(0, 5).map(p => p.key);
+  const selectedPadrones = padrones.filter(p => selected.includes(p.key));
+  const padronesOk = selectedPadrones.filter(p => p.status === 'disponible' && ['vigente','por_vencer','sin_vigencia'].includes(p.vigencia_estado)).length;
+  const padronCoverage = selectedPadrones.length ? Math.round((padronesOk / selectedPadrones.length) * 100) : 0;
+  const arcaOk = info.afip_modo === 'live', supabaseOk = info.supabase?.enabled === true;
+  const accessPending = reqs.filter(r => ['pendiente','faltante','sin_acceso'].includes(r.estado_acceso)).length;
+  const accessScore = reqs.length ? Math.max(0, Math.round(((reqs.length - accessPending) / reqs.length) * 100)) : 80;
+  const alertas = fuentesData.alertas || [], fuentesScore = fuentes.length ? Math.max(0, 100 - Math.min(60, alertas.length * 8)) : 50;
+  const setupOk = Boolean((cliente.value || '').trim() && (cuits.value || '').trim());
+  const total = Math.round((setupOk ? 15 : 0) + (arcaOk ? 20 : 8) + (supabaseOk ? 10 : 5) + padronCoverage * .25 + fuentesScore * .2 + accessScore * .1);
+  const [scoreName, barCls] = scoreLabel(total); score.textContent = `${total}%`; document.getElementById('score-label').textContent = `Cobertura ${scoreName}`; const bar = document.getElementById('score-bar'); bar.style.width = `${total}%`; bar.className = `h-full rounded-full ${barCls}`;
+  document.getElementById('score-detail').innerHTML = [`Cliente/CUITs: <b>${setupOk ? 'definidos' : 'pendientes'}</b>`, `ARCA: <b>${arcaOk ? 'live' : 'demo/fallback'}</b>`, `Padrones prioritarios: <b>${padronCoverage}%</b>`, `Accesos pendientes: <b>${accessPending}</b>`].map(x => `<div>${x}</div>`).join('');
+  document.getElementById('steps').innerHTML = [step('1. Cliente', setupOk ? 'ok' : 'fail', setupOk ? cliente.value : 'Definir cliente y CUIT agente'), step('2. ARCA', arcaOk ? 'ok' : 'warn', arcaOk ? 'Consulta productiva' : 'Modo demo/fallback'), step('3. Padrones', padronCoverage >= 80 ? 'ok' : padronCoverage ? 'warn' : 'fail', `${padronesOk}/${selectedPadrones.length || 0} listos`), step('4. Accesos', accessPending ? 'warn' : 'ok', accessPending ? `${accessPending} pendientes` : 'Sin pendientes críticos'), step('5. Operación', alertas.length ? 'warn' : 'ok', alertas.length ? `${alertas.length} alertas` : 'Sin alertas')].join('');
+  document.getElementById('checklist').innerHTML = [checklistItem(setupOk, 'Definir cliente y CUITs agente', 'Identifica sociedad operativa y responsables fiscales del grupo.', null, ''), checklistItem(arcaOk, 'Activar ARCA live', arcaOk ? 'Credenciales productivas disponibles.' : 'Hoy la consulta puede usar demo/fallback.', '/info', 'Ver diagnóstico'), checklistItem(padronCoverage >= 80, 'Cargar padrones prioritarios', `${padronesOk}/${selectedPadrones.length || 0} padrones seleccionados listos.`, '/padrones', 'Administrar padrones'), checklistItem(!accessPending, 'Resolver accesos fiscales', accessPending ? `${accessPending} fuente(s) requieren autorización o exportación.` : 'Accesos críticos cubiertos.', '/accesos', 'Gestionar accesos'), checklistItem(!alertas.length, 'Atender alertas operativas', alertas.length ? `${alertas.length} fuente(s) vencidas, faltantes o asistidas.` : 'No hay alertas activas.', '/fuentes', 'Ver fuentes')].join('');
+  const actions = []; if (!setupOk) actions.push(['Completar cliente/CUITs agente', '#', 'Es el mínimo para contextualizar padrones y accesos.']); if (padronCoverage < 80) actions.push(['Cargar padrones faltantes', '/padrones', 'Priorizar jurisdicciones marcadas.']); if (accessPending) actions.push(['Registrar accesos pendientes', '/accesos', 'Evita depender de personas o claves no autorizadas.']); if (alertas.length) actions.push(['Resolver alertas P0/P1', '/fuentes', 'Mantiene vigencia de consultas.']);
+  document.getElementById('acciones').innerHTML = (actions.length ? actions : [['Listo para piloto controlado','/','Ya podés validar proveedores y generar legajos.']]).map(a => `<a href="${a[1]}" class="block border border-slate-200 rounded-xl p-4 hover:bg-slate-50"><div class="font-bold text-blue-600">${a[0]}</div><div class="text-slate-500 mt-1">${a[2]}</div></a>`).join('');
+  const critical = fuentes.filter(f => ['P0','P1'].includes(f.prioridad)).slice(0, 9); document.getElementById('fuentes').innerHTML = (critical.length ? critical : fuentes.slice(0, 9)).map(sourceCard).join('') || '<div class="text-sm text-slate-500">Sin fuentes cargadas.</div>';
+}
+cargar().catch(err => setMsg(false, `No se pudo cargar diagnóstico: ${err.message}`));
+</script>
+</body>
+</html>

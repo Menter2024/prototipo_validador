@@ -7,66 +7,35 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="/static/menter.css" />
 <script defer src="/static/menter-ui.js"></script>
+<style>@media print {.menter-appbar,.menter-page-hero,.no-print, details pre {display:none!important} body{background:white!important} section{break-inside:avoid}}</style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
-<header class="bg-slate-900 text-white">
-  <div class="max-w-6xl mx-auto px-6 py-5">
-    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
-    <div class="text-xl font-bold">Detalle de legajo fiscal</div>
-  </div>
-</header>
-<main class="max-w-6xl mx-auto px-6 py-8">
-  <div class="flex justify-between mb-5">
-    <div>
-      <h1 id="title" class="text-2xl font-bold">Legajo</h1>
-      <p id="subtitle" class="text-slate-500 text-sm"></p>
-    </div>
-    <a href="/legajos" class="text-blue-600 hover:underline text-sm">← Legajos</a>
-  </div>
-  <div id="content" class="space-y-4"></div>
+<header class="bg-slate-900 text-white"><div class="max-w-6xl mx-auto px-6 py-5"><div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div><div class="text-xl font-bold">Detalle de legajo fiscal</div></div></header>
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex justify-between gap-4 flex-wrap"><div><h1 id="title" class="text-2xl font-bold">Legajo</h1><p id="subtitle" class="text-slate-500 text-sm"></p></div><div class="no-print flex gap-3 text-sm"><button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-semibold">Imprimir / PDF</button><a id="excel" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 font-semibold">Excel</a><a href="/legajos" class="text-blue-600 hover:underline self-center">← Legajos</a></div></div>
+  </section>
+  <section id="kpis" class="grid md:grid-cols-4 gap-3 mb-6"></section>
+  <section class="grid lg:grid-cols-[.85fr_1.15fr] gap-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Timeline de auditoría</h2><div id="timeline" class="space-y-4 text-sm"></div></div>
+    <div id="content" class="space-y-4"></div>
+  </section>
 </main>
 <script>
 const legajoId = location.pathname.split('/').pop();
-function decisionClass(estado) {
-  return {
-    APROBABLE:'bg-emerald-100 text-emerald-700',
-    OBSERVADO:'bg-amber-100 text-amber-700',
-    REVISION_MANUAL:'bg-blue-100 text-blue-700',
-    BLOQUEAR:'bg-rose-100 text-rose-700',
-  }[estado] || 'bg-slate-100 text-slate-700';
-}
+function cls(estado) { return {APROBABLE:'bg-emerald-100 text-emerald-700',OBSERVADO:'bg-amber-100 text-amber-700',REVISION_MANUAL:'bg-blue-100 text-blue-700',BLOQUEAR:'bg-rose-100 text-rose-700'}[estado] || 'bg-slate-100 text-slate-700'; }
+function badge(text, estado) { return `<span class="${cls(estado)} text-xs font-semibold px-2 py-1 rounded">${text || '—'}</span>`; }
+function kpi(label, value, border) { return `<div class="bg-white rounded-xl shadow-sm p-4 border-l-4 ${border}"><div class="text-xs uppercase tracking-wide text-slate-500">${label}</div><div class="text-2xl font-bold">${value}</div></div>`; }
+function nextAction(dec) { if (dec.estado === 'APROBABLE') return 'Aprobar/continuar alta con evidencia adjunta.'; if (dec.estado === 'BLOQUEAR') return 'Bloquear y derivar a Compliance/Impuestos.'; return (dec.recomendaciones || [])[0] || 'Revisión de Impuestos.'; }
+function timelineItem(title, desc, ok=true) { return `<div class="flex gap-3"><div class="w-7 h-7 rounded-full ${ok?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'} flex items-center justify-center font-bold text-xs">${ok?'✓':'!'}</div><div><div class="font-bold">${title}</div><div class="text-slate-500">${desc}</div></div></div>`; }
 async function cargar() {
-  const r = await fetch('/api/legajos/' + legajoId);
-  const data = await r.json();
-  document.getElementById('title').textContent = data.id;
-  document.getElementById('subtitle').textContent = `${data.creado_en} · ${data.total_proveedores} proveedor(es)`;
-  document.getElementById('content').innerHTML = data.resultados.map(res => {
-    const afip = res.afip || {};
-    const dec = res.decision_fiscal || {};
-    return `<section class="bg-white rounded-xl shadow-sm p-5">
-      <div class="flex justify-between gap-3 flex-wrap">
-        <div>
-          <div class="font-mono text-lg font-bold">${res.cuit}</div>
-          <div class="text-slate-600">${afip.razon_social || '—'}</div>
-        </div>
-        <span class="${decisionClass(dec.estado)} text-xs font-semibold px-2 py-1 rounded self-start">${dec.label || '—'}</span>
-      </div>
-      <div class="grid md:grid-cols-2 gap-4 mt-4">
-        <div class="bg-slate-50 rounded-lg p-3">
-          <div class="text-xs uppercase text-slate-500">Motivos</div>
-          <ul class="list-disc ml-5 text-sm">${(dec.motivos || []).map(m => `<li>${m}</li>`).join('')}</ul>
-        </div>
-        <div class="bg-slate-50 rounded-lg p-3">
-          <div class="text-xs uppercase text-slate-500">Recomendaciones</div>
-          <ul class="list-disc ml-5 text-sm">${(dec.recomendaciones || []).map(m => `<li>${m}</li>`).join('')}</ul>
-        </div>
-      </div>
-      <details class="mt-4">
-        <summary class="cursor-pointer text-blue-600">Ver evidencia JSON completa</summary>
-        <pre class="mt-2 bg-slate-900 text-slate-100 rounded-lg p-3 text-xs overflow-auto">${JSON.stringify(res, null, 2)}</pre>
-      </details>
-    </section>`;
-  }).join('');
+  const r = await fetch('/api/legajos/' + legajoId); const data = await r.json();
+  title.textContent = data.id; subtitle.textContent = `${data.creado_en} · ${data.total_proveedores} proveedor(es) · evidencia auditable`; excel.href = data.excel ? '/api/excel/' + data.excel : '#';
+  const counts = (data.resultados || []).reduce((a,res) => { const e = res.decision_fiscal?.estado || 'REVISION_MANUAL'; a[e]=(a[e]||0)+1; return a; }, {});
+  kpis.innerHTML = [kpi('Proveedores', data.total_proveedores || 0, 'border-blue-500'), kpi('Aprobables', counts.APROBABLE||0, 'border-emerald-500'), kpi('Observados', (counts.OBSERVADO||0)+(counts.REVISION_MANUAL||0), 'border-amber-500'), kpi('Bloqueados', counts.BLOQUEAR||0, 'border-rose-500')].join('');
+  const live = (data.resultados || []).some(r => r.modo_afip === 'live');
+  timeline.innerHTML = [timelineItem('Legajo creado', data.creado_en || 'Fecha no informada'), timelineItem('CUITs validados', `${data.total_proveedores || 0} proveedor(es) procesados`), timelineItem('ARCA consultado', live ? 'Al menos una consulta live' : 'Modo demo/fallback', live), timelineItem('Padrones y fuentes cruzadas', 'Cruce provincial, fuentes online y cola asistida registradas'), timelineItem('Reporte generado', data.excel || 'Excel no disponible')].join('');
+  content.innerHTML = (data.resultados || []).map(res => { const afip = res.afip || {}; const dec = res.decision_fiscal || {}; const padrones = Object.entries(res.padrones || {}).map(([k,p]) => `<div class="text-xs"><b>${k}</b>: ${p.status || '—'} · ${p.detalle || ''}</div>`).join(''); return `<section class="bg-white rounded-xl shadow-sm p-5"><div class="flex justify-between gap-3 flex-wrap"><div><div class="font-mono text-lg font-bold">${res.cuit}</div><div class="text-slate-600">${afip.razon_social || '—'}</div><div class="text-xs text-slate-500">${afip.estado_clave || 'Estado ARCA no informado'} · ${res.modo_afip || 'demo'}</div></div>${badge(dec.label, dec.estado)}</div><div class="mt-4 rounded-xl border border-slate-200 p-4"><div class="text-xs uppercase text-slate-500">Próxima acción</div><div class="font-bold">${nextAction(dec)}</div></div><div class="grid md:grid-cols-2 gap-4 mt-4"><div class="bg-slate-50 rounded-lg p-3"><div class="text-xs uppercase text-slate-500">Motivos</div><ul class="list-disc ml-5 text-sm">${(dec.motivos || []).map(m => `<li>${m}</li>`).join('') || '<li>Sin motivos informados.</li>'}</ul></div><div class="bg-slate-50 rounded-lg p-3"><div class="text-xs uppercase text-slate-500">Recomendaciones</div><ul class="list-disc ml-5 text-sm">${(dec.recomendaciones || []).map(m => `<li>${m}</li>`).join('') || '<li>Sin recomendaciones.</li>'}</ul></div></div><details class="menter-detail mt-4"><summary>Evidencia resumida</summary><div class="mt-3 text-sm"><b>Actividad:</b> ${afip.actividad_principal || '—'}<br><b>Domicilio:</b> ${afip.domicilio_fiscal || '—'}<br><b>IVA:</b> ${afip.condicion_iva || '—'} · <b>Ganancias:</b> ${afip.condicion_ganancias || '—'}<div class="mt-3">${padrones || 'Sin padrones.'}</div></div></details><details class="menter-detail mt-3 no-print"><summary>JSON técnico completo</summary><pre class="mt-2 bg-slate-900 text-slate-100 rounded-lg p-3 text-xs overflow-auto">${JSON.stringify(res, null, 2)}</pre></details></section>`; }).join('');
 }
 cargar();
 </script>

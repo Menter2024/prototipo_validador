@@ -9,65 +9,37 @@
 <script defer src="/static/menter-ui.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
-<header class="bg-slate-900 text-white">
-  <div class="max-w-6xl mx-auto px-6 py-5">
-    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
-    <div class="text-xl font-bold">Legajos fiscales digitales</div>
-  </div>
-</header>
-<main class="max-w-6xl mx-auto px-6 py-8">
-  <div class="flex justify-between mb-5">
-    <div>
-      <h1 class="text-2xl font-bold">Historial de validaciones</h1>
-      <p class="text-slate-500 text-sm">Evidencia auditable por corrida.</p>
-    </div>
-    <a href="/" class="text-blue-600 hover:underline text-sm">← Volver</a>
-  </div>
-  <div class="bg-white rounded-xl shadow-sm overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-100 text-slate-600">
-        <tr>
-          <th class="text-left p-3">Fecha</th>
-          <th class="text-left p-3">Proveedores</th>
-          <th class="text-left p-3">Resumen</th>
-          <th class="text-left p-3">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+<header class="bg-slate-900 text-white"><div class="max-w-6xl mx-auto px-6 py-5"><div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div><div class="text-xl font-bold">Legajos fiscales digitales</div></div></header>
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex justify-between gap-4 flex-wrap"><div><h1 class="text-2xl font-bold">Historial auditable</h1><p class="text-slate-500 text-sm">Legajos, Excel, decisiones y evolución por CUIT.</p></div><div class="flex gap-3 text-sm"><a href="/dashboard" class="text-blue-600 hover:underline">Dashboard</a><a href="/" class="text-blue-600 hover:underline">Nueva consulta</a></div></div>
+    <div class="grid md:grid-cols-3 gap-3 mt-5"><input id="search" class="border rounded-lg px-3 py-2" placeholder="Buscar CUIT o razón social"><select id="decision" class="border rounded-lg px-3 py-2"><option value="">Todas las decisiones</option><option value="APROBABLE">Aprobable</option><option value="OBSERVADO">Observado</option><option value="REVISION_MANUAL">Revisión manual</option><option value="BLOQUEAR">Bloquear</option></select><button onclick="render()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-semibold">Filtrar</button></div>
+  </section>
+  <section id="kpis" class="grid md:grid-cols-4 gap-3 mb-6"></section>
+  <section class="grid lg:grid-cols-[1fr_.9fr] gap-6">
+    <div class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Legajos recientes</h2><div id="cards" class="grid md:grid-cols-2 gap-3"></div></div>
+    <div class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Comparación histórica</h2><div id="history" class="space-y-3 text-sm"></div></div>
+  </section>
+  <section class="bg-white rounded-xl shadow-sm p-6 mt-6"><details class="menter-detail"><summary>Ver tabla completa</summary><div class="overflow-x-auto mt-3"><table class="w-full text-sm"><thead class="bg-slate-100 text-slate-600"><tr><th class="text-left p-3">Fecha</th><th class="text-left p-3">Proveedores</th><th class="text-left p-3">Resumen</th><th class="text-left p-3">Acciones</th></tr></thead><tbody id="tbody"></tbody></table></div></details></section>
 </main>
 <script>
-function badge(decision) {
-  const cls = {
-    APROBABLE:'bg-emerald-100 text-emerald-700',
-    OBSERVADO:'bg-amber-100 text-amber-700',
-    REVISION_MANUAL:'bg-blue-100 text-blue-700',
-    BLOQUEAR:'bg-rose-100 text-rose-700',
-  }[decision] || 'bg-slate-100 text-slate-700';
-  return cls;
+let allLegajos = [];
+function kind(decision) { if (decision === 'APROBABLE') return 'bg-emerald-100 text-emerald-700'; if (decision === 'OBSERVADO') return 'bg-amber-100 text-amber-700'; if (decision === 'REVISION_MANUAL') return 'bg-blue-100 text-blue-700'; if (decision === 'BLOQUEAR') return 'bg-rose-100 text-rose-700'; return 'bg-slate-100 text-slate-700'; }
+function badge(text, estado) { return `<span class="${kind(estado)} text-xs font-semibold px-2 py-1 rounded">${text || '—'}</span>`; }
+function kpi(label, value, cls) { return `<div class="bg-white rounded-xl shadow-sm p-4 border-l-4 ${cls}"><div class="text-xs uppercase tracking-wide text-slate-500">${label}</div><div class="text-2xl font-bold">${value}</div></div>`; }
+function flatRows() { return allLegajos.flatMap(l => (l.resumen || []).map(r => ({...r, legajo:l}))); }
+function filtered() { const q = search.value.trim().toLowerCase(); const d = decision.value; return allLegajos.filter(l => (l.resumen || []).some(r => (!d || r.decision_estado === d) && (!q || `${r.cuit} ${r.razon_social}`.toLowerCase().includes(q)))); }
+function historyForQuery() { const q = search.value.trim().replace(/\D/g,''); if (!q) return []; return flatRows().filter(r => String(r.cuit_limpio || r.cuit || '').replace(/\D/g,'').includes(q)).sort((a,b) => String(b.legajo.creado_en).localeCompare(String(a.legajo.creado_en))); }
+function renderHistory() { const rows = historyForQuery(); history.innerHTML = rows.length ? rows.slice(0,8).map((r, idx) => `<a href="/legajos/${r.legajo.id}" class="block border rounded-xl p-4 hover:bg-slate-50"><div class="flex justify-between gap-2"><b>${idx === 0 ? 'Última' : 'Anterior'}</b>${badge(r.decision, r.decision_estado)}</div><div class="font-mono text-xs text-slate-500 mt-2">${r.cuit}</div><div class="text-slate-600">${r.razon_social || '—'}</div><div class="text-xs text-slate-500 mt-1">${r.legajo.creado_en}</div></a>`).join('') : '<div class="text-slate-500">Buscá un CUIT para ver evolución histórica.</div>'; }
+function render() {
+  const legajos = filtered(); const rows = flatRows(); const counts = rows.reduce((a,r) => (a[r.decision_estado]=(a[r.decision_estado]||0)+1,a), {});
+  kpis.innerHTML = [kpi('Legajos', allLegajos.length, 'border-blue-500'), kpi('Proveedores', rows.length, 'border-slate-500'), kpi('Observados', (counts.OBSERVADO||0)+(counts.REVISION_MANUAL||0), 'border-amber-500'), kpi('Bloqueados', counts.BLOQUEAR||0, 'border-rose-500')].join('');
+  cards.innerHTML = legajos.map(l => { const resumen = (l.resumen || []).slice(0,3).map(x => `<div class="text-sm mt-1"><span class="font-mono">${x.cuit}</span> · ${x.razon_social || '—'} ${badge(x.decision, x.decision_estado)}</div>`).join(''); return `<div class="border rounded-xl p-4"><div class="flex justify-between gap-2"><b>${l.creado_en || '—'}</b><span class="text-xs text-slate-500">${l.total_proveedores} prov.</span></div><div class="mt-3">${resumen || '—'}</div><div class="mt-4 flex gap-3 text-sm"><a href="/legajos/${l.id}" class="text-blue-600 hover:underline font-semibold">ver detalle</a>${l.excel ? `<a href="/api/excel/${l.excel}" class="text-emerald-600 hover:underline font-semibold">excel</a>` : ''}</div></div>`; }).join('') || '<div class="text-slate-500">Sin legajos para el filtro.</div>';
+  tbody.innerHTML = legajos.map(l => { const resumen = (l.resumen || []).slice(0,3).map(x => `<div class="mb-1"><span class="font-mono">${x.cuit}</span> · ${x.razon_social || '—'} ${badge(x.decision, x.decision_estado)}</div>`).join(''); return `<tr class="border-b border-slate-100"><td class="p-3">${l.creado_en || '—'}</td><td class="p-3">${l.total_proveedores}</td><td class="p-3">${resumen || '—'}</td><td class="p-3 whitespace-nowrap"><a href="/legajos/${l.id}" class="text-blue-600 hover:underline">detalle</a>${l.excel ? ` · <a href="/api/excel/${l.excel}" class="text-emerald-600 hover:underline">excel</a>` : ''}</td></tr>`; }).join('');
+  renderHistory();
 }
-async function cargar() {
-  const r = await fetch('/api/legajos');
-  const data = await r.json();
-  document.getElementById('tbody').innerHTML = data.legajos.map(l => {
-    const resumen = (l.resumen || []).slice(0,3).map(x => `
-      <div class="mb-1">
-        <span class="font-mono">${x.cuit}</span> · ${x.razon_social || '—'}
-        <span class="${badge(x.decision_estado)} text-xs font-semibold px-2 py-1 rounded">${x.decision}</span>
-      </div>`).join('');
-    return `<tr class="border-b border-slate-100">
-      <td class="p-3">${l.creado_en || '—'}</td>
-      <td class="p-3">${l.total_proveedores}</td>
-      <td class="p-3">${resumen || '—'}</td>
-      <td class="p-3 whitespace-nowrap">
-        <a href="/legajos/${l.id}" class="text-blue-600 hover:underline">ver detalle</a>
-        ${l.excel ? ` · <a href="/api/excel/${l.excel}" class="text-emerald-600 hover:underline">excel</a>` : ''}
-      </td>
-    </tr>`;
-  }).join('');
-}
-cargar();
+async function cargar() { const r = await fetch('/api/legajos'); const data = await r.json(); allLegajos = data.legajos || []; render(); }
+search.addEventListener('input', render); decision.addEventListener('change', render); cargar();
 </script>
 </body>
 </html>

@@ -7,285 +7,116 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="/static/menter.css" />
 <script defer src="/static/menter-ui.js"></script>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-  .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
-</style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
-<header class="gradient-menter text-white">
+<header class="bg-slate-900 text-white">
   <div class="max-w-6xl mx-auto px-6 py-5">
     <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
-    <div class="text-xl font-bold">Administrar padrones provinciales</div>
-    <div class="text-sm text-blue-100">Subí archivos originales y convertimos al formato normalizado</div>
+    <div class="text-xl font-bold">Padrones provinciales</div>
+    <div class="text-sm text-slate-300">Carga guiada con previsualización, autodetección y control de vigencia.</div>
   </div>
 </header>
-
-<main class="max-w-6xl mx-auto px-6 py-8">
-  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
-    <div class="flex justify-between gap-4 flex-wrap mb-5">
-      <div>
-        <h1 class="text-2xl font-bold">Importar padrón</h1>
-        <p class="text-slate-500 text-sm">Soporta CSV, TXT, TSV, PSV, XLSX, ZIP y RAR para provincias con padrón por archivo.</p>
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <section class="grid lg:grid-cols-[1.1fr_.9fr] gap-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between gap-4 flex-wrap mb-5">
+        <div><h1 class="text-2xl font-bold">Importar padrón</h1><p class="text-slate-500 text-sm">Arrastrá el archivo oficial. Intentamos detectar provincia, período, vigencia y fuente.</p></div>
+        <div class="flex gap-3 text-sm"><a href="/configuracion" class="text-blue-600 hover:underline">Config. guiada</a><a href="/accesos" class="text-blue-600 hover:underline">Accesos</a></div>
       </div>
-      <div class="flex gap-3 text-sm">
-        <a href="/" class="text-blue-600 hover:underline">← Volver al validador</a>
-        <a href="/accesos" class="text-blue-600 hover:underline">Accesos fiscales</a>
-      </div>
+      <form id="form-importar" class="grid md:grid-cols-4 gap-3 items-end">
+        <label id="drop-zone" class="md:col-span-4 block border-2 border-dashed border-amber-300 rounded-2xl bg-amber-50/40 p-6 text-center cursor-pointer">
+          <input id="archivo" name="archivo" type="file" accept=".csv,.txt,.tsv,.psv,.xlsx,.xlsm,.zip,.rar" class="hidden" />
+          <div class="text-lg font-bold">Soltá el archivo acá o hacé click para elegirlo</div>
+          <div id="archivo-nombre" class="text-sm text-slate-500 mt-1">CSV, TXT, XLSX, ZIP o RAR · aviso automático si supera 8 MB</div>
+        </label>
+        <label class="block"><span class="text-sm font-semibold">Provincia detectada</span><select id="provincia" name="provincia" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select></label>
+        <label class="block"><span class="text-sm font-semibold">Período</span><input id="periodo" name="periodo" placeholder="2026-06" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></label>
+        <label class="block"><span class="text-sm font-semibold">Vigencia hasta</span><input id="vigencia_hasta" name="vigencia_hasta" placeholder="2026-06-30" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></label>
+        <label class="block"><span class="text-sm font-semibold">Hoja XLSX opcional</span><input id="sheet" name="sheet" placeholder="Hoja1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></label>
+        <label class="block"><span class="text-sm font-semibold">Cliente / grupo</span><input name="cliente" value="CCU" placeholder="CCU" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></label>
+        <label class="block"><span class="text-sm font-semibold">CUIT agente</span><input name="cuit_agente" placeholder="XX-XXXXXXXX-X" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></label>
+        <label class="block md:col-span-2"><span class="text-sm font-semibold">Fuente oficial</span><select id="fuente_id" name="fuente_id" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"><option value="">Detectar / sin asociar</option></select></label>
+        <div class="md:col-span-4 flex justify-between gap-2 flex-wrap">
+          <div id="detect-msg" class="text-sm text-slate-500"></div>
+          <div class="flex gap-2"><button id="btn-preview" type="button" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-lg">Previsualizar</button><button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg">Importar padrón</button></div>
+        </div>
+      </form>
+      <div id="msg" class="hidden mt-4 rounded-lg px-4 py-3 text-sm"></div>
+      <div id="preview" class="hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50"></div>
     </div>
-    <form id="form-importar" class="grid md:grid-cols-4 gap-3 items-end">
-      <label class="block">
-        <span class="text-sm font-semibold">Provincia</span>
-        <select id="provincia" name="provincia" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
-      </label>
-      <label class="block md:col-span-2">
-        <span class="text-sm font-semibold">Archivo original</span>
-        <input id="archivo" name="archivo" type="file" accept=".csv,.txt,.tsv,.psv,.xlsx,.xlsm,.zip,.rar" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 bg-white" />
-      </label>
-      <label class="block">
-        <span class="text-sm font-semibold">Hoja XLSX opcional</span>
-        <input id="sheet" name="sheet" placeholder="Hoja1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
-      </label>
-      <label class="block">
-        <span class="text-sm font-semibold">Período</span>
-        <input name="periodo" placeholder="2026-06" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
-      </label>
-      <label class="block">
-        <span class="text-sm font-semibold">Vigencia hasta</span>
-        <input name="vigencia_hasta" placeholder="2026-06-30" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
-      </label>
-      <label class="block">
-        <span class="text-sm font-semibold">Cliente / grupo</span>
-        <input name="cliente" value="CCU" placeholder="CCU" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
-      </label>
-      <label class="block">
-        <span class="text-sm font-semibold">CUIT agente</span>
-        <input name="cuit_agente" placeholder="XX-XXXXXXXX-X" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
-      </label>
-      <label class="block">
-        <span class="text-sm font-semibold">Fuente ID</span>
-        <input name="fuente_id" placeholder="arba_iibb / comarb_sircreb" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
-      </label>
-      <div class="md:col-span-4 flex justify-end gap-2">
-        <button id="btn-preview" type="button" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-lg">Previsualizar</button>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg">Importar padrón</button>
-      </div>
-    </form>
-    <div id="msg" class="hidden mt-4 rounded-lg px-4 py-3 text-sm"></div>
-    <div id="preview" class="hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50"></div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-xl font-bold mb-3">Operación recomendada</h2>
+      <div id="ops" class="space-y-3 text-sm"></div>
+    </div>
   </section>
-
   <section class="bg-white rounded-xl shadow-sm p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Estado de padrones</h2>
-      <button onclick="cargarEstado()" class="text-blue-600 hover:underline text-sm">Actualizar</button>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-100 text-slate-600">
-          <tr>
-            <th class="text-left p-2">Provincia</th>
-            <th class="text-left p-2">Tipo</th>
-            <th class="text-left p-2">Estado</th>
-            <th class="text-left p-2">Registros</th>
-            <th class="text-left p-2">Período</th>
-            <th class="text-left p-2">Vigencia</th>
-            <th class="text-left p-2">Actualizado</th>
-            <th class="text-left p-2">Archivo / fuente</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+    <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">Estado de padrones</h2><button onclick="cargarEstado()" class="text-blue-600 hover:underline text-sm">Actualizar</button></div>
+    <div id="cards" class="grid md:grid-cols-2 xl:grid-cols-3 gap-3 mb-6"></div>
+    <details class="menter-detail"><summary>Ver tabla técnica</summary><div class="overflow-x-auto mt-3"><table class="w-full text-sm"><thead class="bg-slate-100 text-slate-600"><tr><th class="text-left p-2">Provincia</th><th class="text-left p-2">Tipo</th><th class="text-left p-2">Estado</th><th class="text-left p-2">Registros</th><th class="text-left p-2">Período</th><th class="text-left p-2">Vigencia</th><th class="text-left p-2">Actualizado</th><th class="text-left p-2">Archivo / fuente</th></tr></thead><tbody id="tbody"></tbody></table></div></details>
   </section>
 </main>
-
 <script>
+const form_importar = document.getElementById("form-importar");
+const drop_zone = document.getElementById("drop-zone");
+const btn_preview = document.getElementById("btn-preview");
 const importables = new Set(['archivo']);
 let ultimaPreview = null;
-
-function badge(status) {
-  const cls = {
-    disponible: 'bg-emerald-100 text-emerald-700',
-    no_disponible: 'bg-slate-100 text-slate-700',
-    consulta_manual: 'bg-blue-100 text-blue-700',
-    requiere_credenciales: 'bg-violet-100 text-violet-700',
-    error: 'bg-rose-100 text-rose-700',
-  }[status] || 'bg-slate-100 text-slate-700';
-  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${status}</span>`;
+let padronesCache = [];
+const names = { caba:'CABA', arba:'Buenos Aires', buenos_aires:'Buenos Aires', entrerios:'Entre Ríos', entre_rios:'Entre Ríos', cordoba:'Córdoba', santa_fe:'Santa Fe', mendoza:'Mendoza', jujuy:'Jujuy', tucuman:'Tucumán', formosa:'Formosa' };
+function nice(v) { return String(v || '—').replaceAll('_', ' '); }
+function badge(status) { const cls = {disponible:'bg-emerald-100 text-emerald-700',no_disponible:'bg-rose-100 text-rose-700',consulta_manual:'bg-blue-100 text-blue-700',requiere_credenciales:'bg-violet-100 text-violet-700',error:'bg-rose-100 text-rose-700'}[status] || 'bg-slate-100 text-slate-700'; return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${nice(status)}</span>`; }
+function vigenciaBadge(status) { const cls = {vigente:'bg-emerald-100 text-emerald-700',por_vencer:'bg-amber-100 text-amber-700',vencido:'bg-rose-100 text-rose-700',sin_vigencia:'bg-slate-100 text-slate-700',aprobado:'bg-emerald-100 text-emerald-700',observado:'bg-amber-100 text-amber-700',bloqueado:'bg-rose-100 text-rose-700'}[status] || 'bg-slate-100 text-slate-700'; return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${nice(status)}</span>`; }
+function mostrarMsg(ok, texto) { const msg = document.getElementById('msg'); msg.className = ok ? 'mt-4 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800' : 'mt-4 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800'; msg.textContent = texto; }
+function guessFromFile(file) {
+  const raw = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const p = padronesCache.find(x => raw.includes(x.key.replace('_','')) || raw.includes(x.key.replace('_','_')) || raw.includes((x.nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ')[0]));
+  if (p) provincia.value = p.key;
+  const ym = raw.match(/(20\d{2})[-_ ]?(0[1-9]|1[0-2])/);
+  const my = raw.match(/(0[1-9]|1[0-2])[-_ ]?(20\d{2})/);
+  const y = ym ? ym[1] : my ? my[2] : '';
+  const m = ym ? ym[2] : my ? my[1] : '';
+  if (y && m) { periodo.value = `${y}-${m}`; const last = new Date(Number(y), Number(m), 0).getDate(); vigencia_hasta.value = `${y}-${m}-${String(last).padStart(2,'0')}`; }
+  const fuente = [...fuente_id.options].find(o => p && (o.value.includes(p.key) || o.textContent.toLowerCase().includes((p.nombre || '').toLowerCase().split(' ')[0])));
+  if (fuente) fuente_id.value = fuente.value;
+  const mb = file.size / 1024 / 1024;
+  document.getElementById('archivo-nombre').textContent = `${file.name} · ${mb.toFixed(1)} MB`;
+  document.getElementById('detect-msg').textContent = `${p ? 'Provincia detectada: ' + p.nombre + '. ' : ''}${y ? 'Período sugerido: ' + y + '-' + m + '. ' : ''}${mb > 8 ? 'Archivo grande: conviene carga asistida/background en producción.' : ''}`;
 }
-
-function vigenciaBadge(status) {
-  const cls = {
-    vigente: 'bg-emerald-100 text-emerald-700',
-    por_vencer: 'bg-amber-100 text-amber-700',
-    vencido: 'bg-rose-100 text-rose-700',
-    sin_vigencia: 'bg-slate-100 text-slate-700',
-    aprobado: 'bg-emerald-100 text-emerald-700',
-    observado: 'bg-amber-100 text-amber-700',
-    bloqueado: 'bg-rose-100 text-rose-700',
-  }[status] || 'bg-slate-100 text-slate-700';
-  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${status}</span>`;
-}
-
 async function cargarEstado() {
-  const r = await fetch('/api/padrones');
-  const data = await r.json();
-  const select = document.getElementById('provincia');
-  const current = select.value;
-  select.innerHTML = data.padrones
-    .filter(p => importables.has(p.tipo))
-    .map(p => `<option value="${p.key}">${p.nombre}</option>`)
-    .join('');
-  if (current) select.value = current;
-
-  document.getElementById('tbody').innerHTML = data.padrones.map(p => {
-    const fuente = p.url
-      ? `<a href="${p.url}" target="_blank" class="text-blue-600 hover:underline">abrir fuente</a>`
-      : (p.archivo || '—');
-    return `<tr class="border-b border-slate-100">
-      <td class="p-2 font-semibold">${p.nombre} <span class="text-xs text-slate-400">${p.prioridad}</span></td>
-      <td class="p-2">${p.tipo}</td>
-      <td class="p-2">${badge(p.status)}</td>
-      <td class="p-2">${p.registros ?? '—'}</td>
-      <td class="p-2">${p.periodo || '—'}</td>
-      <td class="p-2">${vigenciaBadge(p.vigencia_estado)} ${p.vigencia_hasta || ''}</td>
-      <td class="p-2">${p.actualizado ?? '—'}</td>
-      <td class="p-2">${fuente}</td>
-    </tr>`;
-  }).join('');
+  const [padsResp, fuentesResp] = await Promise.all([fetch('/api/padrones'), fetch('/api/fuentes')]);
+  const data = await padsResp.json(); const fuentes = await fuentesResp.json(); padronesCache = data.padrones || [];
+  const current = provincia.value;
+  provincia.innerHTML = padronesCache.filter(p => importables.has(p.tipo)).map(p => `<option value="${p.key}">${p.nombre}</option>`).join(''); if (current) provincia.value = current;
+  fuente_id.innerHTML = '<option value="">Detectar / sin asociar</option>' + (fuentes.fuentes || []).map(f => `<option value="${f.id}">${f.nombre} · ${f.organismo || ''}</option>`).join('');
+  const faltantes = padronesCache.filter(p => p.tipo === 'archivo' && p.status !== 'disponible'); const vencidos = padronesCache.filter(p => ['vencido','por_vencer'].includes(p.vigencia_estado));
+  ops.innerHTML = [
+    `<div class="border rounded-xl p-4"><b>${faltantes.length}</b> padrones faltantes <div class="text-slate-500">Priorizar P0/P1 antes de validar lotes reales.</div></div>`,
+    `<div class="border rounded-xl p-4"><b>${vencidos.length}</b> con vigencia vencida/por vencer <div class="text-slate-500">Actualizar antes de cierres mensuales.</div></div>`,
+    `<div class="border rounded-xl p-4"><b>Carga segura</b><div class="text-slate-500">Siempre previsualizar; si hay advertencias, confirmar explícitamente.</div></div>`
+  ].join('');
+  cards.innerHTML = padronesCache.map(p => `<div class="border border-slate-200 rounded-xl p-4"><div class="flex justify-between gap-2"><div class="font-bold">${p.nombre}</div>${badge(p.status)}</div><div class="text-xs text-slate-500 mt-1">${p.prioridad} · ${p.registros ?? '—'} registros</div><div class="mt-3 text-sm">Período: <b>${p.periodo || '—'}</b><br>Vigencia: ${vigenciaBadge(p.vigencia_estado)} ${p.vigencia_hasta || ''}</div></div>`).join('');
+  tbody.innerHTML = padronesCache.map(p => { const fuente = p.url ? `<a href="${p.url}" target="_blank" class="text-blue-600 hover:underline">abrir fuente</a>` : (p.archivo || '—'); return `<tr class="border-b border-slate-100"><td class="p-2 font-semibold">${p.nombre} <span class="text-xs text-slate-400">${p.prioridad}</span></td><td class="p-2">${p.tipo}</td><td class="p-2">${badge(p.status)}</td><td class="p-2">${p.registros ?? '—'}</td><td class="p-2">${p.periodo || '—'}</td><td class="p-2">${vigenciaBadge(p.vigencia_estado)} ${p.vigencia_hasta || ''}</td><td class="p-2">${p.actualizado ?? '—'}</td><td class="p-2">${fuente}</td></tr>`; }).join('');
 }
-
-function mostrarMsg(ok, texto) {
-  const msg = document.getElementById('msg');
-  msg.className = ok
-    ? 'mt-4 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800'
-    : 'mt-4 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800';
-  msg.textContent = texto;
-}
-
 function renderPreview(data) {
-  ultimaPreview = data;
-  const calidad = data.calidad || {};
-  const evidencia = data.evidencia || {};
-  const preview = document.getElementById('preview');
-  const advertencias = (calidad.advertencias || []).map(a => `<li>${a}</li>`).join('');
-  const errores = (calidad.errores || []).map(a => `<li>${a}</li>`).join('');
-  const rows = (data.muestra || []).map(r => `<tr>
-    <td class="p-2 font-mono">${r.cuit}</td>
-    <td class="p-2">${r.alicuota_retencion || '—'}</td>
-    <td class="p-2">${r.alicuota_percepcion || '—'}</td>
-    <td class="p-2">${r.vigencia_desde || '—'} a ${r.vigencia_hasta || '—'}</td>
-    <td class="p-2">${r.regimen || '—'}</td>
-  </tr>`).join('');
+  ultimaPreview = data; const calidad = data.calidad || {}; const evidencia = data.evidencia || {}; const advertencias = (calidad.advertencias || []).map(a => `<li>${a}</li>`).join(''); const errores = (calidad.errores || []).map(a => `<li>${a}</li>`).join('');
+  const rows = (data.muestra || []).map(r => `<tr><td class="p-2 font-mono">${r.cuit}</td><td class="p-2">${r.alicuota_retencion || '—'}</td><td class="p-2">${r.alicuota_percepcion || '—'}</td><td class="p-2">${r.vigencia_desde || '—'} a ${r.vigencia_hasta || '—'}</td><td class="p-2">${r.regimen || '—'}</td></tr>`).join('');
   preview.className = 'mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50';
-  preview.innerHTML = `
-    <div class="flex justify-between gap-3 flex-wrap mb-3">
-      <div>
-        <div class="text-sm uppercase tracking-wide text-slate-500">Previsualización</div>
-        <div class="font-bold">${data.nombre} · ${data.registros} registros válidos</div>
-      </div>
-      <div>${vigenciaBadge(calidad.estado || 'sin_vigencia')}</div>
-    </div>
-    <div class="grid md:grid-cols-4 gap-3 text-sm mb-3">
-      <div><b>Filas origen</b><br>${calidad.raw_registros ?? '—'}</div>
-      <div><b>Descartadas</b><br>${calidad.descartados_cuit_invalido ?? 0}</div>
-      <div><b>Duplicados</b><br>${calidad.duplicados ?? 0}</div>
-      <div><b>SHA256</b><br><span class="font-mono text-xs">${(evidencia.sha256 || '').slice(0, 16)}...</span></div>
-    </div>
-    <div class="text-xs text-slate-600 mb-3">Perfil: <b>${calidad.perfil || '—'}</b> · Layout: <b>${calidad.layout_detectado || evidencia.layout_detectado || '—'}</b></div>
-    ${errores ? `<div class="bg-rose-100 text-rose-800 rounded p-3 mb-3"><b>Errores</b><ul class="list-disc ml-5">${errores}</ul></div>` : ''}
-    ${advertencias ? `<div class="bg-amber-100 text-amber-800 rounded p-3 mb-3"><b>Advertencias</b><ul class="list-disc ml-5">${advertencias}</ul></div>` : ''}
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs">
-        <thead class="bg-white text-slate-600"><tr><th class="text-left p-2">CUIT</th><th class="text-left p-2">Ret.</th><th class="text-left p-2">Perc.</th><th class="text-left p-2">Vigencia</th><th class="text-left p-2">Régimen</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  preview.innerHTML = `<div class="flex justify-between gap-3 flex-wrap mb-3"><div><div class="text-sm uppercase tracking-wide text-slate-500">Previsualización</div><div class="font-bold">${data.nombre} · ${data.registros} registros válidos</div></div><div>${vigenciaBadge(calidad.estado || 'sin_vigencia')}</div></div><div class="grid md:grid-cols-4 gap-3 text-sm mb-3"><div><b>Filas origen</b><br>${calidad.raw_registros ?? '—'}</div><div><b>Descartadas</b><br>${calidad.descartados_cuit_invalido ?? 0}</div><div><b>Duplicados</b><br>${calidad.duplicados ?? 0}</div><div><b>SHA256</b><br><span class="font-mono text-xs">${(evidencia.sha256 || '').slice(0,16)}...</span></div></div><div class="text-xs text-slate-600 mb-3">Perfil: <b>${calidad.perfil || '—'}</b> · Layout: <b>${calidad.layout_detectado || evidencia.layout_detectado || '—'}</b></div>${errores ? `<div class="bg-rose-100 text-rose-800 rounded p-3 mb-3"><b>Errores</b><ul class="list-disc ml-5">${errores}</ul></div>` : ''}${advertencias ? `<div class="bg-amber-100 text-amber-800 rounded p-3 mb-3"><b>Advertencias</b><ul class="list-disc ml-5">${advertencias}</ul></div>` : ''}<div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-white text-slate-600"><tr><th class="text-left p-2">CUIT</th><th class="text-left p-2">Ret.</th><th class="text-left p-2">Perc.</th><th class="text-left p-2">Vigencia</th><th class="text-left p-2">Régimen</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-
-async function leerRespuesta(r) {
-  const contentType = r.headers.get('content-type') || '';
-  const texto = await r.text();
-  if (contentType.includes('application/json') && texto) {
-    try { return JSON.parse(texto); } catch (_) { return {detail: texto}; }
-  }
-  return {detail: texto || `${r.status} ${r.statusText || 'Error sin detalle'}`};
-}
-
-function mensajeHttp(status, detail) {
-  if (status === 503) {
-    return 'El servidor de demo no pudo procesar el padrón en este momento. Si usaste un archivo grande, probá primero con un fixture chico o reintentá luego del cold start/redeploy de Render.';
-  }
-  if (status === 413) {
-    return 'El archivo supera el límite del hosting de demo. Para padrones reales grandes conviene carga asistida o plan con más recursos.';
-  }
-  return detail || 'Error procesando padrón.';
-}
-
+async function leerRespuesta(r) { const contentType = r.headers.get('content-type') || ''; const texto = await r.text(); if (contentType.includes('application/json') && texto) { try { return JSON.parse(texto); } catch (_) { return {detail: texto}; } } return {detail: texto || `${r.status} ${r.statusText || 'Error sin detalle'}`}; }
+function mensajeHttp(status, detail) { if (status === 503) return 'El servidor de demo no pudo procesar el padrón. Para archivos grandes usar carga asistida/background.'; if (status === 413) return 'El archivo supera el límite del hosting de demo. Usar carga asistida o plan con más recursos.'; return detail || 'Error procesando padrón.'; }
 async function enviarPadron(url, texto, opts = {}) {
-  const formEl = document.getElementById('form-importar');
-  const form = new FormData(formEl);
-  if (opts.confirmarAdvertencias) {
-    form.set('confirmar_advertencias', 'true');
-  }
-  const archivoInput = document.getElementById('archivo');
-  if (!archivoInput.files.length) {
-    mostrarMsg(false, 'Seleccioná un archivo.');
-    return null;
-  }
-  const archivo = archivoInput.files[0];
-  if (archivo.size > 8 * 1024 * 1024 && !confirm('El archivo pesa más de 8 MB. En Render Free puede demorar o fallar con 503. ¿Querés intentar igualmente?')) {
-    mostrarMsg(false, 'Carga cancelada. Probá primero con un archivo chico de demo.');
-    return null;
-  }
-  mostrarMsg(true, texto);
-  let r;
-  try {
-    r = await fetch(url, { method: 'POST', body: form });
-  } catch (error) {
-    mostrarMsg(false, `No se pudo conectar con el servidor: ${error.message}`);
-    return null;
-  }
-  const data = await leerRespuesta(r);
-  if (!r.ok) {
-    mostrarMsg(false, mensajeHttp(r.status, data.detail));
-    return null;
-  }
-  return data;
+  const form = new FormData(form_importar); if (opts.confirmarAdvertencias) form.set('confirmar_advertencias', 'true'); if (!archivo.files.length) { mostrarMsg(false, 'Seleccioná un archivo.'); return null; }
+  const file = archivo.files[0]; if (file.size > 8 * 1024 * 1024 && !confirm('Archivo grande. En Render Free puede demorar/fallar. ¿Intentar igualmente?')) { mostrarMsg(false, 'Carga cancelada. Para padrón real grande usar carga asistida/background.'); return null; }
+  mostrarMsg(true, texto); let r; try { r = await fetch(url, { method:'POST', body: form }); } catch (error) { mostrarMsg(false, `No se pudo conectar: ${error.message}`); return null; }
+  const data = await leerRespuesta(r); if (!r.ok) { mostrarMsg(false, mensajeHttp(r.status, data.detail)); return null; } return data;
 }
-
-document.getElementById('btn-preview').addEventListener('click', async () => {
-  const data = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando...');
-  if (!data) return;
-  mostrarMsg(true, `${data.nombre}: previsualización generada sin sobrescribir padrón.`);
-  renderPreview(data);
-});
-
-document.getElementById('archivo').addEventListener('change', () => {
-  ultimaPreview = null;
-  document.getElementById('preview').className = 'hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50';
-});
-
-document.getElementById('form-importar').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (!ultimaPreview) {
-    const preview = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando antes de importar...');
-    if (!preview) return;
-    renderPreview(preview);
-  }
-  const observado = ultimaPreview?.calidad?.estado === 'observado';
-  if (observado && !confirm('La previsualización tiene advertencias. ¿Confirmás sobrescribir el padrón igualmente?')) {
-    mostrarMsg(false, 'Importación cancelada. Revisá las advertencias antes de confirmar.');
-    return;
-  }
-  const data = await enviarPadron('/api/padrones/importar', 'Importando...', { confirmarAdvertencias: observado });
-  if (!data) return;
-  mostrarMsg(true, `${data.nombre}: ${data.registros} registros importados.`);
-  renderPreview(data);
-  await cargarEstado();
-});
-
+drop_zone.addEventListener('dragover', e => { e.preventDefault(); drop_zone.classList.add('ring-2','ring-amber-400'); });
+drop_zone.addEventListener('dragleave', () => drop_zone.classList.remove('ring-2','ring-amber-400'));
+drop_zone.addEventListener('drop', e => { e.preventDefault(); drop_zone.classList.remove('ring-2','ring-amber-400'); if (e.dataTransfer.files.length) { archivo.files = e.dataTransfer.files; ultimaPreview = null; preview.className = 'hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50'; guessFromFile(archivo.files[0]); } });
+archivo.addEventListener('change', () => { ultimaPreview = null; preview.className = 'hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50'; if (archivo.files.length) guessFromFile(archivo.files[0]); });
+btn_preview.addEventListener('click', async () => { const data = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando...'); if (!data) return; mostrarMsg(true, `${data.nombre}: previsualización generada sin sobrescribir padrón.`); renderPreview(data); });
+form_importar.addEventListener('submit', async e => { e.preventDefault(); if (!ultimaPreview) { const previewData = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando antes de importar...'); if (!previewData) return; renderPreview(previewData); } const observado = ultimaPreview?.calidad?.estado === 'observado'; if (observado && !confirm('La previsualización tiene advertencias. ¿Confirmás sobrescribir el padrón?')) { mostrarMsg(false, 'Importación cancelada.'); return; } const data = await enviarPadron('/api/padrones/importar', 'Importando...', {confirmarAdvertencias: observado}); if (!data) return; mostrarMsg(true, `${data.nombre}: ${data.registros} registros importados.`); renderPreview(data); await cargarEstado(); });
 cargarEstado();
 </script>
 </body>

@@ -9,114 +9,77 @@
 <script defer src="/static/menter-ui.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
-<header class="bg-gradient-to-r from-blue-700 to-slate-800 text-white">
+<header class="bg-slate-900 text-white">
   <div class="max-w-6xl mx-auto px-6 py-5">
     <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
-    <div class="text-xl font-bold">Accesos fiscales y CUITs agente</div>
-    <div class="text-sm text-blue-100">Gestión segura de autorizaciones, exportaciones y evidencias por cliente/grupo económico.</div>
+    <div class="text-xl font-bold">Accesos fiscales</div>
+    <div class="text-sm text-slate-300">Autorizaciones, exportaciones y evidencias por cliente y CUIT agente.</div>
   </div>
 </header>
-
-<main class="max-w-6xl mx-auto px-6 py-8">
-  <div class="mb-4 text-sm">
-    <a href="/" class="text-blue-600 hover:underline">← Volver al validador</a>
-    <span class="text-slate-300 mx-2">·</span>
-    <a href="/padrones" class="text-blue-600 hover:underline">Padrones</a>
-    <span class="text-slate-300 mx-2">·</span>
-    <a href="/fuentes" class="text-blue-600 hover:underline">Fuentes</a>
-  </div>
-
-  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
-    <h1 class="text-2xl font-bold mb-2">Alta / actualización de acceso</h1>
-    <p class="text-sm text-slate-500 mb-4">No cargues claves personales. Registrá autorización, exportación oficial, usuario técnico o evidencia de servicio delegado.</p>
-    <form id="form-acceso" class="grid md:grid-cols-3 gap-3" enctype="multipart/form-data">
-      <input name="cliente" value="CCU" class="border rounded p-2" placeholder="Cliente / grupo económico" required>
-      <input name="cuit_agente" class="border rounded p-2" placeholder="CUIT agente / sociedad" required>
-      <input name="organismo" class="border rounded p-2" placeholder="Organismo: ARBA, COMARB, ARCA..." required>
-      <input name="servicio" class="border rounded p-2" placeholder="Servicio: SIRCREB, SIRE, PARP..." required>
-      <input name="fuente_id" class="border rounded p-2" placeholder="fuente_id opcional">
-      <select name="tipo_acceso" class="border rounded p-2" required>
-        <option value="archivo_manual">archivo_manual</option>
-        <option value="credencial_delegada">credencial_delegada</option>
-        <option value="login_asistido">login_asistido</option>
-        <option value="publico">publico</option>
-        <option value="no_automatizable">no_automatizable</option>
-      </select>
-      <select name="estado" class="border rounded p-2">
-        <option value="pendiente">pendiente</option>
-        <option value="autorizado">autorizado</option>
-        <option value="credencial_cargada">credencial_cargada</option>
-        <option value="exportacion_manual">exportacion_manual</option>
-        <option value="login_asistido">login_asistido</option>
-        <option value="bloqueado">bloqueado</option>
-        <option value="revocado">revocado</option>
-      </select>
-      <input name="responsable" class="border rounded p-2" placeholder="Responsable interno">
-      <input name="alcance" class="border rounded p-2" placeholder="Alcance: sólo descarga padrones">
-      <textarea name="notas" class="border rounded p-2 md:col-span-2" placeholder="Notas / condiciones de uso"></textarea>
-      <input name="evidencia" type="file" class="border rounded p-2">
-      <div class="md:col-span-3 flex justify-end">
-        <button class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 font-semibold">Guardar acceso</button>
-      </div>
-    </form>
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <div class="mb-4 text-sm"><a href="/configuracion" class="text-blue-600 hover:underline">← Configuración guiada</a><span class="text-slate-300 mx-2">·</span><a href="/padrones" class="text-blue-600 hover:underline">Padrones</a><span class="text-slate-300 mx-2">·</span><a href="/fuentes" class="text-blue-600 hover:underline">Fuentes</a></div>
+  <section class="grid lg:grid-cols-[1fr_1fr] gap-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h1 class="text-2xl font-bold mb-2">Registrar acceso seguro</h1>
+      <p class="text-sm text-slate-500 mb-4">No cargues claves personales. Registrá el tipo de autorización, responsable y evidencia.</p>
+      <form id="form-acceso" class="grid md:grid-cols-2 gap-3" enctype="multipart/form-data">
+        <input name="cliente" value="CCU" class="border rounded p-2" placeholder="Cliente / grupo económico" required>
+        <input name="cuit_agente" class="border rounded p-2" placeholder="CUIT agente / sociedad" required>
+        <input name="organismo" class="border rounded p-2" placeholder="Organismo" required>
+        <input name="servicio" class="border rounded p-2" placeholder="Servicio" required>
+        <select name="fuente_id" id="fuente_id" class="border rounded p-2"><option value="">Asociar fuente crítica...</option></select>
+        <select name="tipo_acceso" class="border rounded p-2" required>
+          <option value="archivo_manual">Exportación manual de padrón</option>
+          <option value="credencial_delegada">Credencial delegada / usuario técnico</option>
+          <option value="login_asistido">Login asistido por responsable</option>
+          <option value="publico">Fuente pública</option>
+          <option value="no_automatizable">No automatizable</option>
+        </select>
+        <select name="estado" class="border rounded p-2">
+          <option value="pendiente">Pendiente</option><option value="autorizado">Autorizado</option><option value="credencial_cargada">Credencial cargada</option><option value="exportacion_manual">Exportación manual</option><option value="login_asistido">Login asistido</option><option value="bloqueado">Bloqueado</option><option value="revocado">Revocado</option>
+        </select>
+        <input name="responsable" class="border rounded p-2" placeholder="Responsable interno">
+        <input name="alcance" class="border rounded p-2 md:col-span-2" placeholder="Alcance: sólo descarga de padrones / consulta CUIT / evidencia">
+        <textarea name="notas" class="border rounded p-2 md:col-span-2" placeholder="Notas, vencimiento o condiciones de uso"></textarea>
+        <input name="evidencia" type="file" class="border rounded p-2 md:col-span-2">
+        <div id="msg" class="hidden md:col-span-2 rounded-lg px-4 py-3 text-sm"></div>
+        <div class="md:col-span-2 flex justify-end"><button class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 font-semibold">Guardar acceso</button></div>
+      </form>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-xl font-bold mb-3">Pendientes prioritarios</h2>
+      <p class="text-sm text-slate-500 mb-4">Usá una fuente pendiente para precompletar el formulario.</p>
+      <div id="pendientes" class="space-y-3 text-sm"></div>
+    </div>
   </section>
-
   <section class="grid md:grid-cols-4 gap-3 mb-6" id="kpis"></section>
-
-  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
-    <h2 class="text-xl font-bold mb-3">Accesos registrados</h2>
-    <div id="accesos" class="space-y-3 text-sm"></div>
-  </section>
-
-  <section class="bg-white rounded-xl shadow-sm p-6">
-    <h2 class="text-xl font-bold mb-3">Requisitos pendientes por fuente crítica</h2>
-    <div id="requisitos" class="overflow-x-auto"></div>
-  </section>
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6"><h2 class="text-xl font-bold mb-3">Accesos registrados</h2><div id="accesos" class="grid md:grid-cols-2 gap-3 text-sm"></div></section>
+  <section class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Matriz de requisitos</h2><div id="requisitos" class="overflow-x-auto"></div></section>
 </main>
-
 <script>
-async function cargar() {
-  const r = await fetch('/api/accesos');
-  const data = await r.json();
-  const res = data.resumen || {};
-  const kpis = [
-    ['Total', res.total || 0, 'bg-slate-100 text-slate-800'],
-    ['Pendientes', res.pendientes || 0, 'bg-amber-100 text-amber-800'],
-    ['Autorizados', res.autorizados || 0, 'bg-emerald-100 text-emerald-800'],
-    ['Bloqueados', res.bloqueados || 0, 'bg-rose-100 text-rose-800'],
-  ];
-  document.getElementById('kpis').innerHTML = kpis.map(([l,v,c]) => `<div class="${c} rounded-xl p-4"><div class="text-xs uppercase">${l}</div><div class="text-2xl font-bold">${v}</div></div>`).join('');
-  document.getElementById('accesos').innerHTML = (data.accesos || []).map(a => `
-    <div class="border rounded-lg p-3">
-      <div class="flex justify-between gap-2">
-        <div><b>${a.cliente}</b> · ${a.cuit_agente} · ${a.organismo} / ${a.servicio}</div>
-        <span class="bg-slate-100 rounded px-2 py-1 text-xs">${a.estado}</span>
-      </div>
-      <div class="text-slate-600 mt-1">Tipo: ${a.tipo_acceso} · Fuente: ${a.fuente_id || '—'} · Responsable: ${a.responsable || '—'}</div>
-      <div class="text-slate-500">${a.notas || ''}</div>
-    </div>`).join('') || '<div class="text-slate-500">Sin accesos registrados.</div>';
-  const reqs = data.requisitos?.items || [];
-  document.getElementById('requisitos').innerHTML = `
-    <table class="w-full text-xs">
-      <thead class="bg-slate-100"><tr><th class="text-left p-2">Prioridad</th><th class="text-left p-2">Fuente</th><th class="text-left p-2">Organismo</th><th class="text-left p-2">Acceso requerido</th><th class="text-left p-2">Estado</th><th class="text-left p-2">Acción</th></tr></thead>
-      <tbody>${reqs.map(i => `<tr class="border-b"><td class="p-2">${i.prioridad}</td><td class="p-2">${i.nombre}</td><td class="p-2">${i.organismo}</td><td class="p-2">${i.tipo_acceso_requerido}</td><td class="p-2">${i.estado_acceso}</td><td class="p-2">${i.proxima_accion}</td></tr>`).join('')}</tbody>
-    </table>`;
+const labels = {archivo_manual:'Exportación manual',credencial_delegada:'Credencial delegada',login_asistido:'Login asistido',publico:'Público',no_automatizable:'No automatizable',pendiente:'Pendiente',autorizado:'Autorizado',credencial_cargada:'Credencial cargada',exportacion_manual:'Exportación manual',bloqueado:'Bloqueado',revocado:'Revocado'};
+function friendly(v) { return labels[v] || String(v || '—').replaceAll('_',' '); }
+function badge(v) { const cls = {pendiente:'bg-amber-100 text-amber-800',autorizado:'bg-emerald-100 text-emerald-800',credencial_cargada:'bg-emerald-100 text-emerald-800',exportacion_manual:'bg-blue-100 text-blue-800',bloqueado:'bg-rose-100 text-rose-800',revocado:'bg-slate-100 text-slate-800'}[v] || 'bg-slate-100 text-slate-800'; return `<span class="${cls} rounded px-2 py-1 text-xs font-semibold">${friendly(v)}</span>`; }
+function showMsg(ok, text) { const el = document.getElementById('msg'); el.className = ok ? 'md:col-span-2 rounded-lg px-4 py-3 text-sm bg-emerald-100 text-emerald-800' : 'md:col-span-2 rounded-lg px-4 py-3 text-sm bg-rose-100 text-rose-800'; el.textContent = text; }
+function prefill(i) {
+  const f = document.getElementById('form-acceso');
+  f.organismo.value = i.organismo || '';
+  f.servicio.value = i.nombre || i.fuente_id || '';
+  f.fuente_id.value = i.fuente_id || '';
+  f.tipo_acceso.value = i.tipo_acceso_requerido || 'archivo_manual';
+  f.alcance.value = i.proxima_accion || '';
+  f.notas.value = `Prioridad ${i.prioridad || '—'} · ${i.estado_acceso || 'pendiente'}`;
+  window.scrollTo({top:0, behavior:'smooth'});
 }
-
-document.getElementById('form-acceso').addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const fd = new FormData(ev.target);
-  const r = await fetch('/api/accesos', {method:'POST', body: fd});
-  if (!r.ok) {
-    const err = await r.json();
-    alert(err.detail || 'Error');
-    return;
-  }
-  ev.target.reset();
-  ev.target.cliente.value = 'CCU';
-  await cargar();
-});
-
+async function cargar() {
+  const r = await fetch('/api/accesos'); const data = await r.json(); const res = data.resumen || {}; const reqs = data.requisitos?.items || [];
+  document.getElementById('kpis').innerHTML = [['Total',res.total||0,'bg-slate-100 text-slate-800'],['Pendientes',res.pendientes||0,'bg-amber-100 text-amber-800'],['Autorizados',res.autorizados||0,'bg-emerald-100 text-emerald-800'],['Bloqueados',res.bloqueados||0,'bg-rose-100 text-rose-800']].map(([l,v,c]) => `<div class="${c} rounded-xl p-4"><div class="text-xs uppercase">${l}</div><div class="text-2xl font-bold">${v}</div></div>`).join('');
+  document.getElementById('fuente_id').innerHTML = '<option value="">Asociar fuente crítica...</option>' + reqs.map(i => `<option value="${i.fuente_id || ''}">${i.nombre} · ${i.organismo}</option>`).join('');
+  document.getElementById('pendientes').innerHTML = reqs.slice(0,6).map((i, idx) => `<div class="border rounded-xl p-4"><div class="flex justify-between gap-2"><b>${i.nombre}</b><span class="text-xs text-slate-500">${i.prioridad}</span></div><div class="text-slate-500 mt-1">${i.organismo} · ${friendly(i.tipo_acceso_requerido)}</div><div class="mt-2">${i.proxima_accion || ''}</div><button onclick='prefill(${JSON.stringify(i)})' class="mt-3 text-blue-600 hover:underline font-semibold">Usar en formulario</button></div>`).join('') || '<div class="text-slate-500">Sin requisitos pendientes.</div>';
+  document.getElementById('accesos').innerHTML = (data.accesos || []).map(a => `<div class="border rounded-xl p-4"><div class="flex justify-between gap-2"><div><b>${a.cliente}</b> · ${a.cuit_agente}</div>${badge(a.estado)}</div><div class="text-slate-600 mt-2">${a.organismo} / ${a.servicio}</div><div class="text-slate-600">${friendly(a.tipo_acceso)} · Responsable: ${a.responsable || '—'}</div><div class="text-slate-500 mt-1">${a.notas || ''}</div></div>`).join('') || '<div class="text-slate-500">Sin accesos registrados.</div>';
+  document.getElementById('requisitos').innerHTML = `<table class="w-full text-xs"><thead class="bg-slate-100"><tr><th class="text-left p-2">Prioridad</th><th class="text-left p-2">Fuente</th><th class="text-left p-2">Organismo</th><th class="text-left p-2">Acceso requerido</th><th class="text-left p-2">Estado</th><th class="text-left p-2">Acción</th></tr></thead><tbody>${reqs.map(i => `<tr class="border-b"><td class="p-2">${i.prioridad}</td><td class="p-2">${i.nombre}</td><td class="p-2">${i.organismo}</td><td class="p-2">${friendly(i.tipo_acceso_requerido)}</td><td class="p-2">${friendly(i.estado_acceso)}</td><td class="p-2">${i.proxima_accion}</td></tr>`).join('')}</tbody></table>`;
+}
+document.getElementById('form-acceso').addEventListener('submit', async ev => { ev.preventDefault(); const fd = new FormData(ev.target); const r = await fetch('/api/accesos', {method:'POST', body: fd}); if (!r.ok) { const err = await r.json().catch(() => ({})); return showMsg(false, err.detail || 'No se pudo guardar.'); } ev.target.reset(); ev.target.cliente.value = 'CCU'; showMsg(true, 'Acceso guardado.'); await cargar(); });
 cargar();
 </script>
 </body>
