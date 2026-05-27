@@ -549,6 +549,11 @@ def dashboard_page():
     return (STATIC_DIR / "dashboard.html").read_text(encoding="utf-8")
 
 
+@app.get("/manual", response_class=HTMLResponse)
+def manual_page():
+    return (STATIC_DIR / "manual.html").read_text(encoding="utf-8")
+
+
 @app.get("/info", response_class=HTMLResponse)
 def info_page():
     return (STATIC_DIR / "info.html").read_text(encoding="utf-8")

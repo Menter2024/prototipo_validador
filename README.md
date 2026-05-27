@@ -205,8 +205,11 @@ Módulo: app/modules/excel.py
 
 | Ruta | Uso |
 |---|---|
+| /dashboard | Dashboard ejecutivo de piloto y próximas acciones por rol |
 | / | Validación individual o múltiple por texto |
-| /info | Configuración actual en formato legible |
+| /configuracion | Configuración guiada de cliente, cobertura, padrones, fuentes y accesos |
+| /manual | Manual de usuario y operación imprimible/PDF |
+| /info | Diagnóstico técnico legible |
 | /lotes | Carga masiva desde Excel/CSV |
 | /padrones | Administración de padrones provinciales |
 | /fuentes | Monitor de fuentes fiscales y alertas |
@@ -294,6 +297,7 @@ Para producción enterprise se debe agregar:
 
 ## Documentación complementaria
 
+- docs/MANUAL_USUARIO.md
 - docs/ARQUITECTURA_ENTERPRISE.md
 - docs/OPERACION_TRIBUTARIA.md
 - docs/ROADMAP_ENTERPRISE.md

@@ -5,6 +5,7 @@
     ["/lotes", "Carga masiva"],
     ["/legajos", "Legajos"],
     ["/configuracion", "Config."],
+    ["/manual", "Manual"],
   ];
   const opsPages = [
     ["/padrones", "Padrones"],
