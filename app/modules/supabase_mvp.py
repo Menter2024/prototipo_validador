@@ -96,8 +96,9 @@ def upload_file(local_path: Path, remote_path: str, *, content_type: str | None 
     url = f"{cfg.url}/storage/v1/object/{cfg.bucket}/{remote_path}"
     headers = _headers(cfg, {"Content-Type": content_type, "x-upsert": "true" if upsert else "false"})
     with httpx.Client(timeout=60) as client:
-        res = client.post(url, headers=headers, content=local_path.read_bytes())
-        res.raise_for_status()
+        with local_path.open("rb") as fh:
+            res = client.post(url, headers=headers, content=fh)
+            res.raise_for_status()
     return {
         "enabled": True,
         "uploaded": True,
@@ -105,6 +106,30 @@ def upload_file(local_path: Path, remote_path: str, *, content_type: str | None 
         "path": remote_path,
         "sha256": sha256_file(local_path),
         "size": local_path.stat().st_size,
+    }
+
+
+def download_file(remote_path: str, local_path: Path, *, timeout: int = 120) -> dict[str, Any]:
+    cfg = get_config()
+    if not cfg:
+        return {"enabled": False, "downloaded": False, "reason": "Supabase no configurado"}
+    url = f"{cfg.url}/storage/v1/object/{cfg.bucket}/{remote_path}"
+    headers = _headers(cfg)
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    with httpx.Client(timeout=timeout) as client:
+        with client.stream("GET", url, headers=headers) as res:
+            res.raise_for_status()
+            with local_path.open("wb") as fh:
+                for chunk in res.iter_bytes():
+                    fh.write(chunk)
+    return {
+        "enabled": True,
+        "downloaded": True,
+        "bucket": cfg.bucket,
+        "path": remote_path,
+        "local_path": str(local_path),
+        "size": local_path.stat().st_size,
+        "sha256": sha256_file(local_path),
     }
 
 
