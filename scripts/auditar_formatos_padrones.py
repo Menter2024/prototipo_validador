@@ -38,13 +38,24 @@ def _layout_index(layouts: list[dict[str, Any]]) -> dict[str, list[str]]:
     return indexed
 
 
+def _layout_states(layouts: list[dict[str, Any]]) -> dict[str, list[str]]:
+    indexed: dict[str, list[str]] = {}
+    for layout in layouts:
+        fuente_id = layout.get("fuente_id")
+        if fuente_id:
+            indexed.setdefault(fuente_id, []).append(layout.get("estado", "sin_estado"))
+    return indexed
+
+
 def audit_sources(
     catalog_path: Path = ROOT / "config" / "fuentes_catalogo.json",
     layouts_path: Path = ROOT / "config" / "padron_layouts.json",
 ) -> dict[str, Any]:
     catalog = _read_json(catalog_path)
     layouts_catalog = _read_json(layouts_path)
-    layouts_by_source = _layout_index(layouts_catalog.get("layouts", []))
+    layouts = layouts_catalog.get("layouts", [])
+    layouts_by_source = _layout_index(layouts)
+    states_by_source = _layout_states(layouts)
     rows: list[dict[str, Any]] = []
 
     for source in catalog["fuentes"]:
@@ -56,9 +67,14 @@ def audit_sources(
         requires_massive_layout = automation in MASSIVE_AUTOMATION
 
         if source_layouts:
-            layout_status = "layout_especifico"
-            next_action = "Mantener muestra real, hash, golden CUITs y alerta de cambio de columnas."
-            blocking = False
+            pending_sample = any(state.startswith("pendiente") for state in states_by_source.get(fuente_id, []))
+            layout_status = "layout_especifico_pendiente_muestra" if pending_sample else "layout_especifico"
+            next_action = (
+                "Validar contra muestra oficial real, conservar hash y recién marcar integrado."
+                if pending_sample
+                else "Mantener muestra real, hash, golden CUITs y alerta de cambio de columnas."
+            )
+            blocking = bool(requires_massive_layout and pending_sample)
         elif requires_massive_layout:
             layout_status = "requiere_layout_especifico"
             next_action = "Relevar archivo oficial real, documentar columnas y crear layout específico versionado."
@@ -90,6 +106,7 @@ def audit_sources(
                 "formato_info_status": format_info_status,
                 "layout_status": layout_status,
                 "layout_ids": source_layouts,
+                "layout_estados": states_by_source.get(fuente_id, []),
                 "bloquea_importacion_masiva": blocking,
                 "accion_siguiente": next_action,
             }

@@ -37,6 +37,14 @@ def _fecha_ddmmaaaa(value: str) -> str:
     return str(value or "").strip()
 
 
+def _fecha_yyyy_mm_dd(value: str) -> str:
+    raw = str(value or "").strip()
+    digitos = _solo_digitos(raw)
+    if len(digitos) == 8 and raw[:4].isdigit():
+        return f"{digitos[6:8]}/{digitos[4:6]}/{digitos[:4]}"
+    return raw
+
+
 def _porcentaje(value: str) -> str:
     raw = str(value or "").replace("%", "").strip()
     if "," in raw or "." in raw:
@@ -53,12 +61,50 @@ def _transform(value: str, spec: dict[str, Any]) -> str:
         return _solo_digitos(value)
     if tipo == "fecha_ddmmaaaa":
         return _fecha_ddmmaaaa(value)
-    if tipo == "porcentaje_agip":
+    if tipo == "fecha_yyyy_mm_dd":
+        return _fecha_yyyy_mm_dd(value)
+    if tipo in {"porcentaje", "porcentaje_agip"}:
         return _porcentaje(value)
     if tipo == "codigo":
         raw = str(value or "").strip()
         return (spec.get("map") or {}).get(raw.upper(), raw)
     return str(value or "").strip()
+
+
+def _norm_header(value: str) -> str:
+    reemplazos = str.maketrans("áéíóúÁÉÍÓÚñÑ", "aeiouAEIOUnN")
+    limpio = str(value or "").translate(reemplazos).strip().lower()
+    return " ".join("".join(ch if ch.isalnum() else " " for ch in limpio).split())
+
+
+def traducir_row_con_cabeceras(row: dict[str, Any], layout: dict[str, Any]) -> dict[str, Any] | None:
+    headers = {_norm_header(key): value for key, value in row.items()}
+    values: dict[str, str] = {}
+    for field, spec in (layout.get("campos") or {}).items():
+        aliases = spec.get("aliases") or []
+        for alias in aliases:
+            header = _norm_header(alias)
+            if header in headers:
+                values[field] = _transform(headers[header], spec)
+                break
+
+    cuit = values.get("cuit", "")
+    cuit_len = int((layout.get("validaciones") or {}).get("cuit_longitud") or 0)
+    if cuit_len and len(cuit) != cuit_len:
+        return None
+
+    return {
+        "cuit": cuit,
+        "alicuota_retencion": values.get("alicuota_retencion", ""),
+        "alicuota_percepcion": values.get("alicuota_percepcion", ""),
+        "vigencia_desde": values.get("vigencia_desde", ""),
+        "vigencia_hasta": values.get("vigencia_hasta", ""),
+        "regimen": values.get("regimen") or (layout.get("salida") or {}).get("regimen_default", ""),
+        "jurisdiccion": layout.get("jurisdiccion", ""),
+        "tipo_padron": layout.get("tipo_padron", ""),
+        "fuente_id": layout.get("fuente_id", ""),
+        "layout_id": layout.get("id", ""),
+    }
 
 
 def traducir_linea_delimitada(line: str, layout: dict[str, Any]) -> dict[str, Any] | None:

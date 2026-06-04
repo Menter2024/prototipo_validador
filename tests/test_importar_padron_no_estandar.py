@@ -162,3 +162,36 @@ def test_importar_guarda_manifest_con_hash_y_calidad(tmp_path):
     assert item["tipo_archivo"] == ".csv"
     assert item["calidad"]["estado"] == "aprobado"
     assert item["periodo"] == "2026-06"
+
+
+
+def test_importar_arba_usa_layout_especifico_de_cabeceras(tmp_path):
+    origen = tmp_path / "arba.csv"
+    origen.write_text(
+        "cuit,alicuota_retencion,alicuota_percepcion,vigencia_desde,vigencia_hasta\n"
+        "30-50001091-2,2.00,3.00,2026-05-01,2026-05-31\n",
+        encoding="utf-8",
+    )
+
+    res = imp.importar_padron("ARBA", origen, tmp_path / "padrones", backup=False)
+
+    assert res["muestra"][0]["cuit"] == "30500010912"
+    assert res["muestra"][0]["vigencia_desde"] == "01/05/2026"
+    assert res["muestra"][0]["regimen"] == "ARBA Régimen por sujeto"
+    assert res["calidad"]["layout_detectado"] == "arba_iibb_sujeto_csv_v1"
+
+
+def test_importar_ater_usa_layout_especifico_de_cabeceras(tmp_path):
+    origen = tmp_path / "ater.csv"
+    origen.write_text(
+        "cuit,alicuota_retencion,alicuota_percepcion,vigencia_desde,vigencia_hasta,regimen\n"
+        "20000033481,3.00,3.00,2026-05-01,2026-05-31,\n",
+        encoding="utf-8",
+    )
+
+    res = imp.importar_padron("ATER", origen, tmp_path / "padrones", backup=False)
+
+    assert res["muestra"][0]["cuit"] == "20000033481"
+    assert res["muestra"][0]["vigencia_hasta"] == "31/05/2026"
+    assert res["muestra"][0]["regimen"] == "ATER IIBB retención/percepción"
+    assert res["calidad"]["layout_detectado"] == "ater_entrerios_iibb_csv_v1"

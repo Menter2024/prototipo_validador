@@ -48,3 +48,54 @@ def test_layouts_para_padron_incluye_especifico_y_genericos():
     assert "agip_caba_regimenes_generales_v1" in ids
     assert "cabeceras_alias_iibb_v1" in ids
     assert "delimitado_sin_cabecera_generico_v1" in ids
+
+
+
+def test_traducir_row_arba_con_cabeceras_canonicas():
+    layout = padron_layouts.obtener_layout("arba_iibb_sujeto_csv_v1")
+
+    row = padron_layouts.traducir_row_con_cabeceras(
+        {
+            "cuit": "30-50001091-2",
+            "alicuota_retencion": "2,00",
+            "alicuota_percepcion": "3.00%",
+            "vigencia_desde": "2026-05-01",
+            "vigencia_hasta": "2026-05-31",
+        },
+        layout,
+    )
+
+    assert row["cuit"] == "30500010912"
+    assert row["alicuota_retencion"] == "2.00"
+    assert row["alicuota_percepcion"] == "3.00"
+    assert row["vigencia_desde"] == "01/05/2026"
+    assert row["vigencia_hasta"] == "31/05/2026"
+    assert row["regimen"] == "ARBA Régimen por sujeto"
+    assert row["layout_id"] == "arba_iibb_sujeto_csv_v1"
+
+
+def test_traducir_row_ater_con_muestra_local_normalizada():
+    layout = padron_layouts.obtener_layout("ater_entrerios_iibb_csv_v1")
+
+    row = padron_layouts.traducir_row_con_cabeceras(
+        {
+            "cuit": "20000033481",
+            "alicuota_retencion": "3.00",
+            "alicuota_percepcion": "3.00",
+            "vigencia_desde": "2026-05-01",
+            "vigencia_hasta": "2026-05-31",
+            "regimen": "",
+        },
+        layout,
+    )
+
+    assert row["cuit"] == "20000033481"
+    assert row["vigencia_desde"] == "01/05/2026"
+    assert row["regimen"] == "ATER IIBB retención/percepción"
+    assert row["layout_id"] == "ater_entrerios_iibb_csv_v1"
+
+
+def test_layout_santafe_queda_marcado_pendiente_muestra_real():
+    layout = padron_layouts.obtener_layout("santafe_iibb_csv_v1")
+
+    assert layout["estado"] == "pendiente_muestra_real"

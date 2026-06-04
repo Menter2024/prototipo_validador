@@ -8,24 +8,25 @@ Este backlog convierte el registro maestro en trabajo verificable: identifica qu
 
 - Fuentes auditadas: 34
 - consulta_api_o_asistida: 25
-- layout_especifico: 1
-- requiere_layout_especifico: 8
-- Bloqueos de importación masiva por prioridad: P0=3, P1=4, P2=1
+- layout_especifico: 3
+- layout_especifico_pendiente_muestra: 1
+- requiere_layout_especifico: 5
+- Bloqueos de importación masiva por prioridad: P0=1, P1=4, P2=1
 
 ## Matriz completa
 
 | Prioridad | Fuente | Jurisdicción | Tipo | Obtención | Estado formato | Layout | Bloquea masivo | Próxima acción |
 |---|---|---|---|---|---|---|---|---|
-| P0 | `arba_iibb` | Buenos Aires | archivo_normalizado | [link](https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto) | landing_con_instructivo_a_verificar | requiere_layout_especifico | sí | Relevar archivo oficial real, documentar columnas y crear layout específico versionado. |
+| P0 | `arba_iibb` | Buenos Aires | archivo_normalizado | [link](https://web.arba.gov.ar/regimen-de-recaudacion-por-sujeto) | landing_con_instructivo_a_verificar | `arba_iibb_sujeto_csv_v1` | no | Mantener muestra real, hash, golden CUITs y alerta de cambio de columnas. |
 | P0 | `agip_caba_iibb` | CABA | archivo_normalizado | [link](https://imagenes.agip.gob.ar/agentes/agentes-de-recaudacion-e-informacion) | landing_con_instructivo_a_verificar | `agip_caba_regimenes_generales_v1` | no | Mantener muestra real, hash, golden CUITs y alerta de cambio de columnas. |
 | P0 | `comarb_sircip` | Convenio Multilateral | requiere_credenciales | [link](https://www.ca.gob.ar/sistemas/sircip) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P0 | `comarb_sircreb` | Convenio Multilateral | requiere_credenciales | [link](https://www.ca.gob.ar/index.php/sistemas/sircreb) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P0 | `comarb_sircupa` | Convenio Multilateral | requiere_credenciales | [link](https://www.ca.gob.ar/sistemas/sircupa) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
-| P0 | `ater_entrerios_iibb` | Entre Ríos | archivo_normalizado | [link](https://www.ater.gov.ar/ater2/NominasAgentes.asp) | landing_con_instructivo_a_verificar | requiere_layout_especifico | sí | Relevar archivo oficial real, documentar columnas y crear layout específico versionado. |
+| P0 | `ater_entrerios_iibb` | Entre Ríos | archivo_normalizado | [link](https://www.ater.gov.ar/ater2/NominasAgentes.asp) | landing_con_instructivo_a_verificar | `ater_entrerios_iibb_csv_v1` | no | Mantener muestra real, hash, golden CUITs y alerta de cambio de columnas. |
 | P0 | `arca_apoc` | Nacional | requiere_navegador | [link](https://www.arca.gob.ar/facturacion/default.asp) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P0 | `arca_constancia` | Nacional | automatizada | [link](https://www.afip.gob.ar/ws/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P0 | `arca_sire` | Nacional | requiere_credenciales | [link](https://arca.gob.ar/sire/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
-| P0 | `santafe_iibb` | Santa Fe | archivo_normalizado | [link](https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284) | landing_con_instructivo_a_verificar | requiere_layout_especifico | sí | Relevar archivo oficial real, documentar columnas y crear layout específico versionado. |
+| P0 | `santafe_iibb` | Santa Fe | archivo_normalizado | [link](https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284) | landing_con_instructivo_a_verificar | `santafe_iibb_csv_v1` | sí | Validar contra muestra oficial real, conservar hash y recién marcar integrado. |
 | P1 | `chubut_iibb_agentes` | Chubut | pendiente_automatizacion | [link](https://www.dgrchubut.gov.ar/agentes-de-retencion-y-percepcion/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P1 | `comarb_sifere_padron` | Convenio Multilateral | requiere_credenciales | [link](https://www.ca.gob.ar/sistemas/padron-web-padron-federal) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P1 | `comarb_sircar` | Convenio Multilateral | requiere_credenciales | [link](https://www.ca.gob.ar/sistemas/sircar) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |

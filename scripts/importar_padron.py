@@ -195,6 +195,23 @@ def _rows_agip_layout(path: Path) -> list[dict]:
     return out
 
 
+def _rows_layout_cabeceras(provincia: str, rows: list[dict], parse_meta: dict) -> list[dict]:
+    out = []
+    for layout in padron_layouts.layouts_para_padron(provincia):
+        if layout.get("formato") != "csv_xlsx_con_cabeceras" or not layout.get("fuente_id"):
+            continue
+        translated = []
+        for row in rows:
+            parsed = padron_layouts.traducir_row_con_cabeceras(row, layout)
+            if parsed:
+                translated.append(parsed)
+        if translated:
+            parse_meta.setdefault("layout_detectado", layout["id"])
+            out = translated
+            break
+    return out
+
+
 def _rows_delimitado_sin_header(path: Path) -> list[dict]:
     """Fallback para archivos provinciales delimitados sin cabecera explícita."""
     out = []
@@ -314,6 +331,9 @@ def _leer_origen(provincia: str, path: Path, sheet: str | None, parse_meta: dict
                 parse_meta.setdefault("layout_detectado", "agip_regimenes_generales")
                 return agip
         rows = _rows_csv(path)
+        specific = _rows_layout_cabeceras(provincia, rows, parse_meta)
+        if specific:
+            return specific
         if rows and any((k or "").strip() for k in rows[0].keys()):
             norm = [_normalizar_row(r) for r in rows]
             if any(r.get("cuit") for r in norm):

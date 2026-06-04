@@ -26,8 +26,11 @@ def test_auditoria_cubre_todas_las_fuentes_y_detecta_bloqueos_masivos():
     by_id = {row["fuente_id"]: row for row in audit["rows"]}
     assert by_id["agip_caba_iibb"]["layout_status"] == "layout_especifico"
     assert by_id["agip_caba_iibb"]["layout_ids"] == ["agip_caba_regimenes_generales_v1"]
-    assert by_id["arba_iibb"]["bloquea_importacion_masiva"] is True
-    assert by_id["ater_entrerios_iibb"]["bloquea_importacion_masiva"] is True
+    assert by_id["arba_iibb"]["layout_status"] == "layout_especifico"
+    assert by_id["arba_iibb"]["bloquea_importacion_masiva"] is False
+    assert by_id["ater_entrerios_iibb"]["layout_status"] == "layout_especifico"
+    assert by_id["ater_entrerios_iibb"]["bloquea_importacion_masiva"] is False
+    assert by_id["santafe_iibb"]["layout_status"] == "layout_especifico_pendiente_muestra"
     assert by_id["santafe_iibb"]["bloquea_importacion_masiva"] is True
 
 

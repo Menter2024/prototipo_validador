@@ -26,18 +26,42 @@
       "separador": ";",
       "frecuencia": "mensual",
       "campos": {
-        "fecha_publicacion": {"posicion": 0, "tipo": "fecha_ddmmaaaa"},
-        "vigencia_desde": {"posicion": 1, "tipo": "fecha_ddmmaaaa"},
-        "vigencia_hasta": {"posicion": 2, "tipo": "fecha_ddmmaaaa"},
-        "cuit": {"posicion": 3, "tipo": "cuit"},
+        "fecha_publicacion": {
+          "posicion": 0,
+          "tipo": "fecha_ddmmaaaa"
+        },
+        "vigencia_desde": {
+          "posicion": 1,
+          "tipo": "fecha_ddmmaaaa"
+        },
+        "vigencia_hasta": {
+          "posicion": 2,
+          "tipo": "fecha_ddmmaaaa"
+        },
+        "cuit": {
+          "posicion": 3,
+          "tipo": "cuit"
+        },
         "tipo_inscripcion": {
           "posicion": 4,
           "tipo": "codigo",
-          "map": {"C": "Convenio", "D": "Directo CABA"}
+          "map": {
+            "C": "Convenio",
+            "D": "Directo CABA"
+          }
         },
-        "alicuota_percepcion": {"posicion": 7, "tipo": "porcentaje_agip"},
-        "alicuota_retencion": {"posicion": 8, "tipo": "porcentaje_agip"},
-        "razon_social": {"posicion": 11, "tipo": "texto"}
+        "alicuota_percepcion": {
+          "posicion": 7,
+          "tipo": "porcentaje_agip"
+        },
+        "alicuota_retencion": {
+          "posicion": 8,
+          "tipo": "porcentaje_agip"
+        },
+        "razon_social": {
+          "posicion": 11,
+          "tipo": "texto"
+        }
       },
       "salida": {
         "regimen_template": "AGIP Regímenes Generales · {tipo_inscripcion}"
@@ -54,6 +78,299 @@
       ]
     },
     {
+      "id": "arba_iibb_sujeto_csv_v1",
+      "nombre": "ARBA Buenos Aires · Régimen por sujeto CSV",
+      "fuente_id": "arba_iibb",
+      "padron_key": "ARBA",
+      "jurisdiccion": "Buenos Aires",
+      "organismo": "ARBA",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "csv_xlsx_con_cabeceras",
+      "frecuencia": "mensual",
+      "estado": "validado_muestra_local",
+      "campos": {
+        "cuit": {
+          "aliases": [
+            "cuit",
+            "cuil",
+            "cuit/cuil",
+            "cuit_contribuyente",
+            "cuit sujeto",
+            "nro_cuit",
+            "numero_cuit"
+          ],
+          "tipo": "cuit"
+        },
+        "alicuota_retencion": {
+          "aliases": [
+            "alicuota_retencion",
+            "retencion",
+            "retención",
+            "ali_ret",
+            "alic_ret",
+            "alic ret",
+            "alicuota retencion",
+            "alícuota retención",
+            "ret"
+          ],
+          "tipo": "porcentaje"
+        },
+        "alicuota_percepcion": {
+          "aliases": [
+            "alicuota_percepcion",
+            "percepcion",
+            "percepción",
+            "ali_per",
+            "alic_per",
+            "alic perc",
+            "alicuota percepcion",
+            "alícuota percepción",
+            "perc"
+          ],
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde": {
+          "aliases": [
+            "vigencia_desde",
+            "desde",
+            "fecha_desde",
+            "fecha desde",
+            "vig desde",
+            "inicio"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "vigencia_hasta": {
+          "aliases": [
+            "vigencia_hasta",
+            "hasta",
+            "fecha_hasta",
+            "fecha hasta",
+            "vig hasta",
+            "fin"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "regimen": {
+          "aliases": [
+            "regimen",
+            "régimen",
+            "tipo",
+            "categoria",
+            "categoría"
+          ],
+          "tipo": "texto"
+        }
+      },
+      "salida": {
+        "regimen_default": "ARBA Régimen por sujeto"
+      },
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": true,
+        "requiere_vigencia": true
+      },
+      "notas": [
+        "Layout canónico para exportación CSV normalizada del padrón ARBA por sujeto.",
+        "Debe validarse contra cada archivo oficial mensual conservando hash y manifest."
+      ]
+    },
+    {
+      "id": "ater_entrerios_iibb_csv_v1",
+      "nombre": "ATER Entre Ríos · IIBB retención/percepción CSV",
+      "fuente_id": "ater_entrerios_iibb",
+      "padron_key": "EntreRios",
+      "jurisdiccion": "Entre Ríos",
+      "organismo": "ATER",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "csv_xlsx_con_cabeceras",
+      "frecuencia": "mensual",
+      "estado": "validado_muestra_local",
+      "campos": {
+        "cuit": {
+          "aliases": [
+            "cuit",
+            "cuil",
+            "cuit/cuil",
+            "cuit_contribuyente",
+            "cuit sujeto",
+            "nro_cuit",
+            "numero_cuit"
+          ],
+          "tipo": "cuit"
+        },
+        "alicuota_retencion": {
+          "aliases": [
+            "alicuota_retencion",
+            "retencion",
+            "retención",
+            "ali_ret",
+            "alic_ret",
+            "alic ret",
+            "alicuota retencion",
+            "alícuota retención",
+            "ret"
+          ],
+          "tipo": "porcentaje"
+        },
+        "alicuota_percepcion": {
+          "aliases": [
+            "alicuota_percepcion",
+            "percepcion",
+            "percepción",
+            "ali_per",
+            "alic_per",
+            "alic perc",
+            "alicuota percepcion",
+            "alícuota percepción",
+            "perc"
+          ],
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde": {
+          "aliases": [
+            "vigencia_desde",
+            "desde",
+            "fecha_desde",
+            "fecha desde",
+            "vig desde",
+            "inicio"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "vigencia_hasta": {
+          "aliases": [
+            "vigencia_hasta",
+            "hasta",
+            "fecha_hasta",
+            "fecha hasta",
+            "vig hasta",
+            "fin"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "regimen": {
+          "aliases": [
+            "regimen",
+            "régimen",
+            "tipo",
+            "categoria",
+            "categoría"
+          ],
+          "tipo": "texto"
+        }
+      },
+      "salida": {
+        "regimen_default": "ATER IIBB retención/percepción"
+      },
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": true,
+        "requiere_vigencia": true
+      },
+      "notas": [
+        "Layout validado con muestra local de gran volumen normalizada a cabeceras canónicas.",
+        "No commitear el padrón real completo; usar muestras sanitizadas en tests."
+      ]
+    },
+    {
+      "id": "santafe_iibb_csv_v1",
+      "nombre": "Santa Fe API · IIBB retención/percepción CSV/XLSX",
+      "fuente_id": "santafe_iibb",
+      "padron_key": "SantaFe",
+      "jurisdiccion": "Santa Fe",
+      "organismo": "API Santa Fe",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "csv_xlsx_con_cabeceras",
+      "frecuencia": "mensual",
+      "estado": "pendiente_muestra_real",
+      "campos": {
+        "cuit": {
+          "aliases": [
+            "cuit",
+            "cuil",
+            "cuit/cuil",
+            "cuit_contribuyente",
+            "cuit sujeto",
+            "nro_cuit",
+            "numero_cuit"
+          ],
+          "tipo": "cuit"
+        },
+        "alicuota_retencion": {
+          "aliases": [
+            "alicuota_retencion",
+            "retencion",
+            "retención",
+            "ali_ret",
+            "alic_ret",
+            "alic ret",
+            "alicuota retencion",
+            "alícuota retención",
+            "ret"
+          ],
+          "tipo": "porcentaje"
+        },
+        "alicuota_percepcion": {
+          "aliases": [
+            "alicuota_percepcion",
+            "percepcion",
+            "percepción",
+            "ali_per",
+            "alic_per",
+            "alic perc",
+            "alicuota percepcion",
+            "alícuota percepción",
+            "perc"
+          ],
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde": {
+          "aliases": [
+            "vigencia_desde",
+            "desde",
+            "fecha_desde",
+            "fecha desde",
+            "vig desde",
+            "inicio"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "vigencia_hasta": {
+          "aliases": [
+            "vigencia_hasta",
+            "hasta",
+            "fecha_hasta",
+            "fecha hasta",
+            "vig hasta",
+            "fin"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "regimen": {
+          "aliases": [
+            "regimen",
+            "régimen",
+            "tipo",
+            "categoria",
+            "categoría"
+          ],
+          "tipo": "texto"
+        }
+      },
+      "salida": {
+        "regimen_default": "API Santa Fe IIBB retención/percepción"
+      },
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": true,
+        "requiere_vigencia": false
+      },
+      "notas": [
+        "Layout inicial por aliases; requiere validación contra archivo oficial real de Santa Fe antes de marcar integrado."
+      ]
+    },
+    {
       "id": "cabeceras_alias_iibb_v1",
       "nombre": "Cabeceras alias IIBB",
       "padron_key": "*",
@@ -61,14 +378,59 @@
       "organismo": "variable",
       "tipo_padron": "iibb_retencion_percepcion",
       "formato": "csv_xlsx_con_cabeceras",
-      "deteccion": {"headers": ["cuit"]},
+      "deteccion": {
+        "headers": [
+          "cuit"
+        ]
+      },
       "campos": {
-        "cuit": {"aliases": ["cuit", "cuil", "nro_cuit", "numero_cuit", "cuit sujeto"]},
-        "alicuota_retencion": {"aliases": ["alicuota_retencion", "retencion", "alic ret", "alic. ret."]},
-        "alicuota_percepcion": {"aliases": ["alicuota_percepcion", "percepcion", "alic perc", "alic. perc."]},
-        "vigencia_desde": {"aliases": ["vigencia_desde", "desde", "fecha_desde"]},
-        "vigencia_hasta": {"aliases": ["vigencia_hasta", "hasta", "fecha_hasta"]},
-        "regimen": {"aliases": ["regimen", "régimen", "categoria", "tipo"]}
+        "cuit": {
+          "aliases": [
+            "cuit",
+            "cuil",
+            "nro_cuit",
+            "numero_cuit",
+            "cuit sujeto"
+          ]
+        },
+        "alicuota_retencion": {
+          "aliases": [
+            "alicuota_retencion",
+            "retencion",
+            "alic ret",
+            "alic. ret."
+          ]
+        },
+        "alicuota_percepcion": {
+          "aliases": [
+            "alicuota_percepcion",
+            "percepcion",
+            "alic perc",
+            "alic. perc."
+          ]
+        },
+        "vigencia_desde": {
+          "aliases": [
+            "vigencia_desde",
+            "desde",
+            "fecha_desde"
+          ]
+        },
+        "vigencia_hasta": {
+          "aliases": [
+            "vigencia_hasta",
+            "hasta",
+            "fecha_hasta"
+          ]
+        },
+        "regimen": {
+          "aliases": [
+            "regimen",
+            "régimen",
+            "categoria",
+            "tipo"
+          ]
+        }
       },
       "validaciones": {
         "cuit_longitud": 11
@@ -82,8 +444,16 @@
       "organismo": "variable",
       "tipo_padron": "iibb_retencion_percepcion",
       "formato": "txt_delimitado_sin_header",
-      "separadores": [";", "\t", "|", ","],
-      "deteccion": {"buscar_cuit": true, "buscar_porcentajes": true},
+      "separadores": [
+        ";",
+        "\t",
+        "|",
+        ","
+      ],
+      "deteccion": {
+        "buscar_cuit": true,
+        "buscar_porcentajes": true
+      },
       "validaciones": {
         "cuit_longitud": 11
       }
