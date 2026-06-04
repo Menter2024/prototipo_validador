@@ -724,6 +724,86 @@
       ]
     },
     {
+      "id": "formosa_iibb_delimitado_v1",
+      "nombre": "Formosa · IIBB retención/percepción delimitado",
+      "fuente_id": "formosa_iibb",
+      "padron_key": "Formosa",
+      "jurisdiccion": "Formosa",
+      "organismo": "DGR Formosa",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "txt_delimitado_sin_header",
+      "separador": ";",
+      "frecuencia": "mensual",
+      "estado": "validado_muestra_oficial",
+      "campos": {
+        "cuit": {
+          "posicion": 0,
+          "tipo": "cuit"
+        },
+        "razon_social": {
+          "posicion": 1,
+          "tipo": "texto"
+        },
+        "periodo": {
+          "posicion": 2,
+          "tipo": "texto"
+        },
+        "categoria_riesgo": {
+          "posicion": 3,
+          "tipo": "texto"
+        },
+        "riesgo_fiscal": {
+          "posicion": 4,
+          "tipo": "texto"
+        },
+        "alicuota_percepcion": {
+          "posicion": 5,
+          "tipo": "porcentaje"
+        },
+        "alicuota_retencion": {
+          "posicion": 6,
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde_especial": {
+          "posicion": 7,
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "vigencia_hasta_especial": {
+          "posicion": 8,
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "alicuota_percepcion_cm": {
+          "posicion": 9,
+          "tipo": "porcentaje"
+        },
+        "alicuota_retencion_cm": {
+          "posicion": 10,
+          "tipo": "porcentaje"
+        },
+        "regimen": {
+          "posicion": 13,
+          "tipo": "texto"
+        },
+        "exento": {
+          "posicion": 14,
+          "tipo": "texto"
+        }
+      },
+      "salida": {
+        "regimen_template": "Formosa IIBB · {regimen} · {riesgo_fiscal}"
+      },
+      "validaciones": {
+        "min_columnas": 14,
+        "cuit_longitud": 11,
+        "requiere_alicuota": true,
+        "requiere_vigencia": false
+      },
+      "notas": [
+        "Layout relevado contra muestra real Formosa.csv recibida de la cervecería.",
+        "Para Convenio Multilateral también existen alícuotas específicas en posiciones 9/10; la salida canónica usa posiciones generales 5/6."
+      ]
+    },
+    {
       "id": "cabeceras_alias_iibb_v1",
       "nombre": "Cabeceras alias IIBB",
       "padron_key": "*",

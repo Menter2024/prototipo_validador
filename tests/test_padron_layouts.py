@@ -129,3 +129,18 @@ def test_layouts_p1_quedan_validados_o_cubiertos_por_muestra_real():
         assert padron_layouts.obtener_layout(layout_id)["estado"] == "validado_muestra_oficial"
     assert padron_layouts.obtener_layout("mendoza_iibb_retib_delimitado_v1")["estado"] == "validado_muestra_oficial_con_observaciones"
     assert padron_layouts.obtener_layout("tucuman_iibb_rg23_csv_v1")["estado"] == "alternativo_aliases_no_usado_en_muestra"
+
+
+def test_traducir_linea_formosa_delimitado_real():
+    layout = padron_layouts.obtener_layout("formosa_iibb_delimitado_v1")
+
+    row = padron_layouts.traducir_linea_delimitada(
+        "30710396708;TRANSPORTE NUEVO HORIZONTE S.A.;202606;B;ALTO RIESGO FISCAL;2.50;2.25;;;2.25;1.500;;;CONVENIO MULTILATERAL;NO",
+        layout,
+    )
+
+    assert row["cuit"] == "30710396708"
+    assert row["alicuota_retencion"] == "2.25"
+    assert row["alicuota_percepcion"] == "2.50"
+    assert row["regimen"] == "Formosa IIBB · CONVENIO MULTILATERAL · ALTO RIESGO FISCAL"
+    assert row["layout_id"] == "formosa_iibb_delimitado_v1"

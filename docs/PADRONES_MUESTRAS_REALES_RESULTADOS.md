@@ -12,10 +12,11 @@ Resumen sanitizado: no incluye padrones completos ni filas de muestra; los repor
 | Mendoza | Mendoza Ret_ib_2026_06_01.txt.gz | `mendoza_iibb_retib_delimitado_v1` | sí | 143567 | observado | 185158 CUITs duplicados descartados. | 959e5913857234e1d3652bd801ac8ba4852f9a2b6348f4fa6b2e44a4143bdfef | 2692125 |
 | Tucumán padrón | Tucum_padroncontribuyente_2606_270520260921 (1).zip | `tucuman_padron_contribuyente_txt_v1` | sí | 76900 | aprobado | — | 792738d0039a0f8d5a37a44dc31bf076dd049d69d30d38d790b8a4b7a8b171ad | 1559964 |
 | Tucumán coeficiente | Tucum_Coefic.zip | `tucuman_coef_rg116_txt_v1` | sí | 47095 | aprobado | — | f560cfbbc9640c1659d9986fdf59e7288ff7a1db2e5f4f63e950fcc26971336c | 983996 |
+| Formosa | Formosa.csv | `formosa_iibb_delimitado_v1` | sí | 77405 | aprobado | — | b5ec5268a12faad5971c4f42476df8e97a460437e27b0365ccc746b228bf0228 | 9060195 |
 
 ## Decisiones
 
-- Santa Fe, Córdoba, Jujuy y Tucumán validaron sin advertencias.
+- Santa Fe, Córdoba, Jujuy, Formosa y Tucumán validaron sin advertencias.
 - Mendoza validó con observación esperada: el archivo trae múltiples filas por CUIT/actividad; el importador conserva un registro por CUIT y reporta duplicados descartados.
 - Los layouts correspondientes fueron marcados como `validado_muestra_oficial` o `validado_muestra_oficial_con_observaciones` en `config/padron_layouts.json`.
 
@@ -26,6 +27,7 @@ Resumen sanitizado: no incluye padrones completos ni filas de muestra; los repor
 /private/tmp/padrones_reales/reportes/cordoba.json
 /private/tmp/padrones_reales/reportes/jujuy.json
 /private/tmp/padrones_reales/reportes/mendoza.json
+/private/tmp/padrones_reales/reportes/formosa.json
 /private/tmp/padrones_reales/reportes/tucuman_padron.json
 /private/tmp/padrones_reales/reportes/tucuman_coef.json
 ```

@@ -35,8 +35,8 @@ def test_auditoria_cubre_todas_las_fuentes_y_detecta_bloqueos_masivos():
     for fuente_id in ["cordoba_iibb", "jujuy_iibb", "mendoza_iibb", "tucuman_iibb"]:
         assert by_id[fuente_id]["layout_status"] == "layout_especifico"
         assert by_id[fuente_id]["bloquea_importacion_masiva"] is False
-    assert by_id["formosa_iibb"]["layout_status"] == "requiere_layout_especifico"
-    assert by_id["formosa_iibb"]["bloquea_importacion_masiva"] is True
+    assert by_id["formosa_iibb"]["layout_status"] == "layout_especifico"
+    assert by_id["formosa_iibb"]["bloquea_importacion_masiva"] is False
 
 
 def test_markdown_backlog_incluye_resumen_y_criterio_de_terminado():
@@ -45,8 +45,7 @@ def test_markdown_backlog_incluye_resumen_y_criterio_de_terminado():
 
     assert "# Backlog de formatos y layouts de padrones" in markdown
     assert "Fuentes auditadas: 34" in markdown
-    assert "Bloqueos de importación masiva" in markdown
     assert "Criterio de terminado por fuente" in markdown
     assert "`arba_iibb`" in markdown
     assert "`agip_caba_iibb`" in markdown
-    assert "Completar P2 masivo sin layout: Formosa" in markdown
+    assert "Mantener layouts validados con muestras reales" in markdown

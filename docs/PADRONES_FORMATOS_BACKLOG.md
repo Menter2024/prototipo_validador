@@ -8,9 +8,7 @@ Este backlog convierte el registro maestro en trabajo verificable: identifica qu
 
 - Fuentes auditadas: 34
 - consulta_api_o_asistida: 25
-- layout_especifico: 8
-- requiere_layout_especifico: 1
-- Bloqueos de importación masiva por prioridad: P2=1
+- layout_especifico: 9
 
 ## Matriz completa
 
@@ -39,7 +37,7 @@ Este backlog convierte el registro maestro en trabajo verificable: identifica qu
 | P1 | `tucuman_iibb` | Tucumán | archivo_normalizado | [link](https://www.rentastucuman.gob.ar/) | landing_con_instructivo_a_verificar | `tucuman_iibb_rg23_csv_v1`, `tucuman_padron_contribuyente_txt_v1`, `tucuman_coef_rg116_txt_v1` | no | Mantener muestra real, hash, golden CUITs y alerta de cambio de columnas. |
 | P2 | `catamarca_iibb_online` | Catamarca | pendiente_automatizacion | [link](https://arcat.gob.ar/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P2 | `chaco_iibb_online` | Chaco | pendiente_automatizacion | [link](https://atp.chaco.gob.ar/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
-| P2 | `formosa_iibb` | Formosa | archivo_normalizado | [link](https://www.formosa.gob.ar/tramite/120/inscripcion_como_agente_de_percepcion_del_impuesto_sobre_los_ingresos_brutos) | landing_con_instructivo_a_verificar | requiere_layout_especifico | sí | Relevar archivo oficial real, documentar columnas y crear layout específico versionado. |
+| P2 | `formosa_iibb` | Formosa | archivo_normalizado | [link](https://www.formosa.gob.ar/tramite/120/inscripcion_como_agente_de_percepcion_del_impuesto_sobre_los_ingresos_brutos) | landing_con_instructivo_a_verificar | `formosa_iibb_delimitado_v1` | no | Mantener muestra real, hash, golden CUITs y alerta de cambio de columnas. |
 | P2 | `lapampa_iibb_online` | La Pampa | pendiente_automatizacion | [link](https://www.dgr.lapampa.gob.ar/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P2 | `larioja_iibb_online` | La Rioja | pendiente_automatizacion | [link](https://dgip.larioja.gob.ar/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
 | P2 | `salta_iibb_online` | Salta | pendiente_automatizacion | [link](https://www.dgrsalta.gov.ar/) | landing_con_instructivo_a_verificar | consulta_api_o_asistida | no | Documentar contrato/API/playbook de acceso y evidencia; no requiere layout masivo inicial. |
@@ -53,9 +51,9 @@ Este backlog convierte el registro maestro en trabajo verificable: identifica qu
 
 ## Orden de trabajo recomendado
 
-1. Completar P2 masivo sin layout: Formosa.
-2. Mantener layouts validados con muestras reales, hash, golden CUITs y alerta de cambio de columnas.
-3. Validar nuevas versiones mensuales contra estos layouts antes de promoverlas.
+1. Mantener layouts validados con muestras reales, hash, golden CUITs y alerta de cambio de columnas.
+2. Validar nuevas versiones mensuales contra estos layouts antes de promoverlas.
+3. Completar nuevas fuentes masivas que incorpore el cliente.
 4. Consultas/API/portales: documentar playbook, credenciales, evidencia y límites legales/técnicos.
 5. Municipales: abrir subregistro por municipios reales del cliente.
 

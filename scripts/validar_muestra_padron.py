@@ -25,6 +25,7 @@ EXPECTED_LAYOUTS = {
     "Cordoba": "cordoba_iibb_delimitado_v1",
     "Jujuy": "jujuy_iibb_xlsx_alias_v1",
     "Mendoza": "mendoza_iibb_retib_delimitado_v1",
+    "Formosa": "formosa_iibb_delimitado_v1",
     "Tucuman": (
         "tucuman_iibb_rg23_csv_v1",
         "tucuman_padron_contribuyente_txt_v1",

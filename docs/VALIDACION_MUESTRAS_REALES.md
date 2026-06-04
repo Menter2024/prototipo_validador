@@ -12,6 +12,7 @@ Este procedimiento valida archivos reales descargados desde fuentes oficiales si
 | Córdoba | Rentas Córdoba | `cordoba_iibb_delimitado_v1` | https://www.rentascordoba.gob.ar/cms/ms-agentes/ | validado con muestra real recibida |
 | Jujuy | DPR Jujuy | `jujuy_iibb_xlsx_alias_v1` | https://rentasjujuy.gob.ar/agentes-ingresos-brutos/ | validado con muestra real recibida |
 | Mendoza | ATM Mendoza | `mendoza_iibb_retib_delimitado_v1` | https://www.atm.mendoza.gov.ar/ | validado con muestra real recibida |
+| Formosa | DGR Formosa | `formosa_iibb_delimitado_v1` | https://www.formosa.gob.ar/tramite/120/inscripcion_como_agente_de_percepcion_del_impuesto_sobre_los_ingresos_brutos | validado con muestra real recibida |
 | Tucumán | DGR Tucumán | `tucuman_padron_contribuyente_txt_v1` / `tucuman_coef_rg116_txt_v1` | https://www.rentastucuman.gob.ar/ | validado con muestra real recibida |
 
 ## Relevamiento público inicial
@@ -35,6 +36,7 @@ No subir a Git padrones completos reales. El reporte conserva hash, tamaño, lay
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Cordoba /private/tmp/padrones_reales/cordoba_padron.zip --output /private/tmp/padrones_reales/reportes/cordoba.json
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Jujuy /private/tmp/padrones_reales/jujuy_padron.xlsx --output /private/tmp/padrones_reales/reportes/jujuy.json
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Mendoza /private/tmp/padrones_reales/mendoza_padron.txt.gz --output /private/tmp/padrones_reales/reportes/mendoza.json
+.venv/bin/python3.13 scripts/validar_muestra_padron.py Formosa /private/tmp/padrones_reales/formosa.csv --output /private/tmp/padrones_reales/reportes/formosa.json
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Tucuman /private/tmp/padrones_reales/tucuman_padron.csv --output /private/tmp/padrones_reales/reportes/tucuman.json
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Tucuman /private/tmp/padrones_reales/tucuman_coef.zip --expected-layout tucuman_coef_rg116_txt_v1 --output /private/tmp/padrones_reales/reportes/tucuman_coef.json
 ```
