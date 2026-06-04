@@ -34,6 +34,42 @@ def test_migration_has_rls_and_private_bucket():
     assert "No se crean políticas públicas" in sql
 
 
+def test_padron_import_jobs_migration_schema():
+    sql = Path("supabase/migrations/002_padron_import_jobs.sql").read_text(encoding="utf-8")
+
+    assert "create table if not exists public.padron_import_jobs" in sql
+    assert "pendiente_upload" in sql
+    assert "upload_completo" in sql
+    assert "procesando" in sql
+    assert "completado" in sql
+    assert "enable row level security" in sql
+    assert "import_job_id" in sql
+
+
+def test_create_padron_import_job_builds_storage_path(monkeypatch):
+    cfg = supabase_mvp.SupabaseConfig("https://demo.supabase.co", "secret", tenant_slug="ccu")
+    inserted = {}
+
+    monkeypatch.setattr(supabase_mvp, "get_config", lambda: cfg)
+    monkeypatch.setattr(supabase_mvp, "tenant_id", lambda: "tenant-1")
+    monkeypatch.setattr(supabase_mvp, "insert_row", lambda table, payload: inserted.setdefault("value", {"data": [payload]}))
+    monkeypatch.setattr(supabase_mvp, "create_signed_upload_url", lambda remote: {"enabled": True, "signed": True, "path": remote})
+
+    res = supabase_mvp.create_padron_import_job(
+        provincia="CABA",
+        archivo_nombre="padron.zip",
+        periodo="2026-06",
+        tamano_bytes=123,
+    )
+
+    assert res["created"] is True
+    job = res["job"]
+    assert job["estado"] == "pendiente_upload"
+    assert job["storage_original_path"].startswith("ccu/padrones/CABA/2026-06/original/")
+    assert job["storage_original_path"].endswith("/padron.zip")
+    assert res["upload"]["path"] == job["storage_original_path"]
+
+
 def test_padrones_uses_supabase_when_local_file_missing(monkeypatch, tmp_path):
     from app.modules import padrones
 

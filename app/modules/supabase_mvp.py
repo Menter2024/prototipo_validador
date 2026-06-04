@@ -8,13 +8,16 @@ from __future__ import annotations
 import hashlib
 import mimetypes
 import os
+import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import httpx
 
 DEFAULT_BUCKET = "menter-fiscal"
+PADRON_IMPORT_TABLE = "padron_import_jobs"
 
 
 @dataclass(frozen=True)
@@ -105,6 +108,19 @@ def upload_file(local_path: Path, remote_path: str, *, content_type: str | None 
     }
 
 
+def create_signed_upload_url(remote_path: str, *, upsert: bool = False) -> dict[str, Any]:
+    cfg = get_config()
+    if not cfg:
+        return {"enabled": False, "signed": False, "reason": "Supabase no configurado"}
+    url = f"{cfg.url}/storage/v1/object/upload/sign/{cfg.bucket}/{remote_path}"
+    headers = _headers(cfg, {"Content-Type": "application/json"})
+    with httpx.Client(timeout=30) as client:
+        res = client.post(url, headers=headers, json={"upsert": upsert})
+        res.raise_for_status()
+        data = res.json() if res.content else {}
+    return {"enabled": True, "signed": True, "bucket": cfg.bucket, "path": remote_path, **data}
+
+
 def select_rows(table: str, params: dict[str, str]) -> list[dict[str, Any]]:
     cfg = get_config()
     if not cfg:
@@ -166,6 +182,91 @@ def update_rows(table: str, filters: dict[str, str], payload: dict[str, Any], *,
         res = client.patch(url, headers=headers, params=filters, json=payload)
         res.raise_for_status()
     return {"enabled": True, "updated": True, "table": table}
+
+
+def _padron_job_select() -> str:
+    return (
+        "id,tenant_id,provincia,periodo,vigencia_hasta,fuente_id,cliente,cuit_agente,estado,"
+        "storage_original_path,storage_normalizado_path,archivo_nombre,tamano_bytes,sha256_original,"
+        "sha256_normalizado,registros_raw,registros_validos,registros_insertados,errores,"
+        "advertencias,calidad,job_metadata,cloud_run_execution,creado_en,actualizado_en,iniciado_en,finalizado_en"
+    )
+
+
+def create_padron_import_job(
+    *,
+    provincia: str,
+    archivo_nombre: str,
+    periodo: str = "",
+    vigencia_hasta: str | None = None,
+    fuente_id: str = "",
+    cliente: str = "CCU",
+    cuit_agente: str = "",
+    tamano_bytes: int = 0,
+) -> dict[str, Any]:
+    cfg = get_config()
+    tid = tenant_id()
+    if not cfg or not tid:
+        return {"enabled": False, "created": False, "reason": "Supabase no configurado"}
+    job_id = str(uuid.uuid4())
+    periodo_path = periodo or "sin-periodo"
+    remote = storage_path(cfg.tenant_slug, "padrones", provincia, periodo_path, "original", job_id, archivo_nombre)
+    payload = {
+        "id": job_id,
+        "tenant_id": tid,
+        "provincia": provincia,
+        "periodo": periodo or "",
+        "vigencia_hasta": vigencia_hasta or None,
+        "fuente_id": fuente_id or None,
+        "cliente": cliente or "CCU",
+        "cuit_agente": cuit_agente or "",
+        "estado": "pendiente_upload",
+        "storage_original_path": remote,
+        "archivo_nombre": archivo_nombre,
+        "tamano_bytes": int(tamano_bytes or 0),
+        "job_metadata": {"pipeline": "cloud_run_jobs", "upload": "supabase_storage"},
+    }
+    inserted = insert_row(PADRON_IMPORT_TABLE, payload)
+    data = (inserted.get("data") or [payload])[0]
+    signed = create_signed_upload_url(remote)
+    return {"enabled": True, "created": True, "job": data, "upload": signed}
+
+
+def get_padron_import_job(job_id: str) -> dict[str, Any] | None:
+    tid = tenant_id()
+    if not tid:
+        return None
+    rows = select_rows(PADRON_IMPORT_TABLE, {
+        "select": _padron_job_select(),
+        "tenant_id": f"eq.{tid}",
+        "id": f"eq.{job_id}",
+        "limit": "1",
+    })
+    return rows[0] if rows else None
+
+
+def list_padron_import_jobs(*, limit: int = 20, estado: str = "") -> list[dict[str, Any]]:
+    tid = tenant_id()
+    if not tid:
+        return []
+    params = {
+        "select": _padron_job_select(),
+        "tenant_id": f"eq.{tid}",
+        "order": "creado_en.desc",
+        "limit": str(max(1, min(limit, 100))),
+    }
+    if estado:
+        params["estado"] = f"eq.{estado}"
+    return select_rows(PADRON_IMPORT_TABLE, params)
+
+
+def update_padron_import_job(job_id: str, patch: dict[str, Any]) -> dict[str, Any]:
+    tid = tenant_id()
+    if not tid:
+        return {"enabled": False, "updated": False, "reason": "Supabase no configurado"}
+    payload = dict(patch)
+    payload["actualizado_en"] = datetime.now(timezone.utc).isoformat()
+    return update_rows(PADRON_IMPORT_TABLE, {"tenant_id": f"eq.{tid}", "id": f"eq.{job_id}"}, payload)
 
 
 def buscar_padron_registro(cuit_limpio: str, provincia: str) -> dict[str, Any] | None:

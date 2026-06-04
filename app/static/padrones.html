@@ -41,6 +41,12 @@
           <div class="flex gap-2"><button id="btn-preview" type="button" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-lg">Previsualizar</button><button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg">Importar padrón</button></div>
         </div>
       </form>
+      <div class="mt-4 border border-blue-100 bg-blue-50 rounded-xl p-4">
+        <div class="flex justify-between gap-3 flex-wrap items-center">
+          <div><b>Carga real asistida</b><div class="text-sm text-slate-600">Para padrones grandes: prepara job Supabase Storage + Cloud Run.</div></div>
+          <button id="btn-crear-import" type="button" class="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-4 py-2 rounded-lg">Preparar carga asistida</button>
+        </div>
+      </div>
       <div id="msg" class="hidden mt-4 rounded-lg px-4 py-3 text-sm"></div>
       <div id="preview" class="hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50"></div>
     </div>
@@ -54,11 +60,16 @@
     <div id="cards" class="grid md:grid-cols-2 xl:grid-cols-3 gap-3 mb-6"></div>
     <details class="menter-detail"><summary>Ver tabla técnica</summary><div class="overflow-x-auto mt-3"><table class="w-full text-sm"><thead class="bg-slate-100 text-slate-600"><tr><th class="text-left p-2">Provincia</th><th class="text-left p-2">Tipo</th><th class="text-left p-2">Estado</th><th class="text-left p-2">Registros</th><th class="text-left p-2">Período</th><th class="text-left p-2">Vigencia</th><th class="text-left p-2">Actualizado</th><th class="text-left p-2">Archivo / fuente</th></tr></thead><tbody id="tbody"></tbody></table></div></details>
   </section>
+  <section class="bg-white rounded-xl shadow-sm p-6 mt-6">
+    <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">Cargas reales/background</h2><button onclick="cargarImports()" class="text-blue-600 hover:underline text-sm">Actualizar</button></div>
+    <div id="imports" class="space-y-3 text-sm"></div>
+  </section>
 </main>
 <script>
 const form_importar = document.getElementById("form-importar");
 const drop_zone = document.getElementById("drop-zone");
 const btn_preview = document.getElementById("btn-preview");
+const btn_crear_import = document.getElementById("btn-crear-import");
 const importables = new Set(['archivo']);
 const PADRON_SYNC_MAX_MB = 8;
 const PADRON_SYNC_TIMEOUT_MS = 120000;
@@ -99,6 +110,16 @@ async function cargarEstado() {
   cards.innerHTML = padronesCache.map(p => `<div class="border border-slate-200 rounded-xl p-4"><div class="flex justify-between gap-2"><div class="font-bold">${p.nombre}</div>${badge(p.status)}</div><div class="text-xs text-slate-500 mt-1">${p.prioridad} · ${p.registros ?? '—'} registros</div><div class="mt-3 text-sm">Período: <b>${p.periodo || '—'}</b><br>Vigencia: ${vigenciaBadge(p.vigencia_estado)} ${p.vigencia_hasta || ''}</div></div>`).join('');
   tbody.innerHTML = padronesCache.map(p => { const fuente = p.url ? `<a href="${p.url}" target="_blank" class="text-blue-600 hover:underline">abrir fuente</a>` : (p.archivo || '—'); return `<tr class="border-b border-slate-100"><td class="p-2 font-semibold">${p.nombre} <span class="text-xs text-slate-400">${p.prioridad}</span></td><td class="p-2">${p.tipo}</td><td class="p-2">${badge(p.status)}</td><td class="p-2">${p.registros ?? '—'}</td><td class="p-2">${p.periodo || '—'}</td><td class="p-2">${vigenciaBadge(p.vigencia_estado)} ${p.vigencia_hasta || ''}</td><td class="p-2">${p.actualizado ?? '—'}</td><td class="p-2">${fuente}</td></tr>`; }).join('');
 }
+async function cargarImports() {
+  const box = document.getElementById('imports');
+  try {
+    const r = await fetch('/api/padron-imports');
+    const data = await r.json();
+    if (!data.enabled) { box.innerHTML = '<div class="text-slate-500">Supabase no configurado: las cargas background se habilitan en el próximo entorno.</div>'; return; }
+    const items = data.imports || [];
+    box.innerHTML = items.length ? items.map(j => `<div class="border rounded-xl p-4"><div class="flex justify-between gap-3 flex-wrap"><div><b>${j.provincia}</b> · ${j.periodo || 'sin período'}<div class="text-xs text-slate-500">${j.archivo_nombre || '—'} · ${(Number(j.tamano_bytes || 0)/1024/1024).toFixed(1)} MB</div></div>${badge(j.estado)}</div><div class="grid md:grid-cols-4 gap-3 mt-3 text-xs"><div>Raw: <b>${j.registros_raw || 0}</b></div><div>Válidos: <b>${j.registros_validos || 0}</b></div><div>Insertados: <b>${j.registros_insertados || 0}</b></div><div>ID: <span class="font-mono">${j.id}</span></div></div></div>`).join('') : '<div class="text-slate-500">Sin cargas background registradas.</div>';
+  } catch (e) { box.innerHTML = `<div class="text-rose-700">No pude cargar imports: ${e.message}</div>`; }
+}
 function renderPreview(data) {
   ultimaPreview = data; const calidad = data.calidad || {}; const evidencia = data.evidencia || {}; const advertencias = (calidad.advertencias || []).map(a => `<li>${a}</li>`).join(''); const errores = (calidad.errores || []).map(a => `<li>${a}</li>`).join('');
   const rows = (data.muestra || []).map(r => `<tr><td class="p-2 font-mono">${r.cuit}</td><td class="p-2">${r.alicuota_retencion || '—'}</td><td class="p-2">${r.alicuota_percepcion || '—'}</td><td class="p-2">${r.vigencia_desde || '—'} a ${r.vigencia_hasta || '—'}</td><td class="p-2">${r.regimen || '—'}</td></tr>`).join('');
@@ -113,13 +134,35 @@ async function enviarPadron(url, texto, opts = {}) {
   mostrarMsg(true, texto); const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), PADRON_SYNC_TIMEOUT_MS); let r; try { r = await fetch(url, { method:'POST', body: form, signal: controller.signal }); } catch (error) { mostrarMsg(false, error.name === 'AbortError' ? 'La previsualización superó el tiempo máximo de carga web. Usar carga asistida/background.' : `No se pudo conectar: ${error.message}`); return null; } finally { clearTimeout(timeout); }
   const data = await leerRespuesta(r); if (!r.ok) { mostrarMsg(false, mensajeHttp(r.status, data.detail)); return null; } return data;
 }
+async function crearImportAsistido() {
+  if (!archivo.files.length) { mostrarMsg(false, 'Seleccioná un archivo.'); return; }
+  const file = archivo.files[0];
+  const payload = {
+    provincia: provincia.value,
+    archivo_nombre: file.name,
+    periodo: periodo.value,
+    vigencia_hasta: vigencia_hasta.value || null,
+    fuente_id: fuente_id.value,
+    cliente: form_importar.cliente.value || 'CCU',
+    cuit_agente: form_importar.cuit_agente.value || '',
+    tamano_bytes: file.size
+  };
+  mostrarMsg(true, 'Preparando carga asistida...');
+  const r = await fetch('/api/padron-imports', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  const data = await leerRespuesta(r);
+  if (!r.ok) { mostrarMsg(false, data.detail || 'No se pudo preparar la carga asistida.'); return; }
+  mostrarMsg(true, `Carga asistida creada. Job ${data.job.id}. Próximo paso: upload directo a Supabase Storage.`);
+  await cargarImports();
+}
 drop_zone.addEventListener('dragover', e => { e.preventDefault(); drop_zone.classList.add('ring-2','ring-amber-400'); });
 drop_zone.addEventListener('dragleave', () => drop_zone.classList.remove('ring-2','ring-amber-400'));
 drop_zone.addEventListener('drop', e => { e.preventDefault(); drop_zone.classList.remove('ring-2','ring-amber-400'); if (e.dataTransfer.files.length) { archivo.files = e.dataTransfer.files; ultimaPreview = null; preview.className = 'hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50'; guessFromFile(archivo.files[0]); } });
 archivo.addEventListener('change', () => { ultimaPreview = null; preview.className = 'hidden mt-4 border border-slate-200 rounded-lg p-4 bg-slate-50'; if (archivo.files.length) guessFromFile(archivo.files[0]); });
 btn_preview.addEventListener('click', async () => { const data = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando...'); if (!data) return; mostrarMsg(true, `${data.nombre}: previsualización generada sin sobrescribir padrón.`); renderPreview(data); });
 form_importar.addEventListener('submit', async e => { e.preventDefault(); if (!ultimaPreview) { const previewData = await enviarPadron('/api/padrones/previsualizar', 'Previsualizando antes de importar...'); if (!previewData) return; renderPreview(previewData); } const observado = ultimaPreview?.calidad?.estado === 'observado'; if (observado && !confirm('La previsualización tiene advertencias. ¿Confirmás sobrescribir el padrón?')) { mostrarMsg(false, 'Importación cancelada.'); return; } const data = await enviarPadron('/api/padrones/importar', 'Importando...', {confirmarAdvertencias: observado}); if (!data) return; mostrarMsg(true, `${data.nombre}: ${data.registros} registros importados.`); renderPreview(data); await cargarEstado(); });
+btn_crear_import.addEventListener('click', crearImportAsistido);
 cargarEstado();
+cargarImports();
 </script>
 </body>
 </html>

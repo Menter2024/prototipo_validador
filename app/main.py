@@ -83,6 +83,26 @@ class ValidarRequest(BaseModel):
     cuits: List[str]
 
 
+class PadronImportCreateRequest(BaseModel):
+    provincia: str
+    archivo_nombre: str
+    periodo: str = ""
+    vigencia_hasta: str | None = None
+    fuente_id: str = ""
+    cliente: str = "CCU"
+    cuit_agente: str = ""
+    tamano_bytes: int = 0
+
+
+class PadronImportConfirmRequest(BaseModel):
+    sha256_original: str = ""
+    tamano_bytes: int | None = None
+
+
+class PadronImportProcessRequest(BaseModel):
+    force: bool = False
+
+
 def _padrones_estado() -> list[dict]:
     manifest = padron_manifest.cargar_manifest(PADRONES_DIR)
     estado = []
@@ -336,6 +356,83 @@ def mvp_status():
         "supabase": supabase_mvp.status(),
         "padrones_locales": len(_padrones_estado()),
         "salidas_dir": str(SALIDAS_DIR),
+    }
+
+
+@app.get("/api/padron-imports")
+def listar_padron_imports(limit: int = 20, estado: str = ""):
+    if not supabase_mvp.enabled():
+        return {"enabled": False, "imports": [], "reason": "Supabase no configurado"}
+    return {"enabled": True, "imports": supabase_mvp.list_padron_import_jobs(limit=limit, estado=estado)}
+
+
+@app.post("/api/padron-imports")
+def crear_padron_import(req: PadronImportCreateRequest):
+    if req.provincia not in padrones.PADRONES_PROVINCIAS:
+        raise HTTPException(status_code=400, detail="Provincia no soportada.")
+    cfg = padrones.PADRONES_PROVINCIAS[req.provincia]
+    if cfg.get("tipo") != "archivo":
+        raise HTTPException(status_code=400, detail="La provincia seleccionada no admite carga por archivo normalizado.")
+    if not req.archivo_nombre or "/" in req.archivo_nombre or "\\" in req.archivo_nombre or ".." in req.archivo_nombre:
+        raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
+    result = supabase_mvp.create_padron_import_job(
+        provincia=req.provincia,
+        archivo_nombre=Path(req.archivo_nombre).name,
+        periodo=req.periodo,
+        vigencia_hasta=req.vigencia_hasta,
+        fuente_id=req.fuente_id,
+        cliente=req.cliente,
+        cuit_agente=req.cuit_agente,
+        tamano_bytes=req.tamano_bytes,
+    )
+    if not result.get("created"):
+        raise HTTPException(status_code=503, detail=result.get("reason", "No se pudo crear la carga asistida."))
+    return result
+
+
+@app.get("/api/padron-imports/{job_id}")
+def obtener_padron_import(job_id: str):
+    job = supabase_mvp.get_padron_import_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Carga de padrón no encontrada.")
+    return {"enabled": True, "job": job}
+
+
+@app.post("/api/padron-imports/{job_id}/confirm-upload")
+def confirmar_padron_upload(job_id: str, req: PadronImportConfirmRequest):
+    job = supabase_mvp.get_padron_import_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Carga de padrón no encontrada.")
+    patch = {"estado": "upload_completo"}
+    if req.sha256_original:
+        patch["sha256_original"] = req.sha256_original
+    if req.tamano_bytes is not None:
+        patch["tamano_bytes"] = req.tamano_bytes
+    supabase_mvp.update_padron_import_job(job_id, patch)
+    return {"ok": True, "job_id": job_id, "estado": "upload_completo"}
+
+
+@app.post("/api/padron-imports/{job_id}/process")
+def preparar_padron_process(job_id: str, req: PadronImportProcessRequest):
+    job = supabase_mvp.get_padron_import_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Carga de padrón no encontrada.")
+    if job.get("estado") not in {"upload_completo", "pendiente_proceso", "fallido"} and not req.force:
+        raise HTTPException(status_code=409, detail=f"La carga está en estado {job.get('estado')}; confirmá upload o usá force.")
+    supabase_mvp.update_padron_import_job(job_id, {
+        "estado": "pendiente_proceso",
+        "job_metadata": {
+            **(job.get("job_metadata") or {}),
+            "cloud_run_job": os.environ.get("PADRON_CLOUD_RUN_JOB", "menter-padron-import"),
+            "trigger": "manual_pendiente",
+        },
+    })
+    return {
+        "ok": True,
+        "job_id": job_id,
+        "estado": "pendiente_proceso",
+        "detalle": "Carga lista para ejecutar Cloud Run Job.",
+        "env": {"PADRON_IMPORT_JOB_ID": job_id},
     }
 
 
