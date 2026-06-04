@@ -371,6 +371,385 @@
       ]
     },
     {
+      "id": "cordoba_iibb_delimitado_v1",
+      "nombre": "Córdoba · IIBB delimitado sin cabecera",
+      "fuente_id": "cordoba_iibb",
+      "padron_key": "Cordoba",
+      "jurisdiccion": "Córdoba",
+      "organismo": "Rentas Córdoba",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "txt_delimitado_sin_header",
+      "separador": ";",
+      "frecuencia": "mensual",
+      "estado": "pendiente_muestra_real",
+      "campos": {
+        "cuit": {
+          "posicion": 0,
+          "tipo": "cuit"
+        },
+        "razon_social": {
+          "posicion": 1,
+          "tipo": "texto"
+        },
+        "alicuota_retencion": {
+          "posicion": 2,
+          "tipo": "porcentaje"
+        },
+        "alicuota_percepcion": {
+          "posicion": 3,
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde": {
+          "posicion": 4,
+          "tipo": "fecha_ddmmaaaa"
+        },
+        "vigencia_hasta": {
+          "posicion": 5,
+          "tipo": "fecha_ddmmaaaa"
+        }
+      },
+      "salida": {
+        "regimen_default": "Córdoba IIBB retención/percepción"
+      },
+      "validaciones": {
+        "min_columnas": 4,
+        "cuit_longitud": 11,
+        "requiere_alicuota": true,
+        "requiere_vigencia": false
+      },
+      "notas": [
+        "Layout cubre archivos delimitados sin cabecera usados en fixture local.",
+        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
+      ]
+    },
+    {
+      "id": "jujuy_iibb_xlsx_alias_v1",
+      "nombre": "Jujuy · DPR IIBB XLSX/CSV con cabeceras",
+      "fuente_id": "jujuy_iibb",
+      "padron_key": "Jujuy",
+      "jurisdiccion": "Jujuy",
+      "organismo": "DPR Jujuy",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "csv_xlsx_con_cabeceras",
+      "frecuencia": "mensual",
+      "estado": "pendiente_muestra_real",
+      "campos": {
+        "cuit": {
+          "aliases": [
+            "cuit",
+            "cuil",
+            "cuit/cuil",
+            "cuit_contribuyente",
+            "cuit sujeto",
+            "nro_cuit",
+            "numero_cuit"
+          ],
+          "tipo": "cuit"
+        },
+        "alicuota_retencion": {
+          "aliases": [
+            "alicuota_retencion",
+            "retencion",
+            "retención",
+            "ali_ret",
+            "alic_ret",
+            "alic ret",
+            "alic. ret.",
+            "alicuota retencion",
+            "alícuota retención",
+            "alícuota de retención",
+            "ret"
+          ],
+          "tipo": "porcentaje"
+        },
+        "alicuota_percepcion": {
+          "aliases": [
+            "alicuota_percepcion",
+            "percepcion",
+            "percepción",
+            "ali_per",
+            "alic_per",
+            "alic perc",
+            "alic. perc.",
+            "alicuota percepcion",
+            "alícuota percepción",
+            "alícuota de percepción",
+            "perc"
+          ],
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde": {
+          "aliases": [
+            "vigencia_desde",
+            "desde",
+            "fecha_desde",
+            "fecha desde",
+            "fecha vigencia desde",
+            "vig desde",
+            "vig. desde",
+            "inicio"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "vigencia_hasta": {
+          "aliases": [
+            "vigencia_hasta",
+            "hasta",
+            "fecha_hasta",
+            "fecha hasta",
+            "fecha vigencia hasta",
+            "vig hasta",
+            "vig. hasta",
+            "fin"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "regimen": {
+          "aliases": [
+            "regimen",
+            "régimen",
+            "tipo",
+            "categoria",
+            "categoría",
+            "categoria fiscal",
+            "categoría fiscal"
+          ],
+          "tipo": "texto"
+        }
+      },
+      "salida": {
+        "regimen_default": "Jujuy IIBB alícuotas"
+      },
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": true,
+        "requiere_vigencia": true
+      },
+      "notas": [
+        "Cubre cabeceras tipo CUIT/CUIL, Alícuota de Retención/Percepción y Categoría Fiscal.",
+        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
+      ]
+    },
+    {
+      "id": "mendoza_iibb_csv_alias_v1",
+      "nombre": "Mendoza · ATM IIBB CSV/XLSX con cabeceras",
+      "fuente_id": "mendoza_iibb",
+      "padron_key": "Mendoza",
+      "jurisdiccion": "Mendoza",
+      "organismo": "ATM Mendoza",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "csv_xlsx_con_cabeceras",
+      "frecuencia": "mensual",
+      "estado": "pendiente_muestra_real",
+      "campos": {
+        "cuit": {
+          "aliases": [
+            "cuit",
+            "cuil",
+            "cuit/cuil",
+            "cuit_contribuyente",
+            "cuit sujeto",
+            "nro_cuit",
+            "numero_cuit"
+          ],
+          "tipo": "cuit"
+        },
+        "alicuota_retencion": {
+          "aliases": [
+            "alicuota_retencion",
+            "retencion",
+            "retención",
+            "ali_ret",
+            "alic_ret",
+            "alic ret",
+            "alic. ret.",
+            "alicuota retencion",
+            "alícuota retención",
+            "alícuota de retención",
+            "ret"
+          ],
+          "tipo": "porcentaje"
+        },
+        "alicuota_percepcion": {
+          "aliases": [
+            "alicuota_percepcion",
+            "percepcion",
+            "percepción",
+            "ali_per",
+            "alic_per",
+            "alic perc",
+            "alic. perc.",
+            "alicuota percepcion",
+            "alícuota percepción",
+            "alícuota de percepción",
+            "perc"
+          ],
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde": {
+          "aliases": [
+            "vigencia_desde",
+            "desde",
+            "fecha_desde",
+            "fecha desde",
+            "fecha vigencia desde",
+            "vig desde",
+            "vig. desde",
+            "inicio"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "vigencia_hasta": {
+          "aliases": [
+            "vigencia_hasta",
+            "hasta",
+            "fecha_hasta",
+            "fecha hasta",
+            "fecha vigencia hasta",
+            "vig hasta",
+            "vig. hasta",
+            "fin"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "regimen": {
+          "aliases": [
+            "regimen",
+            "régimen",
+            "tipo",
+            "categoria",
+            "categoría",
+            "categoria fiscal",
+            "categoría fiscal",
+            "actividad",
+            "grupo",
+            "tratamiento"
+          ],
+          "tipo": "texto"
+        }
+      },
+      "salida": {
+        "regimen_default": "Mendoza IIBB retención/percepción"
+      },
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": true,
+        "requiere_vigencia": false
+      },
+      "notas": [
+        "Layout inicial por aliases para exportaciones tabulares de ATM.",
+        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
+      ]
+    },
+    {
+      "id": "tucuman_iibb_rg23_csv_v1",
+      "nombre": "Tucumán · DGR RG 23/02 CSV/XLSX con cabeceras",
+      "fuente_id": "tucuman_iibb",
+      "padron_key": "Tucuman",
+      "jurisdiccion": "Tucumán",
+      "organismo": "DGR Tucumán",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "csv_xlsx_con_cabeceras",
+      "frecuencia": "mensual",
+      "estado": "pendiente_muestra_real",
+      "campos": {
+        "cuit": {
+          "aliases": [
+            "cuit",
+            "cuil",
+            "cuit/cuil",
+            "cuit_contribuyente",
+            "cuit sujeto",
+            "nro_cuit",
+            "numero_cuit"
+          ],
+          "tipo": "cuit"
+        },
+        "alicuota_retencion": {
+          "aliases": [
+            "alicuota_retencion",
+            "retencion",
+            "retención",
+            "ali_ret",
+            "alic_ret",
+            "alic ret",
+            "alic. ret.",
+            "alicuota retencion",
+            "alícuota retención",
+            "alícuota de retención",
+            "ret"
+          ],
+          "tipo": "porcentaje"
+        },
+        "alicuota_percepcion": {
+          "aliases": [
+            "alicuota_percepcion",
+            "percepcion",
+            "percepción",
+            "ali_per",
+            "alic_per",
+            "alic perc",
+            "alic. perc.",
+            "alicuota percepcion",
+            "alícuota percepción",
+            "alícuota de percepción",
+            "perc"
+          ],
+          "tipo": "porcentaje"
+        },
+        "vigencia_desde": {
+          "aliases": [
+            "vigencia_desde",
+            "desde",
+            "fecha_desde",
+            "fecha desde",
+            "fecha vigencia desde",
+            "vig desde",
+            "vig. desde",
+            "inicio"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "vigencia_hasta": {
+          "aliases": [
+            "vigencia_hasta",
+            "hasta",
+            "fecha_hasta",
+            "fecha hasta",
+            "fecha vigencia hasta",
+            "vig hasta",
+            "vig. hasta",
+            "fin"
+          ],
+          "tipo": "fecha_yyyy_mm_dd"
+        },
+        "regimen": {
+          "aliases": [
+            "regimen",
+            "régimen",
+            "tipo",
+            "categoria",
+            "categoría",
+            "categoria fiscal",
+            "categoría fiscal"
+          ],
+          "tipo": "texto"
+        }
+      },
+      "salida": {
+        "regimen_default": "Tucumán RG 23/02"
+      },
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": false,
+        "requiere_vigencia": false
+      },
+      "notas": [
+        "Cubre cabeceras abreviadas Alic. Ret., Alic. Perc., Vig. Desde y Vig. Hasta.",
+        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
+      ]
+    },
+    {
       "id": "cabeceras_alias_iibb_v1",
       "nombre": "Cabeceras alias IIBB",
       "padron_key": "*",

@@ -66,6 +66,7 @@ def test_cordoba_zip_headerless_delimitado(tmp_path):
     assert res["registros"] == 1
     assert res["muestra"][0]["alicuota_retencion"] == "1.50"
     assert res["muestra"][0]["alicuota_percepcion"] == "2.50"
+    assert res["calidad"]["layout_detectado"] == "cordoba_iibb_delimitado_v1"
 
 
 def test_zip_con_ruta_fuera_de_destino_es_rechazado(tmp_path):
@@ -90,6 +91,7 @@ def test_jujuy_xlsx_cabeceras_no_estandar(tmp_path):
         "vigencia_hasta": "30/06/2026",
         "regimen": "General",
     }
+    assert res["calidad"]["layout_detectado"] == "jujuy_iibb_xlsx_alias_v1"
 
 
 def test_tucuman_csv_abreviaturas(tmp_path):
@@ -102,6 +104,7 @@ def test_tucuman_csv_abreviaturas(tmp_path):
     assert res["muestra"][0]["alicuota_retencion"] == "2.00"
     assert res["muestra"][0]["alicuota_percepcion"] == "3.00"
     assert res["calidad"]["perfil"] == "Tucumán · RG 23/02"
+    assert res["calidad"]["layout_detectado"] == "tucuman_iibb_rg23_csv_v1"
 
 
 def test_preview_no_escribe_y_reporta_calidad(tmp_path):

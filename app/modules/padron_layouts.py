@@ -88,10 +88,9 @@ def traducir_row_con_cabeceras(row: dict[str, Any], layout: dict[str, Any]) -> d
                 values[field] = _transform(headers[header], spec)
                 break
 
-    cuit = values.get("cuit", "")
-    cuit_len = int((layout.get("validaciones") or {}).get("cuit_longitud") or 0)
-    if cuit_len and len(cuit) != cuit_len:
+    if "cuit" not in values:
         return None
+    cuit = values.get("cuit", "")
 
     return {
         "cuit": cuit,
@@ -135,6 +134,8 @@ def traducir_linea_delimitada(line: str, layout: dict[str, Any]) -> dict[str, An
             regimen = template.format(**values).strip(" ·")
         except KeyError:
             regimen = regimen.strip()
+    if not regimen:
+        regimen = (layout.get("salida") or {}).get("regimen_default", "")
 
     return {
         "cuit": cuit,

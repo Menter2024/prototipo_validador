@@ -76,7 +76,7 @@ PERFILES_CALIDAD = {
     },
     "Cordoba": {
         "nombre": "Córdoba · Padrón IIBB",
-        "layout_esperado": {"delimitado_sin_cabecera", "cabeceras_alias", "xlsx"},
+        "layout_esperado": {"cordoba_iibb_delimitado_v1", "delimitado_sin_cabecera", "cabeceras_alias", "xlsx"},
         "min_registros": 1,
         "max_caida_pct": -50,
         "permite_sin_alicuota": False,
@@ -84,7 +84,7 @@ PERFILES_CALIDAD = {
     },
     "Jujuy": {
         "nombre": "Jujuy · DPR alícuotas",
-        "layout_esperado": {"xlsx", "cabeceras_alias", "delimitado_sin_cabecera"},
+        "layout_esperado": {"jujuy_iibb_xlsx_alias_v1", "xlsx", "cabeceras_alias", "delimitado_sin_cabecera"},
         "min_registros": 1,
         "max_caida_pct": -50,
         "permite_sin_alicuota": False,
@@ -92,7 +92,7 @@ PERFILES_CALIDAD = {
     },
     "Tucuman": {
         "nombre": "Tucumán · RG 23/02",
-        "layout_esperado": {"cabeceras_alias", "delimitado_sin_cabecera"},
+        "layout_esperado": {"tucuman_iibb_rg23_csv_v1", "cabeceras_alias", "delimitado_sin_cabecera"},
         "min_registros": 1,
         "max_caida_pct": -50,
         "permite_sin_alicuota": True,
@@ -212,6 +212,25 @@ def _rows_layout_cabeceras(provincia: str, rows: list[dict], parse_meta: dict) -
     return out
 
 
+def _rows_layout_delimitado(provincia: str, path: Path, parse_meta: dict) -> list[dict]:
+    out = []
+    for layout in padron_layouts.layouts_para_padron(provincia):
+        if layout.get("formato") != "txt_delimitado_sin_header" or not layout.get("fuente_id"):
+            continue
+        translated = []
+        for line in _leer_texto(path).splitlines():
+            if not line.strip() or "cuit" in line.lower():
+                continue
+            parsed = padron_layouts.traducir_linea_delimitada(line, layout)
+            if parsed:
+                translated.append(parsed)
+        if translated:
+            parse_meta.setdefault("layout_detectado", layout["id"])
+            out = translated
+            break
+    return out
+
+
 def _rows_delimitado_sin_header(path: Path) -> list[dict]:
     """Fallback para archivos provinciales delimitados sin cabecera explícita."""
     out = []
@@ -322,14 +341,21 @@ def _leer_origen(provincia: str, path: Path, sheet: str | None, parse_meta: dict
 
     ext = path.suffix.lower()
     if ext in {".xlsx", ".xlsm"}:
+        rows = _rows_xlsx(path, sheet)
+        specific = _rows_layout_cabeceras(provincia, rows, parse_meta)
+        if specific:
+            return specific
         parse_meta.setdefault("layout_detectado", "xlsx")
-        return _rows_xlsx(path, sheet)
+        return rows
     if ext in {".csv", ".txt", ".tsv", ".psv"}:
         if provincia == "CABA":
             agip = _rows_agip_layout(path)
             if agip:
                 parse_meta.setdefault("layout_detectado", "agip_regimenes_generales")
                 return agip
+        specific_delimited = _rows_layout_delimitado(provincia, path, parse_meta)
+        if specific_delimited:
+            return specific_delimited
         rows = _rows_csv(path)
         specific = _rows_layout_cabeceras(provincia, rows, parse_meta)
         if specific:

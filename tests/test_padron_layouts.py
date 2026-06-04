@@ -99,3 +99,30 @@ def test_layout_santafe_queda_marcado_pendiente_muestra_real():
     layout = padron_layouts.obtener_layout("santafe_iibb_csv_v1")
 
     assert layout["estado"] == "pendiente_muestra_real"
+
+
+
+def test_traducir_linea_cordoba_delimitado_sin_cabecera():
+    layout = padron_layouts.obtener_layout("cordoba_iibb_delimitado_v1")
+
+    row = padron_layouts.traducir_linea_delimitada(
+        "30722222229;CORDOBA SA;1,50;2,50;01/06/2026;30/06/2026",
+        layout,
+    )
+
+    assert row["cuit"] == "30722222229"
+    assert row["alicuota_retencion"] == "1.50"
+    assert row["alicuota_percepcion"] == "2.50"
+    assert row["vigencia_desde"] == "01/06/2026"
+    assert row["regimen"] == "Córdoba IIBB retención/percepción"
+    assert row["layout_id"] == "cordoba_iibb_delimitado_v1"
+
+
+def test_layouts_p1_quedan_pendientes_de_muestra_real():
+    for layout_id in [
+        "cordoba_iibb_delimitado_v1",
+        "jujuy_iibb_xlsx_alias_v1",
+        "mendoza_iibb_csv_alias_v1",
+        "tucuman_iibb_rg23_csv_v1",
+    ]:
+        assert padron_layouts.obtener_layout(layout_id)["estado"] == "pendiente_muestra_real"
