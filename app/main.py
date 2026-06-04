@@ -45,8 +45,38 @@ SALIDAS_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR = Path(os.environ.get("UPLOADS_DIR", "./uploads")).resolve()
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 EVIDENCIAS_FUENTES_DIR = SALIDAS_DIR / "evidencias" / "fuentes"
+PADRON_UPLOAD_SYNC_MAX_MB = float(os.environ.get("PADRON_UPLOAD_SYNC_MAX_MB", "8"))
 
 app = FastAPI(title="Menter · Validación de Alta de Proveedores")
+
+
+def _padron_sync_limit_bytes() -> int:
+    return int(max(PADRON_UPLOAD_SYNC_MAX_MB, 0) * 1024 * 1024)
+
+
+def _upload_size_bytes(upload: UploadFile) -> int | None:
+    try:
+        pos = upload.file.tell()
+        upload.file.seek(0, os.SEEK_END)
+        size = upload.file.tell()
+        upload.file.seek(pos)
+        return size
+    except Exception:
+        return None
+
+
+def _validar_padron_sync_size(upload: UploadFile) -> None:
+    limite = _padron_sync_limit_bytes()
+    size = _upload_size_bytes(upload)
+    if limite and size and size > limite:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"Archivo demasiado grande para importación web sincrónica "
+                f"({size / 1024 / 1024:.1f} MB; límite {PADRON_UPLOAD_SYNC_MAX_MB:.1f} MB). "
+                "Usá carga asistida/background con Supabase Storage + Cloud Run Jobs."
+            ),
+        )
 
 
 class ValidarRequest(BaseModel):
@@ -78,15 +108,18 @@ def _padrones_estado() -> list[dict]:
             item["vigencia_estado"] = padron_manifest.estado_vigencia(meta.get("vigencia_hasta"))
             item["calidad_estado"] = meta.get("calidad", {}).get("estado", "")
             item["sha256"] = meta.get("sha256", "")
+            item["registros"] = meta.get("registros")
         if cfg["tipo"] == "archivo":
             archivo = PADRONES_DIR / cfg["archivo"]
             if archivo.exists():
                 item["status"] = "disponible"
                 item["actualizado"] = datetime.fromtimestamp(archivo.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-                try:
-                    item["registros"] = len(padrones._leer_padron(archivo))
-                except Exception:
-                    item["status"] = "error"
+                if item["registros"] is None:
+                    if archivo.stat().st_size <= _padron_sync_limit_bytes():
+                        try:
+                            item["registros"] = len(padrones._leer_padron(archivo))
+                        except Exception:
+                            item["status"] = "error"
         estado.append(item)
     return estado
 
@@ -457,6 +490,7 @@ async def importar_padron_endpoint(
     ext = Path(archivo.filename).suffix.lower()
     if ext not in {".csv", ".txt", ".tsv", ".psv", ".xlsx", ".xlsm", ".zip", ".rar"}:
         raise HTTPException(status_code=400, detail="Formato no soportado. Usá CSV, TXT, XLSX, ZIP o RAR.")
+    _validar_padron_sync_size(archivo)
     destino_tmp = UPLOADS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{Path(archivo.filename).name}"
     try:
         with destino_tmp.open("wb") as f:
@@ -520,6 +554,7 @@ async def previsualizar_padron_endpoint(
     ext = Path(archivo.filename).suffix.lower()
     if ext not in {".csv", ".txt", ".tsv", ".psv", ".xlsx", ".xlsm", ".zip", ".rar"}:
         raise HTTPException(status_code=400, detail="Formato no soportado. Usá CSV, TXT, XLSX, ZIP o RAR.")
+    _validar_padron_sync_size(archivo)
     destino_tmp = UPLOADS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_preview_{Path(archivo.filename).name}"
     try:
         with destino_tmp.open("wb") as f:

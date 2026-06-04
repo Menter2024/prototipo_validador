@@ -60,6 +60,8 @@ const form_importar = document.getElementById("form-importar");
 const drop_zone = document.getElementById("drop-zone");
 const btn_preview = document.getElementById("btn-preview");
 const importables = new Set(['archivo']);
+const PADRON_SYNC_MAX_MB = 8;
+const PADRON_SYNC_TIMEOUT_MS = 120000;
 let ultimaPreview = null;
 let padronesCache = [];
 const names = { caba:'CABA', arba:'Buenos Aires', buenos_aires:'Buenos Aires', entrerios:'Entre Ríos', entre_rios:'Entre Ríos', cordoba:'Córdoba', santa_fe:'Santa Fe', mendoza:'Mendoza', jujuy:'Jujuy', tucuman:'Tucumán', formosa:'Formosa' };
@@ -80,7 +82,7 @@ function guessFromFile(file) {
   if (fuente) fuente_id.value = fuente.value;
   const mb = file.size / 1024 / 1024;
   document.getElementById('archivo-nombre').textContent = `${file.name} · ${mb.toFixed(1)} MB`;
-  document.getElementById('detect-msg').textContent = `${p ? 'Provincia detectada: ' + p.nombre + '. ' : ''}${y ? 'Período sugerido: ' + y + '-' + m + '. ' : ''}${mb > 8 ? 'Archivo grande: conviene carga asistida/background en producción.' : ''}`;
+  document.getElementById('detect-msg').textContent = `${p ? 'Provincia detectada: ' + p.nombre + '. ' : ''}${y ? 'Período sugerido: ' + y + '-' + m + '. ' : ''}${mb > PADRON_SYNC_MAX_MB ? 'Archivo grande: esta pantalla no lo procesa en modo web; usar carga asistida/background.' : ''}`;
 }
 async function cargarEstado() {
   const [padsResp, fuentesResp] = await Promise.all([fetch('/api/padrones'), fetch('/api/fuentes')]);
@@ -104,11 +106,11 @@ function renderPreview(data) {
   preview.innerHTML = `<div class="flex justify-between gap-3 flex-wrap mb-3"><div><div class="text-sm uppercase tracking-wide text-slate-500">Previsualización</div><div class="font-bold">${data.nombre} · ${data.registros} registros válidos</div></div><div>${vigenciaBadge(calidad.estado || 'sin_vigencia')}</div></div><div class="grid md:grid-cols-4 gap-3 text-sm mb-3"><div><b>Filas origen</b><br>${calidad.raw_registros ?? '—'}</div><div><b>Descartadas</b><br>${calidad.descartados_cuit_invalido ?? 0}</div><div><b>Duplicados</b><br>${calidad.duplicados ?? 0}</div><div><b>SHA256</b><br><span class="font-mono text-xs">${(evidencia.sha256 || '').slice(0,16)}...</span></div></div><div class="text-xs text-slate-600 mb-3">Perfil: <b>${calidad.perfil || '—'}</b> · Layout: <b>${calidad.layout_detectado || evidencia.layout_detectado || '—'}</b></div>${errores ? `<div class="bg-rose-100 text-rose-800 rounded p-3 mb-3"><b>Errores</b><ul class="list-disc ml-5">${errores}</ul></div>` : ''}${advertencias ? `<div class="bg-amber-100 text-amber-800 rounded p-3 mb-3"><b>Advertencias</b><ul class="list-disc ml-5">${advertencias}</ul></div>` : ''}<div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-white text-slate-600"><tr><th class="text-left p-2">CUIT</th><th class="text-left p-2">Ret.</th><th class="text-left p-2">Perc.</th><th class="text-left p-2">Vigencia</th><th class="text-left p-2">Régimen</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 async function leerRespuesta(r) { const contentType = r.headers.get('content-type') || ''; const texto = await r.text(); if (contentType.includes('application/json') && texto) { try { return JSON.parse(texto); } catch (_) { return {detail: texto}; } } return {detail: texto || `${r.status} ${r.statusText || 'Error sin detalle'}`}; }
-function mensajeHttp(status, detail) { if (status === 503) return 'El servidor de demo no pudo procesar el padrón. Para archivos grandes usar carga asistida/background.'; if (status === 413) return 'El archivo supera el límite del hosting de demo. Usar carga asistida o plan con más recursos.'; return detail || 'Error procesando padrón.'; }
+function mensajeHttp(status, detail) { if ([502,503,504].includes(status)) return 'El servidor cortó la carga web. Para padrones reales usar carga asistida/background con Supabase + Cloud Run Jobs.'; if (status === 413) return detail || 'El archivo supera el límite de carga web. Usar carga asistida/background.'; return detail || 'Error procesando padrón.'; }
 async function enviarPadron(url, texto, opts = {}) {
   const form = new FormData(form_importar); if (opts.confirmarAdvertencias) form.set('confirmar_advertencias', 'true'); if (!archivo.files.length) { mostrarMsg(false, 'Seleccioná un archivo.'); return null; }
-  const file = archivo.files[0]; if (file.size > 8 * 1024 * 1024 && !confirm('Archivo grande. En Render Free puede demorar/fallar. ¿Intentar igualmente?')) { mostrarMsg(false, 'Carga cancelada. Para padrón real grande usar carga asistida/background.'); return null; }
-  mostrarMsg(true, texto); let r; try { r = await fetch(url, { method:'POST', body: form }); } catch (error) { mostrarMsg(false, `No se pudo conectar: ${error.message}`); return null; }
+  const file = archivo.files[0]; if (file.size > PADRON_SYNC_MAX_MB * 1024 * 1024) { mostrarMsg(false, `Archivo de ${(file.size/1024/1024).toFixed(1)} MB: no se procesa por carga web. Próximo paso: carga asistida/background.`); return null; }
+  mostrarMsg(true, texto); const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), PADRON_SYNC_TIMEOUT_MS); let r; try { r = await fetch(url, { method:'POST', body: form, signal: controller.signal }); } catch (error) { mostrarMsg(false, error.name === 'AbortError' ? 'La previsualización superó el tiempo máximo de carga web. Usar carga asistida/background.' : `No se pudo conectar: ${error.message}`); return null; } finally { clearTimeout(timeout); }
   const data = await leerRespuesta(r); if (!r.ok) { mostrarMsg(false, mensajeHttp(r.status, data.detail)); return null; } return data;
 }
 drop_zone.addEventListener('dragover', e => { e.preventDefault(); drop_zone.classList.add('ring-2','ring-amber-400'); });

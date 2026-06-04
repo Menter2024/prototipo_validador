@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 from fastapi.testclient import TestClient
 
@@ -39,6 +40,40 @@ def test_previsualizar_padron_no_escribe_archivo(tmp_path, monkeypatch):
     assert data["calidad"]["perfil"] == "Tucumán · RG 23/02"
     assert data["evidencia"]["sha256"]
     assert not (padrones_dir / "PadronTucuman.csv").exists()
+
+
+def test_previsualizar_padron_grande_devuelve_413_sin_procesar(tmp_path, monkeypatch):
+    client, padrones_dir = _client(tmp_path, monkeypatch)
+    monkeypatch.setattr(main, "PADRON_UPLOAD_SYNC_MAX_MB", 0.0001)
+
+    r = client.post(
+        "/api/padrones/previsualizar",
+        data={"provincia": "Tucuman", "periodo": "2026-06"},
+        files={"archivo": ("padron_grande.csv", b"cuit\n" + b"1" * 1024, "text/csv")},
+    )
+
+    assert r.status_code == 413
+    assert "carga asistida" in r.json()["detail"].lower()
+    assert not any(padrones_dir.iterdir())
+
+
+def test_estado_padrones_usa_manifest_sin_leer_csv_gigante(tmp_path, monkeypatch):
+    client, padrones_dir = _client(tmp_path, monkeypatch)
+    monkeypatch.setattr(main, "PADRON_UPLOAD_SYNC_MAX_MB", 0.0001)
+    (padrones_dir / "PadronCABA.csv").write_text("cuit\n" + ("1" * 2048), encoding="utf-8")
+    (padrones_dir / "padrones_manifest.json").write_text(json.dumps({
+        "version": 1,
+        "padrones": {"CABA": {"registros": 1598053, "periodo": "2026-06", "vigencia_hasta": "2026-06-30"}},
+        "historial": [],
+    }), encoding="utf-8")
+    monkeypatch.setattr(main.padrones, "_leer_padron", lambda _archivo: (_ for _ in ()).throw(AssertionError("no debe leer CSV grande")))
+
+    r = client.get("/api/padrones")
+
+    assert r.status_code == 200
+    caba = next(p for p in r.json()["padrones"] if p["key"] == "CABA")
+    assert caba["status"] == "disponible"
+    assert caba["registros"] == 1598053
 
 
 def test_importar_observado_sin_confirmacion_devuelve_400(tmp_path, monkeypatch):
