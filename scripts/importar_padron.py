@@ -29,6 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from app.modules import padron_layouts  # noqa: E402
 from app.modules.padrones import PADRONES_PROVINCIAS, _normalizar_row  # noqa: E402
 
 PROVINCIAS_IMPORTABLES = {
@@ -183,22 +184,14 @@ def _normalizar_pct_agip(valor: str) -> str:
 
 def _rows_agip_layout(path: Path) -> list[dict]:
     """Parsea el layout AGIP separado por ';' publicado como diseño de registro."""
+    layout = padron_layouts.obtener_layout("agip_caba_regimenes_generales_v1")
     out = []
     for line in _leer_texto(path).splitlines():
         if not line.strip() or "cuit" in line.lower():
             continue
-        cols = [c.strip() for c in line.split(";")]
-        if len(cols) < 10 or len(_solo_digitos(cols[3])) != 11:
-            continue
-        tipo = {"C": "Convenio", "D": "Directo CABA"}.get(cols[4].upper(), cols[4])
-        out.append({
-            "cuit": cols[3],
-            "alicuota_retencion": _normalizar_pct_agip(cols[8]),
-            "alicuota_percepcion": _normalizar_pct_agip(cols[7]),
-            "vigencia_desde": _normalizar_fecha_agip(cols[1]),
-            "vigencia_hasta": _normalizar_fecha_agip(cols[2]),
-            "regimen": f"AGIP Regímenes Generales · {tipo}".strip(" ·"),
-        })
+        row = padron_layouts.traducir_linea_delimitada(line, layout) if layout else None
+        if row:
+            out.append(row)
     return out
 
 

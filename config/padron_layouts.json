@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "actualizado": "2026-06-04",
+  "canonical_fields": [
+    "cuit",
+    "alicuota_retencion",
+    "alicuota_percepcion",
+    "vigencia_desde",
+    "vigencia_hasta",
+    "regimen",
+    "jurisdiccion",
+    "tipo_padron",
+    "fuente_id",
+    "layout_id"
+  ],
+  "layouts": [
+    {
+      "id": "agip_caba_regimenes_generales_v1",
+      "nombre": "AGIP CABA · Padrón Regímenes Generales",
+      "fuente_id": "agip_caba_iibb",
+      "padron_key": "CABA",
+      "jurisdiccion": "CABA",
+      "organismo": "AGIP",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "txt_delimitado_sin_header",
+      "separador": ";",
+      "frecuencia": "mensual",
+      "campos": {
+        "fecha_publicacion": {"posicion": 0, "tipo": "fecha_ddmmaaaa"},
+        "vigencia_desde": {"posicion": 1, "tipo": "fecha_ddmmaaaa"},
+        "vigencia_hasta": {"posicion": 2, "tipo": "fecha_ddmmaaaa"},
+        "cuit": {"posicion": 3, "tipo": "cuit"},
+        "tipo_inscripcion": {
+          "posicion": 4,
+          "tipo": "codigo",
+          "map": {"C": "Convenio", "D": "Directo CABA"}
+        },
+        "alicuota_percepcion": {"posicion": 7, "tipo": "porcentaje_agip"},
+        "alicuota_retencion": {"posicion": 8, "tipo": "porcentaje_agip"},
+        "razon_social": {"posicion": 11, "tipo": "texto"}
+      },
+      "salida": {
+        "regimen_template": "AGIP Regímenes Generales · {tipo_inscripcion}"
+      },
+      "validaciones": {
+        "min_columnas": 10,
+        "requiere_vigencia": true,
+        "requiere_alicuota": true,
+        "cuit_longitud": 11
+      },
+      "notas": [
+        "Los índices son base cero.",
+        "Layout relevado desde archivo oficial AGIP de regímenes generales."
+      ]
+    },
+    {
+      "id": "cabeceras_alias_iibb_v1",
+      "nombre": "Cabeceras alias IIBB",
+      "padron_key": "*",
+      "jurisdiccion": "*",
+      "organismo": "variable",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "csv_xlsx_con_cabeceras",
+      "deteccion": {"headers": ["cuit"]},
+      "campos": {
+        "cuit": {"aliases": ["cuit", "cuil", "nro_cuit", "numero_cuit", "cuit sujeto"]},
+        "alicuota_retencion": {"aliases": ["alicuota_retencion", "retencion", "alic ret", "alic. ret."]},
+        "alicuota_percepcion": {"aliases": ["alicuota_percepcion", "percepcion", "alic perc", "alic. perc."]},
+        "vigencia_desde": {"aliases": ["vigencia_desde", "desde", "fecha_desde"]},
+        "vigencia_hasta": {"aliases": ["vigencia_hasta", "hasta", "fecha_hasta"]},
+        "regimen": {"aliases": ["regimen", "régimen", "categoria", "tipo"]}
+      },
+      "validaciones": {
+        "cuit_longitud": 11
+      }
+    },
+    {
+      "id": "delimitado_sin_cabecera_generico_v1",
+      "nombre": "Delimitado sin cabecera genérico",
+      "padron_key": "*",
+      "jurisdiccion": "*",
+      "organismo": "variable",
+      "tipo_padron": "iibb_retencion_percepcion",
+      "formato": "txt_delimitado_sin_header",
+      "separadores": [";", "\t", "|", ","],
+      "deteccion": {"buscar_cuit": true, "buscar_porcentajes": true},
+      "validaciones": {
+        "cuit_longitud": 11
+      }
+    }
+  ]
+}
