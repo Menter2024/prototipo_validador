@@ -85,6 +85,8 @@ Para que una fuente pase de `catalogado` a `integrado` debe tener:
 
 ## Pendientes de relevamiento profundo
 
+Ver backlog ejecutable en `docs/PADRONES_FORMATOS_BACKLOG.md` y regenerar con `python scripts/auditar_formatos_padrones.py --format markdown --output docs/PADRONES_FORMATOS_BACKLOG.md`.
+
 - Separar, cuando el organismo los publique en páginas distintas, los links de descarga del padrón y los links de layout/instructivo/norma.
 - Completar layouts específicos para ARBA, ATER Entre Ríos, Córdoba, Santa Fe y cualquier provincia que entregue archivo masivo.
 - Completar matriz municipal cuando el cliente confirme municipios donde opera, tributos alcanzados y credenciales disponibles.
