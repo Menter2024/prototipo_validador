@@ -95,10 +95,10 @@ def test_traducir_row_ater_con_muestra_local_normalizada():
     assert row["layout_id"] == "ater_entrerios_iibb_csv_v1"
 
 
-def test_layout_santafe_queda_marcado_pendiente_muestra_real():
-    layout = padron_layouts.obtener_layout("santafe_iibb_csv_v1")
+def test_layout_santafe_queda_marcado_validado_muestra_oficial():
+    layout = padron_layouts.obtener_layout("santafe_iibb_parp_delimitado_v1")
 
-    assert layout["estado"] == "pendiente_muestra_real"
+    assert layout["estado"] == "validado_muestra_oficial"
 
 
 
@@ -106,23 +106,26 @@ def test_traducir_linea_cordoba_delimitado_sin_cabecera():
     layout = padron_layouts.obtener_layout("cordoba_iibb_delimitado_v1")
 
     row = padron_layouts.traducir_linea_delimitada(
-        "30722222229;CORDOBA SA;1,50;2,50;01/06/2026;30/06/2026",
+        "R;22052026;01062026;30062026;30722222229;C;X;N;02,75",
         layout,
     )
 
     assert row["cuit"] == "30722222229"
-    assert row["alicuota_retencion"] == "1.50"
-    assert row["alicuota_percepcion"] == "2.50"
+    assert row["alicuota_retencion"] == "02.75"
+    assert row["alicuota_percepcion"] == ""
     assert row["vigencia_desde"] == "01/06/2026"
-    assert row["regimen"] == "Córdoba IIBB retención/percepción"
+    assert row["regimen"] == "Córdoba IIBB · Retención"
     assert row["layout_id"] == "cordoba_iibb_delimitado_v1"
 
 
-def test_layouts_p1_quedan_pendientes_de_muestra_real():
-    for layout_id in [
+def test_layouts_p1_quedan_validados_o_cubiertos_por_muestra_real():
+    esperados = {
         "cordoba_iibb_delimitado_v1",
         "jujuy_iibb_xlsx_alias_v1",
-        "mendoza_iibb_csv_alias_v1",
-        "tucuman_iibb_rg23_csv_v1",
-    ]:
-        assert padron_layouts.obtener_layout(layout_id)["estado"] == "pendiente_muestra_real"
+        "tucuman_padron_contribuyente_txt_v1",
+        "tucuman_coef_rg116_txt_v1",
+    }
+    for layout_id in esperados:
+        assert padron_layouts.obtener_layout(layout_id)["estado"] == "validado_muestra_oficial"
+    assert padron_layouts.obtener_layout("mendoza_iibb_retib_delimitado_v1")["estado"] == "validado_muestra_oficial_con_observaciones"
+    assert padron_layouts.obtener_layout("tucuman_iibb_rg23_csv_v1")["estado"] == "alternativo_aliases_no_usado_en_muestra"

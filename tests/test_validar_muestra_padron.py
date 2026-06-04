@@ -1,4 +1,5 @@
 import importlib.util
+import zipfile
 from pathlib import Path
 
 
@@ -17,7 +18,11 @@ def load_module():
 
 def test_validar_muestra_cordoba_detecta_layout_y_hash(tmp_path):
     module = load_module()
-    reporte = module.validar_muestra("Cordoba", FIXTURES / "cordoba_headerless.zip")
+    origen = tmp_path / "cordoba.zip"
+    with zipfile.ZipFile(origen, "w") as zf:
+        zf.writestr("cordoba_ret.txt", "R;22052026;01062026;30062026;30722222229;C;X;N;02,75\n")
+
+    reporte = module.validar_muestra("Cordoba", origen)
 
     assert reporte["ok"] is True
     assert reporte["layout_detectado"] == "cordoba_iibb_delimitado_v1"

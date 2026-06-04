@@ -274,105 +274,80 @@
       ]
     },
     {
-      "id": "santafe_iibb_csv_v1",
-      "nombre": "Santa Fe API · IIBB retención/percepción CSV/XLSX",
+      "id": "santafe_iibb_parp_delimitado_v1",
+      "nombre": "Santa Fe API · PARP retención/percepción delimitado",
       "fuente_id": "santafe_iibb",
       "padron_key": "SantaFe",
       "jurisdiccion": "Santa Fe",
       "organismo": "API Santa Fe",
       "tipo_padron": "iibb_retencion_percepcion",
-      "formato": "csv_xlsx_con_cabeceras",
+      "formato": "txt_delimitado_sin_header",
       "frecuencia": "mensual",
-      "estado": "pendiente_muestra_real",
+      "estado": "validado_muestra_oficial",
       "campos": {
-        "cuit": {
-          "aliases": [
-            "cuit",
-            "cuil",
-            "cuit/cuil",
-            "cuit_contribuyente",
-            "cuit sujeto",
-            "nro_cuit",
-            "numero_cuit"
-          ],
-          "tipo": "cuit"
-        },
-        "alicuota_retencion": {
-          "aliases": [
-            "alicuota_retencion",
-            "retencion",
-            "retención",
-            "ali_ret",
-            "alic_ret",
-            "alic ret",
-            "alicuota retencion",
-            "alícuota retención",
-            "ret"
-          ],
-          "tipo": "porcentaje"
-        },
-        "alicuota_percepcion": {
-          "aliases": [
-            "alicuota_percepcion",
-            "percepcion",
-            "percepción",
-            "ali_per",
-            "alic_per",
-            "alic perc",
-            "alicuota percepcion",
-            "alícuota percepción",
-            "perc"
-          ],
-          "tipo": "porcentaje"
+        "fecha_publicacion": {
+          "posicion": 0,
+          "tipo": "fecha_ddmmaaaa"
         },
         "vigencia_desde": {
-          "aliases": [
-            "vigencia_desde",
-            "desde",
-            "fecha_desde",
-            "fecha desde",
-            "vig desde",
-            "inicio"
-          ],
-          "tipo": "fecha_yyyy_mm_dd"
+          "posicion": 1,
+          "tipo": "fecha_ddmmaaaa"
         },
         "vigencia_hasta": {
-          "aliases": [
-            "vigencia_hasta",
-            "hasta",
-            "fecha_hasta",
-            "fecha hasta",
-            "vig hasta",
-            "fin"
-          ],
-          "tipo": "fecha_yyyy_mm_dd"
+          "posicion": 2,
+          "tipo": "fecha_ddmmaaaa"
         },
-        "regimen": {
-          "aliases": [
-            "regimen",
-            "régimen",
-            "tipo",
-            "categoria",
-            "categoría"
-          ],
+        "cuit": {
+          "posicion": 3,
+          "tipo": "cuit"
+        },
+        "tipo_inscripcion": {
+          "posicion": 4,
+          "tipo": "codigo",
+          "map": {
+            "C": "Convenio",
+            "D": "Directo"
+          }
+        },
+        "marca_alta": {
+          "posicion": 5,
+          "tipo": "texto"
+        },
+        "marca_alicuota": {
+          "posicion": 6,
+          "tipo": "texto"
+        },
+        "alicuota_percepcion": {
+          "posicion": 7,
+          "tipo": "porcentaje"
+        },
+        "alicuota_retencion": {
+          "posicion": 8,
+          "tipo": "porcentaje"
+        },
+        "razon_social": {
+          "posicion": 11,
           "tipo": "texto"
         }
       },
       "salida": {
-        "regimen_default": "API Santa Fe IIBB retención/percepción"
+        "regimen_template": "Santa Fe PARP · {tipo_inscripcion}"
       },
       "validaciones": {
+        "min_columnas": 10,
         "cuit_longitud": 11,
         "requiere_alicuota": true,
-        "requiere_vigencia": false
+        "requiere_vigencia": true
       },
       "notas": [
-        "Layout inicial por aliases; requiere validación contra archivo oficial real de Santa Fe antes de marcar integrado."
-      ]
+        "Layout ajustado contra muestra real Sta Fe_PARP_202606.csv recibida de la cervecería.",
+        "Pendiente marcar validado luego de correr reporte oficial y conservar hash."
+      ],
+      "separador": ";"
     },
     {
       "id": "cordoba_iibb_delimitado_v1",
-      "nombre": "Córdoba · IIBB delimitado sin cabecera",
+      "nombre": "Córdoba · IIBB retención delimitado sin cabecera",
       "fuente_id": "cordoba_iibb",
       "padron_key": "Cordoba",
       "jurisdiccion": "Córdoba",
@@ -381,45 +356,52 @@
       "formato": "txt_delimitado_sin_header",
       "separador": ";",
       "frecuencia": "mensual",
-      "estado": "pendiente_muestra_real",
+      "estado": "validado_muestra_oficial",
       "campos": {
-        "cuit": {
+        "tipo_operacion": {
           "posicion": 0,
-          "tipo": "cuit"
+          "tipo": "codigo",
+          "map": {
+            "R": "Retención",
+            "P": "Percepción"
+          }
         },
-        "razon_social": {
+        "fecha_publicacion": {
           "posicion": 1,
-          "tipo": "texto"
-        },
-        "alicuota_retencion": {
-          "posicion": 2,
-          "tipo": "porcentaje"
-        },
-        "alicuota_percepcion": {
-          "posicion": 3,
-          "tipo": "porcentaje"
+          "tipo": "fecha_ddmmaaaa"
         },
         "vigencia_desde": {
-          "posicion": 4,
+          "posicion": 2,
           "tipo": "fecha_ddmmaaaa"
         },
         "vigencia_hasta": {
-          "posicion": 5,
+          "posicion": 3,
           "tipo": "fecha_ddmmaaaa"
+        },
+        "cuit": {
+          "posicion": 4,
+          "tipo": "cuit"
+        },
+        "categoria": {
+          "posicion": 5,
+          "tipo": "texto"
+        },
+        "alicuota_retencion": {
+          "posicion": 8,
+          "tipo": "porcentaje"
         }
       },
       "salida": {
-        "regimen_default": "Córdoba IIBB retención/percepción"
+        "regimen_template": "Córdoba IIBB · {tipo_operacion}"
       },
       "validaciones": {
-        "min_columnas": 4,
+        "min_columnas": 9,
         "cuit_longitud": 11,
         "requiere_alicuota": true,
-        "requiere_vigencia": false
+        "requiere_vigencia": true
       },
       "notas": [
-        "Layout cubre archivos delimitados sin cabecera usados en fixture local.",
-        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
+        "Layout ajustado contra muestra real Cordoba Ret.txt recibida de la cervecería."
       ]
     },
     {
@@ -432,7 +414,7 @@
       "tipo_padron": "iibb_retencion_percepcion",
       "formato": "csv_xlsx_con_cabeceras",
       "frecuencia": "mensual",
-      "estado": "pendiente_muestra_real",
+      "estado": "validado_muestra_oficial",
       "campos": {
         "cuit": {
           "aliases": [
@@ -523,123 +505,76 @@
       "validaciones": {
         "cuit_longitud": 11,
         "requiere_alicuota": true,
-        "requiere_vigencia": true
+        "requiere_vigencia": false
       },
       "notas": [
-        "Cubre cabeceras tipo CUIT/CUIL, Alícuota de Retención/Percepción y Categoría Fiscal.",
-        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
+        "Layout cubre TXT/CSV oficial con cabeceras CUIT, PERIODO, ALICUOTA_PERCEPCION, ALICUOTA_RETENCION y XLSX con aliases.",
+        "Ajustado contra muestra real Jujuy PADRONRETPER202606.txt."
       ]
     },
     {
-      "id": "mendoza_iibb_csv_alias_v1",
-      "nombre": "Mendoza · ATM IIBB CSV/XLSX con cabeceras",
+      "id": "mendoza_iibb_retib_delimitado_v1",
+      "nombre": "Mendoza · ATM Ret_IB delimitado gzip/txt",
       "fuente_id": "mendoza_iibb",
       "padron_key": "Mendoza",
       "jurisdiccion": "Mendoza",
       "organismo": "ATM Mendoza",
       "tipo_padron": "iibb_retencion_percepcion",
-      "formato": "csv_xlsx_con_cabeceras",
+      "formato": "txt_delimitado_sin_header",
       "frecuencia": "mensual",
-      "estado": "pendiente_muestra_real",
+      "estado": "validado_muestra_oficial_con_observaciones",
       "campos": {
         "cuit": {
-          "aliases": [
-            "cuit",
-            "cuil",
-            "cuit/cuil",
-            "cuit_contribuyente",
-            "cuit sujeto",
-            "nro_cuit",
-            "numero_cuit"
-          ],
+          "posicion": 0,
           "tipo": "cuit"
         },
-        "alicuota_retencion": {
-          "aliases": [
-            "alicuota_retencion",
-            "retencion",
-            "retención",
-            "ali_ret",
-            "alic_ret",
-            "alic ret",
-            "alic. ret.",
-            "alicuota retencion",
-            "alícuota retención",
-            "alícuota de retención",
-            "ret"
-          ],
-          "tipo": "porcentaje"
+        "inscripcion": {
+          "posicion": 1,
+          "tipo": "texto"
         },
-        "alicuota_percepcion": {
-          "aliases": [
-            "alicuota_percepcion",
-            "percepcion",
-            "percepción",
-            "ali_per",
-            "alic_per",
-            "alic perc",
-            "alic. perc.",
-            "alicuota percepcion",
-            "alícuota percepción",
-            "alícuota de percepción",
-            "perc"
-          ],
-          "tipo": "porcentaje"
+        "tipo_inscripcion": {
+          "posicion": 2,
+          "tipo": "texto"
+        },
+        "actividad": {
+          "posicion": 3,
+          "tipo": "texto"
         },
         "vigencia_desde": {
-          "aliases": [
-            "vigencia_desde",
-            "desde",
-            "fecha_desde",
-            "fecha desde",
-            "fecha vigencia desde",
-            "vig desde",
-            "vig. desde",
-            "inicio"
-          ],
+          "posicion": 4,
           "tipo": "fecha_yyyy_mm_dd"
         },
-        "vigencia_hasta": {
-          "aliases": [
-            "vigencia_hasta",
-            "hasta",
-            "fecha_hasta",
-            "fecha hasta",
-            "fecha vigencia hasta",
-            "vig hasta",
-            "vig. hasta",
-            "fin"
-          ],
+        "baja": {
+          "posicion": 5,
           "tipo": "fecha_yyyy_mm_dd"
         },
-        "regimen": {
-          "aliases": [
-            "regimen",
-            "régimen",
-            "tipo",
-            "categoria",
-            "categoría",
-            "categoria fiscal",
-            "categoría fiscal",
-            "actividad",
-            "grupo",
-            "tratamiento"
-          ],
+        "marca_retencion": {
+          "posicion": 7,
           "tipo": "texto"
+        },
+        "marca_percepcion": {
+          "posicion": 8,
+          "tipo": "texto"
+        },
+        "fecha_marca": {
+          "posicion": 9,
+          "tipo": "fecha_yyyy_mm_dd"
         }
       },
       "salida": {
-        "regimen_default": "Mendoza IIBB retención/percepción"
+        "regimen_template": "Mendoza Ret_IB · {tipo_inscripcion}"
       },
       "validaciones": {
+        "min_columnas": 9,
         "cuit_longitud": 11,
-        "requiere_alicuota": true,
+        "requiere_alicuota": false,
         "requiere_vigencia": false
       },
       "notas": [
-        "Layout inicial por aliases para exportaciones tabulares de ATM.",
-        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
-      ]
+        "Ret_IB recibido como .txt.gz; no informa alícuota numérica, sino inscripción/actividad/marcas.",
+        "Ajustado contra muestra real Mendoza Ret_ib_2026_06_01.txt.gz."
+      ],
+      "separador": ";"
     },
     {
       "id": "tucuman_iibb_rg23_csv_v1",
@@ -651,7 +586,7 @@
       "tipo_padron": "iibb_retencion_percepcion",
       "formato": "csv_xlsx_con_cabeceras",
       "frecuencia": "mensual",
-      "estado": "pendiente_muestra_real",
+      "estado": "alternativo_aliases_no_usado_en_muestra",
       "campos": {
         "cuit": {
           "aliases": [
@@ -745,8 +680,47 @@
         "requiere_vigencia": false
       },
       "notas": [
-        "Cubre cabeceras abreviadas Alic. Ret., Alic. Perc., Vig. Desde y Vig. Hasta.",
-        "Pendiente validar contra archivo oficial real vigente antes de marcar integrado."
+        "Layout CSV/XLSX por aliases; se complementa con layouts TXT ancho fijo para padron contribuyente y coeficiente."
+      ]
+    },
+    {
+      "id": "tucuman_padron_contribuyente_txt_v1",
+      "nombre": "Tucumán · Padrón contribuyente RG 176/10 TXT",
+      "fuente_id": "tucuman_iibb",
+      "padron_key": "Tucuman",
+      "jurisdiccion": "Tucumán",
+      "organismo": "DGR Tucumán",
+      "tipo_padron": "iibb_constancia_acreditacion",
+      "formato": "txt_ancho_fijo_tucuman",
+      "frecuencia": "mensual",
+      "estado": "validado_muestra_oficial",
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": false,
+        "requiere_vigencia": true
+      },
+      "notas": [
+        "Archivo ACREDITAN.TXT dentro de Tucum_padroncontribuyente ZIP; contiene CUIT, inscripción, vigencia y porcentaje."
+      ]
+    },
+    {
+      "id": "tucuman_coef_rg116_txt_v1",
+      "nombre": "Tucumán · Coeficiente RG 116/10 TXT",
+      "fuente_id": "tucuman_iibb",
+      "padron_key": "Tucuman",
+      "jurisdiccion": "Tucumán",
+      "organismo": "DGR Tucumán",
+      "tipo_padron": "iibb_coeficiente",
+      "formato": "txt_ancho_fijo_tucuman_coef",
+      "frecuencia": "mensual",
+      "estado": "validado_muestra_oficial",
+      "validaciones": {
+        "cuit_longitud": 11,
+        "requiere_alicuota": false,
+        "requiere_vigencia": false
+      },
+      "notas": [
+        "Archivo archivocoefrg116.TXT dentro de Tucum_Coef.zip; contiene CUIT, coeficiente, período y porcentaje."
       ]
     },
     {

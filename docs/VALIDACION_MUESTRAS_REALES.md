@@ -2,17 +2,17 @@
 
 Actualizado: 2026-06-04.
 
-Este procedimiento valida archivos reales descargados desde fuentes oficiales sin sobrescribir los padrones locales del repo. Sirve para pasar un layout de `pendiente_muestra_real` a validado con evidencia.
+Este procedimiento valida archivos reales descargados desde fuentes oficiales sin sobrescribir los padrones locales del repo. Sirve para validar o revalidar layouts con evidencia oficial reproducible.
 
-## Fuentes pendientes de muestra real
+## Fuentes recibidas y validadas
 
 | Jurisdicción | Fuente | Layout esperado | Fuente oficial / acceso | Estado |
 |---|---|---|---|---|
-| Santa Fe | API Santa Fe | `santafe_iibb_csv_v1` | https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284 | pendiente de archivo oficial real |
-| Córdoba | Rentas Córdoba | `cordoba_iibb_delimitado_v1` | https://www.rentascordoba.gob.ar/cms/ms-agentes/ | pendiente de archivo oficial real |
-| Jujuy | DPR Jujuy | `jujuy_iibb_xlsx_alias_v1` | https://rentasjujuy.gob.ar/agentes-ingresos-brutos/ | pendiente de archivo oficial real |
-| Mendoza | ATM Mendoza | `mendoza_iibb_csv_alias_v1` | https://www.atm.mendoza.gov.ar/ | pendiente de archivo oficial real |
-| Tucumán | DGR Tucumán | `tucuman_iibb_rg23_csv_v1` | https://www.rentastucuman.gob.ar/ | pendiente de archivo oficial real |
+| Santa Fe | API Santa Fe | `santafe_iibb_parp_delimitado_v1` | https://www.santafe.gob.ar/index.php/web/content/view/full/221362/(subtema)/102284 | validado con muestra real recibida |
+| Córdoba | Rentas Córdoba | `cordoba_iibb_delimitado_v1` | https://www.rentascordoba.gob.ar/cms/ms-agentes/ | validado con muestra real recibida |
+| Jujuy | DPR Jujuy | `jujuy_iibb_xlsx_alias_v1` | https://rentasjujuy.gob.ar/agentes-ingresos-brutos/ | validado con muestra real recibida |
+| Mendoza | ATM Mendoza | `mendoza_iibb_retib_delimitado_v1` | https://www.atm.mendoza.gov.ar/ | validado con muestra real recibida |
+| Tucumán | DGR Tucumán | `tucuman_padron_contribuyente_txt_v1` / `tucuman_coef_rg116_txt_v1` | https://www.rentastucuman.gob.ar/ | validado con muestra real recibida |
 
 ## Relevamiento público inicial
 
@@ -34,8 +34,9 @@ No subir a Git padrones completos reales. El reporte conserva hash, tamaño, lay
 .venv/bin/python3.13 scripts/validar_muestra_padron.py SantaFe /private/tmp/padrones_reales/santafe_padron.xlsx --output /private/tmp/padrones_reales/reportes/santafe.json
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Cordoba /private/tmp/padrones_reales/cordoba_padron.zip --output /private/tmp/padrones_reales/reportes/cordoba.json
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Jujuy /private/tmp/padrones_reales/jujuy_padron.xlsx --output /private/tmp/padrones_reales/reportes/jujuy.json
-.venv/bin/python3.13 scripts/validar_muestra_padron.py Mendoza /private/tmp/padrones_reales/mendoza_padron.csv --output /private/tmp/padrones_reales/reportes/mendoza.json
+.venv/bin/python3.13 scripts/validar_muestra_padron.py Mendoza /private/tmp/padrones_reales/mendoza_padron.txt.gz --output /private/tmp/padrones_reales/reportes/mendoza.json
 .venv/bin/python3.13 scripts/validar_muestra_padron.py Tucuman /private/tmp/padrones_reales/tucuman_padron.csv --output /private/tmp/padrones_reales/reportes/tucuman.json
+.venv/bin/python3.13 scripts/validar_muestra_padron.py Tucuman /private/tmp/padrones_reales/tucuman_coef.zip --expected-layout tucuman_coef_rg116_txt_v1 --output /private/tmp/padrones_reales/reportes/tucuman_coef.json
 ```
 
 ## Criterio para aprobar una muestra
@@ -54,7 +55,7 @@ No subir a Git padrones completos reales. El reporte conserva hash, tamaño, lay
 - Si faltan alícuotas/vigencia: confirmar si el padrón oficial publica esos campos o si se deben derivar de otra fuente normativa.
 - Si el portal exige credenciales/CAPTCHA: usar cola asistida; no automatizar bypass.
 
-## Próximo paso después de aprobar
+## Próximo paso después de aprobar una nueva muestra
 
 1. Cambiar `estado` del layout en `config/padron_layouts.json` de `pendiente_muestra_real` a `validado_muestra_oficial`.
 2. Guardar reporte JSON sanitizado o resumen de evidencia en documentación, sin padrón completo.

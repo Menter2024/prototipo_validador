@@ -34,6 +34,8 @@ def _fecha_ddmmaaaa(value: str) -> str:
     digitos = _solo_digitos(value)
     if len(digitos) == 8:
         return f"{digitos[:2]}/{digitos[2:4]}/{digitos[4:]}"
+    if len(digitos) == 7:
+        return f"0{digitos[:1]}/{digitos[1:3]}/{digitos[3:]}"
     return str(value or "").strip()
 
 

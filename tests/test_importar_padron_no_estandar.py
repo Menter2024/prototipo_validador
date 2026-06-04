@@ -1,5 +1,6 @@
 import subprocess
 import json
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -59,13 +60,18 @@ def test_agip_rar_sin_extractor_informa_accion(monkeypatch, tmp_path):
 
 def test_cordoba_zip_headerless_delimitado(tmp_path):
     origen = tmp_path / "cordoba.zip"
-    origen.write_bytes((FIXTURES / "cordoba_headerless.zip").read_bytes())
+    with zipfile.ZipFile(origen, "w") as zf:
+        zf.writestr(
+            "cordoba_ret.txt",
+            "R;22052026;01062026;30062026;30722222229;C;X;N;02,75\n"
+            "R;22052026;01062026;30062026;30722222229;C;X;N;02,75\n",
+        )
 
     res = imp.importar_padron("Cordoba", origen, tmp_path / "padrones", backup=False)
 
     assert res["registros"] == 1
-    assert res["muestra"][0]["alicuota_retencion"] == "1.50"
-    assert res["muestra"][0]["alicuota_percepcion"] == "2.50"
+    assert res["muestra"][0]["alicuota_retencion"] == "02.75"
+    assert res["muestra"][0]["alicuota_percepcion"] == ""
     assert res["calidad"]["layout_detectado"] == "cordoba_iibb_delimitado_v1"
 
 

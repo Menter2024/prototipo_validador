@@ -21,11 +21,15 @@ EXPECTED_LAYOUTS = {
     "AGIP": "agip_caba_regimenes_generales_v1",
     "EntreRios": "ater_entrerios_iibb_csv_v1",
     "ATER": "ater_entrerios_iibb_csv_v1",
-    "SantaFe": "santafe_iibb_csv_v1",
+    "SantaFe": "santafe_iibb_parp_delimitado_v1",
     "Cordoba": "cordoba_iibb_delimitado_v1",
     "Jujuy": "jujuy_iibb_xlsx_alias_v1",
-    "Mendoza": "mendoza_iibb_csv_alias_v1",
-    "Tucuman": "tucuman_iibb_rg23_csv_v1",
+    "Mendoza": "mendoza_iibb_retib_delimitado_v1",
+    "Tucuman": (
+        "tucuman_iibb_rg23_csv_v1",
+        "tucuman_padron_contribuyente_txt_v1",
+        "tucuman_coef_rg116_txt_v1",
+    ),
 }
 
 
@@ -48,7 +52,8 @@ def validar_muestra(
         )
     calidad = resultado["calidad"]
     layout_detectado = calidad.get("layout_detectado") or resultado["evidencia"].get("layout_detectado", "")
-    esperado = expected_layout or EXPECTED_LAYOUTS.get(provincia, "")
+    expected = expected_layout or EXPECTED_LAYOUTS.get(provincia, "")
+    esperados = list(expected) if isinstance(expected, tuple) else ([expected] if expected else [])
     errores = []
     advertencias = list(calidad.get("advertencias", []))
 
@@ -56,8 +61,8 @@ def validar_muestra(
         errores.extend(calidad.get("errores", []))
     if resultado["registros"] < min_registros:
         errores.append(f"Registros válidos {resultado['registros']} menor al mínimo requerido {min_registros}.")
-    if esperado and layout_detectado != esperado:
-        errores.append(f"Layout detectado '{layout_detectado}' no coincide con esperado '{esperado}'.")
+    if esperados and layout_detectado not in esperados:
+        errores.append(f"Layout detectado '{layout_detectado}' no coincide con esperado '{' / '.join(esperados)}'.")
     if not resultado["evidencia"].get("sha256"):
         errores.append("No se pudo calcular hash SHA-256 de evidencia.")
 
@@ -67,7 +72,7 @@ def validar_muestra(
         "origen": resultado["origen"],
         "registros": resultado["registros"],
         "layout_detectado": layout_detectado,
-        "layout_esperado": esperado,
+        "layout_esperado": esperados[0] if len(esperados) == 1 else esperados,
         "sha256": resultado["evidencia"].get("sha256", ""),
         "tamano_bytes": resultado["evidencia"].get("tamano_bytes", 0),
         "calidad": calidad,

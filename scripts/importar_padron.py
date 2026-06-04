@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import gzip
 import hashlib
 import io
 import re
@@ -88,11 +89,25 @@ PERFILES_CALIDAD = {
         "min_registros": 1,
         "max_caida_pct": -50,
         "permite_sin_alicuota": False,
-        "requiere_vigencia": True,
+        "requiere_vigencia": False,
+    },
+    "Mendoza": {
+        "nombre": "Mendoza · ATM Ret_IB",
+        "layout_esperado": {"mendoza_iibb_retib_delimitado_v1"},
+        "min_registros": 1,
+        "max_caida_pct": -50,
+        "permite_sin_alicuota": True,
+        "requiere_vigencia": False,
     },
     "Tucuman": {
         "nombre": "Tucumán · RG 23/02",
-        "layout_esperado": {"tucuman_iibb_rg23_csv_v1", "cabeceras_alias", "delimitado_sin_cabecera"},
+        "layout_esperado": {
+            "tucuman_iibb_rg23_csv_v1",
+            "tucuman_padron_contribuyente_txt_v1",
+            "tucuman_coef_rg116_txt_v1",
+            "cabeceras_alias",
+            "delimitado_sin_cabecera",
+        },
         "min_registros": 1,
         "max_caida_pct": -50,
         "permite_sin_alicuota": True,
@@ -172,6 +187,13 @@ def _normalizar_fecha_agip(valor: str) -> str:
     return str(valor or "").strip()
 
 
+def _normalizar_fecha_yyyymmdd(valor: str) -> str:
+    digitos = _solo_digitos(valor)
+    if len(digitos) == 8:
+        return f"{digitos[6:8]}/{digitos[4:6]}/{digitos[:4]}"
+    return str(valor or "").strip()
+
+
 def _normalizar_pct_agip(valor: str) -> str:
     raw = str(valor or "").replace("%", "").strip()
     if "," in raw or "." in raw:
@@ -229,6 +251,42 @@ def _rows_layout_delimitado(provincia: str, path: Path, parse_meta: dict) -> lis
             out = translated
             break
     return out
+
+
+def _rows_tucuman_txt(path: Path, parse_meta: dict) -> list[dict]:
+    contribuyente = []
+    coeficientes = []
+    for line in _leer_texto(path).splitlines():
+        if not line.strip():
+            continue
+        m = re.match(r"^\s*(\d{11})\s+([A-Z]{1,3})\s+(\d{8})\s+(\d{8})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*$", line)
+        if m:
+            contribuyente.append({
+                "cuit": m.group(1),
+                "alicuota_retencion": m.group(6),
+                "alicuota_percepcion": "",
+                "vigencia_desde": _normalizar_fecha_yyyymmdd(m.group(3)),
+                "vigencia_hasta": _normalizar_fecha_yyyymmdd(m.group(4)),
+                "regimen": f"Tucumán padrón contribuyente · {m.group(2)}",
+            })
+            continue
+        c = re.match(r"^\s*(\d{11})\s+(\d+(?:[.,]\d+)?)\s+(\d{6})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*$", line)
+        if c:
+            coeficientes.append({
+                "cuit": c.group(1),
+                "alicuota_retencion": c.group(5),
+                "alicuota_percepcion": "",
+                "vigencia_desde": "",
+                "vigencia_hasta": "",
+                "regimen": f"Tucumán coeficiente RG 116/10 · {c.group(3)}",
+            })
+    if contribuyente:
+        parse_meta.setdefault("layout_detectado", "tucuman_padron_contribuyente_txt_v1")
+        return contribuyente
+    if coeficientes:
+        parse_meta.setdefault("layout_detectado", "tucuman_coef_rg116_txt_v1")
+        return coeficientes
+    return []
 
 
 def _rows_delimitado_sin_header(path: Path) -> list[dict]:
@@ -326,6 +384,14 @@ def _archivos_extraidos(path: Path, destino: Path, parse_meta: dict) -> list[Pat
 
 def _leer_origen(provincia: str, path: Path, sheet: str | None, parse_meta: dict | None = None) -> list[dict]:
     parse_meta = parse_meta if parse_meta is not None else {}
+    if path.suffix.lower() == ".gz":
+        with tempfile.TemporaryDirectory(prefix="padron_gzip_") as tmp:
+            inner = Path(tmp) / Path(path.stem).name
+            with gzip.open(path, "rb") as src, inner.open("wb") as dst:
+                shutil.copyfileobj(src, dst)
+            parse_meta["extractor"] = "gzip"
+            parse_meta["archivo_interno"] = inner.name
+            return _leer_origen(provincia, inner, sheet, parse_meta)
     if path.suffix.lower() in {".zip", ".rar"}:
         errores = []
         with tempfile.TemporaryDirectory(prefix="padron_extract_") as tmp:
@@ -348,6 +414,10 @@ def _leer_origen(provincia: str, path: Path, sheet: str | None, parse_meta: dict
         parse_meta.setdefault("layout_detectado", "xlsx")
         return rows
     if ext in {".csv", ".txt", ".tsv", ".psv"}:
+        if provincia == "Tucuman":
+            tucuman = _rows_tucuman_txt(path, parse_meta)
+            if tucuman:
+                return tucuman
         if provincia == "CABA":
             agip = _rows_agip_layout(path)
             if agip:
