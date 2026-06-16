@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "actualizado": "2026-06-15",
+  "criterio": "Catálogo de clientes-agentes y los regímenes de información, retención y percepción que cada uno debe responder y/o generar. Distinto del catálogo general de regímenes (config/regimenes_catalogo.json), que describe el universo; este archivo describe la huella fiscal concreta de un cliente. Los estados de confirmación marcan qué está validado por perfil público y qué requiere confirmación documental del cliente (nóminas de agentes, claves fiscales, designaciones).",
+  "advertencia": "Las designaciones como agente por jurisdiccion deben confirmarse con la constancia/inscripcion del cliente. No reemplaza dictamen profesional ni la norma vigente.",
+  "clientes": [
+    {
+      "cliente": "CCU",
+      "grupo_economico": "CCU Argentina",
+      "razon_social": "CIA INDUSTRIAL CERVECERA S A",
+      "cuit": "30-50577985-8",
+      "cuit_limpio": "30505779858",
+      "condicion_iva": "Responsable Inscripto",
+      "condicion_ganancias": "Inscripto",
+      "iibb": "Convenio Multilateral",
+      "domicilio_fiscal": "Santa Fe, provincia de Santa Fe",
+      "actividad_principal": "Elaboración de cerveza y maltas",
+      "huella_jurisdiccional_conocida": [
+        "Santa Fe", "Salta", "Buenos Aires", "CABA", "Cordoba", "Mendoza", "Rio Negro", "San Juan", "Entre Rios"
+      ],
+      "como_figura_hoy_en_repo": {
+        "rol": "sujeto_pasible",
+        "detalle": "Aparece como renglon en padrones provinciales de IIBB (ATER Entre Rios, Cordoba, AGIP CABA) con alicuota de retencion y percepcion de 0,10%. Es la alicuota que OTROS agentes le aplican a CICSA, no un rol de agente.",
+        "padrones_donde_figura": ["EntreRios", "Cordoba", "CABA"]
+      },
+      "regimenes": [
+        {
+          "id": "nac_iva_libro_iva_digital",
+          "nivel": "nacional", "organismo": "ARCA", "impuesto": "IVA",
+          "tipo": "informacion", "sistema": "Libro IVA Digital",
+          "rol": "responde", "periodicidad": "mensual",
+          "estado_confirmacion": "alta_probabilidad_por_perfil"
+        },
+        {
+          "id": "nac_seguridad_social_sicoss",
+          "nivel": "nacional", "organismo": "ARCA", "impuesto": "Seguridad Social",
+          "tipo": "informacion", "sistema": "SICOSS / Libro de Sueldos Digital",
+          "rol": "responde", "periodicidad": "mensual",
+          "estado_confirmacion": "alta_probabilidad_por_perfil",
+          "nota": "Empleador con dotacion relevante (planta Santa Fe ~550 empleados)."
+        },
+        {
+          "id": "nac_ganancias_rg830",
+          "nivel": "nacional", "organismo": "ARCA", "impuesto": "Ganancias",
+          "tipo": "retencion", "sistema": "SIRE / SICORE", "regimen": "RG 830",
+          "rol": "genera", "periodicidad": "quincenal_mensual",
+          "estado_confirmacion": "alta_probabilidad_por_perfil",
+          "nota": "Agente de retencion sobre pagos a proveedores, locadores y prestadores."
+        },
+        {
+          "id": "nac_iva_retencion",
+          "nivel": "nacional", "organismo": "ARCA", "impuesto": "IVA",
+          "tipo": "retencion", "sistema": "SIRE / SICORE",
+          "rol": "genera", "periodicidad": "quincenal_mensual",
+          "estado_confirmacion": "a_confirmar_designacion"
+        },
+        {
+          "id": "nac_iva_percepcion",
+          "nivel": "nacional", "organismo": "ARCA", "impuesto": "IVA",
+          "tipo": "percepcion", "sistema": "SIRE / SICORE",
+          "rol": "genera", "periodicidad": "quincenal_mensual",
+          "estado_confirmacion": "alta_probabilidad_por_perfil",
+          "nota": "Productor/distribuidor mayorista de bebidas: tipico agente de percepcion de IVA a clientes."
+        },
+        {
+          "id": "nac_seguridad_social_suss_retencion",
+          "nivel": "nacional", "organismo": "ARCA", "impuesto": "Seguridad Social",
+          "tipo": "retencion", "sistema": "SIRE", "regimen": "SUSS",
+          "rol": "genera", "periodicidad": "mensual",
+          "estado_confirmacion": "a_confirmar_designacion",
+          "nota": "Aplica si contrata servicios alcanzados por retencion SUSS (limpieza, seguridad, construccion)."
+        },
+        {
+          "id": "nac_beneficiarios_exterior",
+          "nivel": "nacional", "organismo": "ARCA", "impuesto": "Ganancias",
+          "tipo": "retencion", "sistema": "SIRE", "regimen": "Beneficiarios del exterior",
+          "rol": "genera", "periodicidad": "por_pago",
+          "estado_confirmacion": "a_confirmar",
+          "nota": "Probable por pago de regalias/licencias de marcas internacionales (Heineken, Amstel, Budweiser)."
+        },
+        {
+          "id": "iibb_cm_sifere",
+          "nivel": "provincial_unificado", "organismo": "COMARB", "impuesto": "Ingresos Brutos",
+          "tipo": "informacion", "sistema": "SIFERE", "regimen": "Convenio Multilateral",
+          "rol": "responde", "periodicidad": "mensual_anual",
+          "estado_confirmacion": "confirmado_por_perfil",
+          "nota": "Contribuyente CM por operacion nacional."
+        },
+        {
+          "id": "iibb_agente_sircar",
+          "nivel": "provincial_unificado", "organismo": "COMARB", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "sistema": "SIRCAR",
+          "rol": "genera", "periodicidad": "quincenal_mensual",
+          "estado_confirmacion": "a_confirmar_designacion",
+          "nota": "Presentacion unificada de DDJJ de agente de retencion/percepcion IIBB de jurisdicciones adheridas."
+        },
+        {
+          "id": "iibb_sircreb",
+          "nivel": "provincial_unificado", "organismo": "COMARB", "impuesto": "Ingresos Brutos",
+          "tipo": "recaudacion_bancaria", "sistema": "SIRCREB",
+          "rol": "sufre", "periodicidad": "continua",
+          "estado_confirmacion": "alta_probabilidad_por_perfil",
+          "nota": "Recaudacion sobre acreditaciones bancarias; la sufre como contribuyente, no la genera."
+        },
+        {
+          "id": "iibb_santa_fe_api",
+          "nivel": "provincial", "organismo": "API Santa Fe", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "jurisdiccion": "Santa Fe",
+          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
+          "nota": "Sede y planta principal; alta probabilidad de designacion como agente."
+        },
+        {
+          "id": "iibb_arba",
+          "nivel": "provincial", "organismo": "ARBA", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "jurisdiccion": "Buenos Aires",
+          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
+          "nota": "Plantas Lujan/Ciudadela/Chascomus; alta probabilidad de designacion."
+        },
+        {
+          "id": "iibb_agip_caba",
+          "nivel": "provincial", "organismo": "AGIP", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "jurisdiccion": "CABA",
+          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion"
+        },
+        {
+          "id": "iibb_cordoba",
+          "nivel": "provincial", "organismo": "Rentas Cordoba", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "jurisdiccion": "Cordoba",
+          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion"
+        },
+        {
+          "id": "iibb_salta",
+          "nivel": "provincial", "organismo": "DGR Salta", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "jurisdiccion": "Salta",
+          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
+          "nota": "Planta en ciudad de Salta."
+        },
+        {
+          "id": "iibb_mendoza_atm",
+          "nivel": "provincial", "organismo": "ATM Mendoza", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "jurisdiccion": "Mendoza",
+          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion"
+        },
+        {
+          "id": "iibb_rio_negro",
+          "nivel": "provincial", "organismo": "ART Rio Negro", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion_percepcion", "jurisdiccion": "Rio Negro",
+          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
+          "nota": "Planta en Allen."
+        },
+        {
+          "id": "municipal_tish_drei",
+          "nivel": "municipal", "organismo": "Municipios", "impuesto": "Tasa de Seguridad e Higiene / DReI",
+          "tipo": "tasa_y_eventual_retencion", "jurisdiccion": "Segun huella (Santa Fe, Salta, Lujan, etc.)",
+          "rol": "responde_y_posible_genera", "estado_confirmacion": "a_relevar_por_huella",
+          "nota": "Tasa local donde hay planta/deposito; algunos municipios designan agente de retencion de DReI."
+        }
+      ]
+    }
+  ]
+}

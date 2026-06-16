@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Menter · Regímenes del cliente</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/static/menter.css" />
+<script defer src="/static/menter-ui.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .gradient-menter { background: linear-gradient(135deg, #0F6FC6 0%, #1F3864 100%); }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="gradient-menter text-white">
+  <div class="max-w-7xl mx-auto px-6 py-5">
+    <div class="text-xs tracking-widest text-blue-200">MENTER S.A.S.</div>
+    <div class="text-xl font-bold">Regímenes del cliente-agente</div>
+    <div class="text-sm text-blue-100">Información, retención y percepción que el cliente debe responder y generar</div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+  <div class="flex justify-between items-center gap-4 flex-wrap mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Huella fiscal por cliente</h1>
+      <p class="text-slate-500 text-sm">Distingue lo que el cliente <b>responde</b> (información), lo que <b>genera</b> (retención/percepción) y lo que <b>sufre</b>.</p>
+    </div>
+    <div class="flex gap-3 text-sm">
+      <a href="/regimenes" class="text-blue-600 hover:underline">Catálogo general</a>
+      <a href="/accesos" class="text-blue-600 hover:underline">Accesos</a>
+      <a href="/" class="text-blue-600 hover:underline">← Validador</a>
+    </div>
+  </div>
+
+  <p id="advertencia" class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 mb-6"></p>
+
+  <div id="clientes" class="space-y-8"></div>
+  <p id="vacio" class="hidden text-slate-500">No hay clientes-agentes cargados en <code>config/clientes_agentes.json</code>.</p>
+</main>
+
+<script>
+function kpi(label, value, cls) {
+  return `<div class="bg-white rounded-xl shadow-sm p-4 border-l-4 ${cls}"><div class="text-xs uppercase tracking-wide text-slate-500">${label}</div><div class="text-2xl font-bold">${value}</div></div>`;
+}
+
+function rolBadge(rol) {
+  const cls = {
+    genera: 'bg-rose-100 text-rose-700',
+    responde: 'bg-blue-100 text-blue-700',
+    sufre: 'bg-slate-100 text-slate-600',
+    responde_y_posible_genera: 'bg-violet-100 text-violet-700',
+  }[rol] || 'bg-slate-100 text-slate-600';
+  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${rol || '—'}</span>`;
+}
+
+function confBadge(estado) {
+  const ok = ['confirmado_por_perfil'].includes(estado);
+  const alta = ['alta_probabilidad_por_perfil'].includes(estado);
+  const cls = ok ? 'bg-emerald-100 text-emerald-700'
+    : alta ? 'bg-teal-100 text-teal-700'
+    : 'bg-orange-100 text-orange-700';
+  return `<span class="${cls} text-xs font-semibold px-2 py-1 rounded">${(estado || '—').replaceAll('_', ' ')}</span>`;
+}
+
+function nivelLabel(n) {
+  return { nacional: 'Nacional', provincial_unificado: 'Prov. unificado', provincial: 'Provincial', municipal: 'Municipal' }[n] || n;
+}
+
+function clienteBloque(c) {
+  const r = c.resumen || {};
+  const kpis = [
+    kpi('Regímenes', r.total || 0, 'border-blue-500'),
+    kpi('Genera', r.por_rol?.genera || 0, 'border-rose-500'),
+    kpi('Responde', r.por_rol?.responde || 0, 'border-teal-500'),
+    kpi('A confirmar', r.a_confirmar || 0, 'border-orange-500'),
+  ].join('');
+
+  const filas = (c.regimenes || []).map(x => `
+    <tr class="border-b border-slate-100 align-top">
+      <td class="p-2">${nivelLabel(x.nivel)}</td>
+      <td class="p-2"><div class="font-semibold">${x.sistema || x.regimen || x.impuesto || x.id}</div>
+        <div class="text-xs text-slate-500">${[x.impuesto, x.jurisdiccion, x.organismo].filter(Boolean).join(' · ')}</div>
+        ${x.nota ? `<div class="text-xs text-slate-400 mt-1">${x.nota}</div>` : ''}</td>
+      <td class="p-2 text-xs">${x.tipo || '—'}</td>
+      <td class="p-2">${rolBadge(x.rol)}</td>
+      <td class="p-2">${confBadge(x.estado_confirmacion)}</td>
+    </tr>`).join('');
+
+  return `<section class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex justify-between items-start gap-4 flex-wrap mb-4">
+      <div>
+        <h2 class="text-xl font-bold">${c.razon_social || c.cliente}</h2>
+        <div class="text-sm text-slate-500 font-mono">CUIT ${c.cuit}</div>
+        <div class="text-sm text-slate-500">${[c.condicion_iva, c.iibb, c.domicilio_fiscal].filter(Boolean).join(' · ')}</div>
+        ${c.grupo_economico ? `<div class="text-xs text-slate-400">Grupo: ${c.grupo_economico}</div>` : ''}
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">${kpis}</div>
+    ${c.como_figura_hoy_en_repo ? `<div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-5 text-xs text-slate-600"><b>Rol actual en padrones:</b> ${c.como_figura_hoy_en_repo.detalle}</div>` : ''}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600"><tr>
+          <th class="text-left p-2">Nivel</th>
+          <th class="text-left p-2">Régimen / Sistema</th>
+          <th class="text-left p-2">Tipo</th>
+          <th class="text-left p-2">Rol</th>
+          <th class="text-left p-2">Confirmación</th>
+        </tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+async function cargar() {
+  const r = await fetch('/api/clientes-agentes');
+  const data = await r.json();
+  if (data.advertencia) {
+    const el = document.getElementById('advertencia');
+    el.textContent = '⚠ ' + data.advertencia;
+    el.classList.remove('hidden');
+  }
+  const clientes = data.clientes || [];
+  if (!clientes.length) {
+    document.getElementById('vacio').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('clientes').innerHTML = clientes.map(clienteBloque).join('');
+}
+
+cargar();
+</script>
+</body>
+</html>

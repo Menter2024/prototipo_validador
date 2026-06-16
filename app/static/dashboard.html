@@ -22,6 +22,10 @@
     <div class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Riesgo de proveedores</h2><div id="risk-chart" class="space-y-3"></div></div>
     <div class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Próximas acciones por rol</h2><div id="actions" class="space-y-3 text-sm"></div></div>
   </section>
+  <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex justify-between gap-3 mb-3"><h2 class="text-xl font-bold">Regímenes del cliente</h2><a href="/clientes-agentes" class="text-blue-600 hover:underline text-sm">ver mapa completo</a></div>
+    <div id="regimenes-cliente" class="grid md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+  </section>
   <section class="grid lg:grid-cols-3 gap-6">
     <div class="bg-white rounded-xl shadow-sm p-6 lg:col-span-2"><div class="flex justify-between gap-3 mb-3"><h2 class="text-xl font-bold">Últimos legajos</h2><a href="/legajos" class="text-blue-600 hover:underline text-sm">ver todos</a></div><div id="legajos" class="grid md:grid-cols-2 gap-3"></div></div>
     <div class="bg-white rounded-xl shadow-sm p-6"><h2 class="text-xl font-bold mb-3">Salud operativa</h2><div id="ops" class="space-y-3 text-sm"></div></div>
@@ -55,7 +59,7 @@ function actionFor(role, ctx) {
 }
 async function cargar() {
   const savedRole = localStorage.getItem(roleKey) || 'impuestos'; role.value = savedRole;
-  const [legajosData, fuentesData, padronesData, accesosData, mvp] = await Promise.all([fetch('/api/legajos').then(r=>r.json()), fetch('/api/fuentes').then(r=>r.json()), fetch('/api/padrones').then(r=>r.json()), fetch('/api/accesos').then(r=>r.json()), fetch('/api/mvp/status').then(r=>r.json())]);
+  const [legajosData, fuentesData, padronesData, accesosData, mvp, clientesData] = await Promise.all([fetch('/api/legajos').then(r=>r.json()), fetch('/api/fuentes').then(r=>r.json()), fetch('/api/padrones').then(r=>r.json()), fetch('/api/accesos').then(r=>r.json()), fetch('/api/mvp/status').then(r=>r.json()), fetch('/api/clientes-agentes').then(r=>r.json()).catch(()=>({clientes:[]}))]);
   const legajos = legajosData.legajos || []; const s = summarizeLegajos(legajos); const total = s.proveedores || 0;
   const padrones = padronesData.padrones || []; const padOk = padrones.filter(p => p.status === 'disponible').length; const alerts = (fuentesData.alertas || []).length; const pendingAccess = (accesosData.requisitos?.items || []).filter(i => ['pendiente','faltante','sin_acceso'].includes(i.estado_acceso)).length;
   document.getElementById('kpis').innerHTML = [kpi('Legajos', legajos.length, 'corridas generadas', 'info'), kpi('Proveedores', total, 'evaluados en legajos', 'info'), kpi('Aprobables', s.counts.APROBABLE || 0, 'sin observación crítica', 'ok'), kpi('Observados', (s.counts.OBSERVADO||0)+(s.counts.REVISION_MANUAL||0), 'requieren acción', 'warn'), kpi('Bloqueados', s.counts.BLOQUEAR || 0, 'riesgo alto', (s.counts.BLOQUEAR||0) ? 'bad':'ok'), kpi('Storage', mvp.storage || 'local', 'MVP backend', mvp.storage==='supabase'?'ok':'warn')].join('');
@@ -64,6 +68,8 @@ async function cargar() {
   document.getElementById('actions').innerHTML = actionFor(role.value, ctx).map(a => `<a href="${a[1]}" class="block border border-slate-200 rounded-xl p-4 hover:bg-slate-50"><div class="font-bold text-blue-600">${a[0]}</div><div class="text-slate-500 mt-1">${a[2]}</div></a>`).join('');
   document.getElementById('legajos').innerHTML = legajos.slice(0,6).map(l => { const first = (l.resumen||[])[0] || {}; return `<a href="/legajos/${l.id}" class="block border border-slate-200 rounded-xl p-4 hover:bg-slate-50"><div class="flex justify-between gap-2"><b>${l.creado_en || '—'}</b>${pill(`${l.total_proveedores} prov.`, 'info')}</div><div class="text-sm text-slate-600 mt-2 font-mono">${first.cuit || '—'}</div><div class="text-sm text-slate-500">${first.razon_social || 'Sin resumen'}</div>${pill(first.decision || '—', decisionKind(first.decision_estado))}</a>`; }).join('') || '<div class="text-slate-500">Todavía no hay legajos.</div>';
   document.getElementById('ops').innerHTML = [`Padrones cargados: <b>${padOk}/${padrones.length}</b>`, `Alertas de fuentes: <b>${alerts}</b>`, `Accesos pendientes: <b>${pendingAccess}</b>`, `AFIP live en legajos: <b>${total ? Math.round(s.live*100/total) : 0}%</b>`].map(x => `<div class="border rounded-xl p-4">${x}</div>`).join('');
+  const clientes = (clientesData && clientesData.clientes) || [];
+  document.getElementById('regimenes-cliente').innerHTML = clientes.map(c => { const r = c.resumen || {}; return `<a href="/clientes-agentes" class="block border border-slate-200 rounded-xl p-4 hover:bg-slate-50"><div class="font-bold">${c.razon_social || c.cliente}</div><div class="text-xs text-slate-500 font-mono mb-2">CUIT ${c.cuit}</div><div class="flex flex-wrap gap-1">${pill(`${r.total||0} regímenes`,'info')}${pill(`${r.por_rol?.genera||0} genera`,'bad')}${pill(`${r.por_rol?.responde||0} responde`,'info')}${pill(`${r.a_confirmar||0} a confirmar`,'warn')}</div></a>`; }).join('') || '<div class="text-slate-500">Sin clientes-agentes cargados.</div>';
 }
 role.addEventListener('change', () => { localStorage.setItem(roleKey, role.value); cargar(); });
 cargar();

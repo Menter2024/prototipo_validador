@@ -13,6 +13,7 @@
     ["/fuentes", "Fuentes"],
     ["/fuentes-pendientes", "Cola asistida"],
     ["/regimenes", "Regímenes"],
+    ["/clientes-agentes", "Regímenes del cliente"],
     ["/accesos", "Accesos"],
     ["/info", "Diagnóstico"],
   ];
@@ -22,6 +23,7 @@
     "/lotes": ["Validación masiva", "Carga Excel/CSV para revisar proveedores por lote y generar evidencia consolidada."],
     "/padrones": ["Administración de padrones", "Carga, previsualización, calidad, vigencia e indexación de padrones fiscales."],
     "/regimenes": ["Mapa de regímenes fiscales", "Catálogo operativo de obligaciones nacionales, provinciales y municipales."],
+    "/clientes-agentes": ["Regímenes del cliente-agente", "Información, retención y percepción que el cliente debe responder y generar."],
     "/fuentes": ["Monitor de fuentes oficiales", "Seguimiento de organismos, descargas, evidencia y disponibilidad."],
     "/fuentes-pendientes": ["Cola asistida", "Tareas que requieren credenciales, navegador, evidencia o intervención humana."],
     "/accesos": ["Accesos fiscales", "Gestión de permisos, exportaciones y responsables por CUIT agente."],

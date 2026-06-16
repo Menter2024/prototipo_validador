@@ -8,6 +8,7 @@
 - `padron_layouts.json` defines import layouts and field mappings.
 - `regimenes_catalogo.json` defines fiscal regime backlog/coverage.
 - `portal_adapters.json` defines portal automation metadata.
+- `clientes_agentes.json` defines per-client fiscal footprint: regimes (information/withholding/perception) a client must respond to or generate, with confirmation status. Consumed by `app/modules/clientes_agentes.py` and exposed at `/api/clientes-agentes` and `/clientes-agentes`.
 
 ## Local Contracts
 - Config changes that affect runtime behavior require corresponding module/script tests.
