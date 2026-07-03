@@ -19,3 +19,7 @@ dev = [
 automation = [
   "playwright>=1.44",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

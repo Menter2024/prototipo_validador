@@ -279,6 +279,13 @@ Estructura:
 
 Luego abrir http://localhost:8000.
 
+## Tests
+
+    pip install -r requirements.txt -r requirements-dev.txt
+    pytest
+
+La suite corre además en GitHub Actions (.github/workflows/ci.yml) en cada push/PR a main.
+
 ## Deploy
 
 El repo incluye render.yaml para Render. El sitio queda protegido con Basic Auth. /healthz y /api/info quedan públicos para health check y diagnóstico no sensible.
