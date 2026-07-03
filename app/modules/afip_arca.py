@@ -81,7 +81,7 @@ DEMO_DATA = {
         "domicilio_fiscal": "HIPOLITO YRIGOYEN 370, CABA",
         "actividad_principal": "Administración pública",
         "fecha_inicio": "01/01/1997",
-        "en_apoc": False,
+        "en_apoc": None,
     },
     "30500010912": {
         "razon_social": "BANCO DE LA NACION ARGENTINA",
@@ -92,7 +92,7 @@ DEMO_DATA = {
         "domicilio_fiscal": "BARTOLOME MITRE 326, CABA",
         "actividad_principal": "Intermediación financiera",
         "fecha_inicio": "01/01/1891",
-        "en_apoc": False,
+        "en_apoc": None,
     },
     "30546689979": {
         "razon_social": "YPF SOCIEDAD ANONIMA",
@@ -103,7 +103,7 @@ DEMO_DATA = {
         "domicilio_fiscal": "MACACHA GUEMES 515, CABA",
         "actividad_principal": "Extracción de petróleo crudo",
         "fecha_inicio": "01/01/1922",
-        "en_apoc": False,
+        "en_apoc": None,
     },
 }
 
@@ -452,7 +452,9 @@ def _parse_persona(resp: dict) -> dict:
         "domicilio_fiscal": dom_str,
         "actividad_principal": act_str,
         "fecha_inicio": fecha,
-        "en_apoc": False,  # APOC requiere otro WSID — pendiente fase 1
+        # La consulta a base APOC requiere otro WSID todavía no integrado.
+        # None = NO VERIFICADO; nunca informar False sin consulta real.
+        "en_apoc": None,
     }
 
 

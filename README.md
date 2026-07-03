@@ -139,7 +139,9 @@ Estados:
 - REVISIÓN MANUAL
 - BLOQUEAR
 
-Evalúa CUIT inválido, AFIP/ARCA, estado fiscal, APOC, monotributo, padrones IIBB, fuentes pendientes y hallazgos online.
+Evalúa CUIT inválido, AFIP/ARCA, estado fiscal, monotributo, padrones IIBB, fuentes pendientes y hallazgos online.
+
+Sobre APOC/facturación apócrifa: la consulta a la base APOC todavía no está integrada (requiere un web service propio). El sistema reporta ese control como "NO VERIFICADO" y deriva a revisión manual; nunca afirma que un CUIT no figura en APOC sin consulta real.
 
 Módulo: app/modules/riesgo_fiscal.py
 

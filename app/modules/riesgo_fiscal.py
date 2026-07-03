@@ -49,6 +49,13 @@ def evaluar(resultado: dict) -> dict:
         estado = _max_estado(estado, "BLOQUEAR")
         motivos.append("El CUIT figura vinculado a base APOC/facturación apócrifa.")
         recomendaciones.append("Derivar a Impuestos/Compliance antes de cualquier alta o pago.")
+    elif resultado.get("valido") and afip.get("encontrado") is not False and afip.get("en_apoc") is None:
+        estado = _max_estado(estado, "REVISION_MANUAL")
+        motivos.append(
+            "Verificación contra base APOC no realizada (integración pendiente); "
+            "no hay evidencia para descartar facturación apócrifa."
+        )
+        recomendaciones.append("Verificar APOC manualmente en ARCA antes de aprobar.")
 
     condicion_iva = (afip.get("condicion_iva") or "").upper()
     if "MONOTRIBUTO" in condicion_iva:

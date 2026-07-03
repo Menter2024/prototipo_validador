@@ -220,7 +220,7 @@ function renderResults(data) {
     decision.label = label(decision.estado === 'REVISION_MANUAL' ? 'REVISION_MANUAL' : decision.label);
     const modo = (r.modo_afip || 'demo').toLowerCase();
     const sourceBadge = `<span class="source-${modo} text-xs font-semibold px-2 py-1 rounded">${modo === 'live' ? 'Fuente live' : 'Demo/fallback'}</span>`;
-    const apoc = afip.en_apoc === true ? '<span class="text-rose-700 font-bold">Sí — revisar</span>' : (afip.en_apoc === false ? '<span class="text-emerald-700">No</span>' : '<span class="text-slate-500">—</span>');
+    const apoc = afip.en_apoc === true ? '<span class="text-rose-700 font-bold">Sí — revisar</span>' : (afip.en_apoc === false ? '<span class="text-emerald-700">No</span>' : '<span class="text-amber-700 font-semibold">No verificado — pendiente de integración</span>');
     const iibbArca = afip.inscripciones_iibb || {};
     const iibbArcaTxt = (iibbArca.jurisdicciones || []).length ? `${iibbArca.regimen || 'IIBB'}: ${(iibbArca.jurisdicciones || []).join(', ')}` : 'Sin jurisdicciones CM/IIBB normalizadas en ARCA.';
     const pads = r.padrones || {};

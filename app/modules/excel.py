@@ -152,8 +152,8 @@ def generar(resultados: list, ruta_salida: Path) -> Path:
         row = 4 + ri
         en_apoc = afip.get("en_apoc")
         iibb = afip.get("inscripciones_iibb") or {}
-        apoc_text = "SÍ" if en_apoc else ("NO" if en_apoc is False else "—")
-        apoc_status = "error" if en_apoc else "ok" if en_apoc is False else None
+        apoc_text = "SÍ" if en_apoc else ("NO" if en_apoc is False else "NO VERIFICADO")
+        apoc_status = "error" if en_apoc else "ok" if en_apoc is False else "warn"
         vals = [
             r.get("cuit", "—"),
             afip.get("razon_social", "—"),
