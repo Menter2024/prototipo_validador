@@ -21,7 +21,7 @@
 - When editing generated/data-heavy areas, avoid normalizing or re-saving full datasets unless explicitly requested.
 
 ## Verification
-- Run targeted `pytest` for changed behavior when relevant.
+- Run targeted `pytest` for changed behavior when relevant. The full suite also runs in GitHub Actions (`.github/workflows/ci.yml`) on every push/PR to `main`; install test deps with `pip install -r requirements-dev.txt`.
 - For pure DOX/doc changes, verify by checking the DOX chain and `git diff --check`.
 - Before committing critical staged changes, run `python scripts/check_dox.py --mode staged` to confirm docs/tests/AGENTS review is present.
 - For padron/importer changes, include tests or scripts that prove the affected source/layout.

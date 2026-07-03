@@ -126,6 +126,14 @@ Cada paso es testeable de forma aislada, lo cual encaja con la disciplina de tes
 
 ---
 
+## Estado de ejecución (actualizado 2026-07-03)
+
+Auditoría técnico-fiscal de julio 2026 (Sprint 0 "Blindaje P0 fiscal") ejecutó correcciones que este plan no había detectado, además de ítems propios:
+
+- **Hecho antes de julio:** B1 (hoja "Matriz tributaria" en el Excel).
+- **Sprint 0 (2026-07-03):** APOC pasa a "NO VERIFICADO" con derivación a revisión manual (relacionado a A2: ningún APROBABLE puede salir sin verificación APOC); fix del dígito verificador (DV calculado 10 ya no se acepta como 9); los padrones dejaron de afirmar "no aplica retención/percepción" para CUITs no incluidos; la vigencia del padrón ahora impacta consulta, decisión y matriz; CI en GitHub Actions con la suite completa.
+- **Pendiente:** A1 (reglas tributarias parametrizadas con vigencia), A3-A8, B2-B6, C1-C8, D1-D4.
+
 ## Fuentes (verificación normativa 2026)
 
 - SIRE — Sistema Integral de Retenciones Electrónicas (ARCA): https://www.afip.gob.ar/sire/
