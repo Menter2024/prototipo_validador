@@ -5,6 +5,7 @@ Endpoints:
   POST /api/validar -> recibe lista de CUITs y devuelve resultados
   GET  /api/excel/{filename} -> descarga del Excel generado
 """
+import logging
 import os
 import asyncio
 import base64
@@ -48,6 +49,7 @@ EVIDENCIAS_FUENTES_DIR = SALIDAS_DIR / "evidencias" / "fuentes"
 PADRON_UPLOAD_SYNC_MAX_MB = float(os.environ.get("PADRON_UPLOAD_SYNC_MAX_MB", "8"))
 
 app = FastAPI(title="Menter · Validación de Alta de Proveedores")
+logger = logging.getLogger("menter")
 
 
 def _padron_sync_limit_bytes() -> int:
@@ -243,7 +245,7 @@ async def validar_endpoint(req: ValidarRequest):
     filename = f"validacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
-    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR)
+    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR, PADRONES_DIR)
     tareas_asistidas = fuentes_pendientes.crear_desde_resultados(SALIDAS_DIR, resultados, legajo["id"])
 
     return {
@@ -297,7 +299,7 @@ async def validar_excel_endpoint(
     filename = f"validacion_lote_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
-    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR)
+    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR, PADRONES_DIR)
     tareas_asistidas = fuentes_pendientes.crear_desde_resultados(SALIDAS_DIR, resultados, legajo["id"])
     return {
         "resultados": resultados,
@@ -627,8 +629,8 @@ async def importar_padron_endpoint(
             )
             try:
                 supabase_mvp.sync_acceso(acceso)
-            except Exception:
-                pass
+            except Exception as sync_error:
+                logger.warning("No se pudo sincronizar el acceso %s a Supabase: %s", acceso.get("id"), sync_error)
         try:
             supabase_sync = supabase_mvp.sync_padron_importado(
                 archivo_local=destino_tmp,

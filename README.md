@@ -177,6 +177,10 @@ Cada validación genera evidencia auditable:
 
 - ID único;
 - fecha/hora;
+- sellado al crear: estado "cerrado" + hash SHA256 del contenido completo;
+- verificación de integridad al consultar el legajo (detecta adulteración);
+- versiones de los catálogos de reglas aplicados (regímenes y clientes-agentes);
+- snapshot del manifest de padrones usados (período, hash, vigencia);
 - CUIT y razón social;
 - decisión fiscal;
 - motivos y recomendaciones;
