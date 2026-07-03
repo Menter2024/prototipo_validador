@@ -72,9 +72,18 @@ def validar(cuit: str) -> dict:
     if dv_calculado == 11:
         dv_calculado = 0
     elif dv_calculado == 10:
-        # Caso especial: se permite recalcular con otro prefijo, pero
-        # convencionalmente se considera inválido si no coincide.
-        dv_calculado = 9
+        # Regla ARCA: si el cálculo da 10, no existe CUIT válido con ese
+        # cuerpo (en la asignación se cambia el prefijo a 23 y se recalcula).
+        return {
+            "cuit": formatear(c),
+            "cuit_limpio": c,
+            "valido": False,
+            "tipo": tipo_persona(c),
+            "mensaje": (
+                "El cuerpo del CUIT no admite dígito verificador válido "
+                "(el cálculo da 10); el CUIT es inexistente según el algoritmo de ARCA."
+            ),
+        }
 
     dv_real = int(c[10])
     valido = dv_calculado == dv_real
