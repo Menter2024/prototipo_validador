@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "actualizado": "2026-05-26",
-  "criterio": "Catálogo operativo inicial de regímenes argentinos de retención, percepción, recaudación e información. No calcula alícuotas; clasifica integración, evidencia y seguimiento.",
+  "version": 2,
+  "actualizado": "2026-07-03",
+  "criterio": "Catálogo operativo inicial de regímenes argentinos de retención, percepción, recaudación e información. No calcula alícuotas; clasifica integración, evidencia y seguimiento. v2 (2026-07-03): SIRE y SICORE modelados como sistemas separados que conviven; calendarios 2026 referenciados a norma verificada, sin fechas hardcodeadas (las fechas puntuales se reprograman durante el año y deben consultarse en la fuente oficial).",
   "regimenes": [
     {
       "id": "arca_ganancias_rg830",
@@ -92,8 +92,8 @@
       "impuesto_tasa": "Ganancias/IVA/Seguridad Social",
       "tipo": "informacion",
       "familia": "sire_certificacion",
-      "nombre": "SIRE · Sistema Integral de Retenciones Electrónicas",
-      "hecho_disparador": "Información y certificación de retenciones/percepciones alcanzadas por SIRE",
+      "nombre": "SIRE · Sistema Integral de Retenciones Electrónicas (RG 3726)",
+      "hecho_disparador": "Información y certificación de retenciones/percepciones de los regímenes migrados a SIRE (IVA, Seguridad Social, Ganancias beneficiarios del exterior)",
       "sujeto_agente": "Agentes de retención/percepción obligados",
       "sujeto_pasible": "Sujetos retenidos/percibidos",
       "base_calculo": "Importes retenidos/percibidos por régimen",
@@ -110,7 +110,52 @@
       "fuentes": [
         "https://www.arca.gob.ar/sire/",
         "https://www.arca.gob.ar/sire/ayuda/normativa.asp"
-      ]
+      ],
+      "norma_base": "RG (AFIP) 3726/2015 y modificatorias",
+      "nota_convivencia": "Convive con SICORE (RG 2233): cada régimen de retención/percepción define por cuál sistema se informa y certifica. Ver arca_sicore.",
+      "calendario_2026": {
+        "esquema": "DDJJ mensual + pago a cuenta quincenal, por terminación de CUIT, según agenda oficial de vencimientos ARCA 2026.",
+        "norma_calendario": "Agenda de vencimientos ARCA 2026. Antecedente de reprogramación: RG (ARCA) 5652/2025 prorrogó vencimientos feb-abr 2025 por feriados.",
+        "fechas_hardcodeadas": false,
+        "fuente": "https://www.afip.gob.ar/vencimientos/"
+      },
+      "norma_verificada_al": "2026-07-03"
+    },
+    {
+      "id": "arca_sicore",
+      "nivel": "nacional",
+      "jurisdiccion": "Nación",
+      "organismo": "ARCA",
+      "impuesto_tasa": "Ganancias/IVA (regímenes no migrados a SIRE)",
+      "tipo": "informacion",
+      "familia": "sicore_certificacion",
+      "nombre": "SICORE · Sistema de Control de Retenciones (RG 2233)",
+      "hecho_disparador": "Información e ingreso de retenciones/percepciones de los regímenes que permanecen en SICORE (p. ej. Ganancias RG 830)",
+      "sujeto_agente": "Agentes de retención/percepción obligados",
+      "sujeto_pasible": "Sujetos retenidos/percibidos",
+      "base_calculo": "Importes retenidos/percibidos por régimen",
+      "alicuota_fuente": "regimen_origen",
+      "padron_fuente": "ARCA",
+      "periodicidad": "segun_vencimiento_arca",
+      "sistema_presentacion": "SICORE",
+      "credenciales_requeridas": true,
+      "automatizacion": "portal_credenciales_api_si_disponible",
+      "evidencia_requerida": "certificados_sire_acuse_presentacion",
+      "riesgo_operativo": "alto",
+      "estado_integracion": "pendiente_catalogado",
+      "prioridad": "P0",
+      "fuentes": [
+        "https://servicioscf.afip.gob.ar/publico/abc/ABCpaso2.aspx?cat=3285"
+      ],
+      "norma_base": "RG (AFIP) 2233/2007 y modificatorias",
+      "nota_convivencia": "Convive con SIRE (RG 3726). Verificado con caso real: CICSA informa Ganancias RG 830 por SICORE y los regímenes de IVA por SIRE desde 2020.",
+      "calendario_2026": {
+        "esquema": "DDJJ mensual + pago a cuenta quincenal, por terminación de CUIT, según agenda oficial de vencimientos ARCA 2026.",
+        "norma_calendario": "Agenda de vencimientos ARCA 2026. Antecedente de reprogramación: RG (ARCA) 5652/2025 prorrogó vencimientos feb-abr 2025 por feriados.",
+        "fechas_hardcodeadas": false,
+        "fuente": "https://www.afip.gob.ar/vencimientos/"
+      },
+      "norma_verificada_al": "2026-07-03"
     },
     {
       "id": "arca_libro_iva_digital_iva_simple",
@@ -192,7 +237,14 @@
       "prioridad": "P1",
       "fuentes": [
         "https://www.ca.gob.ar/sistemas/sircar"
-      ]
+      ],
+      "calendario_2026": {
+        "esquema": "Presentación y pago a partir del 5º día hábil de cada mes para los anticipos reprogramados (segunda quincena/mensual de enero, febrero, mayo, julio y octubre, Disposición CA 1/2026); resto de períodos según anexo RG CA 21/2025.",
+        "norma_calendario": "RG CA 21/2025 (calendario SIRCAR 2026), modificada por Disposición CA 1/2026 (BO 23/01/2026) y RG CA 2/2026 (BO 18/02/2026).",
+        "fechas_hardcodeadas": false,
+        "fuente": "https://www.ca.gob.ar/comarb-generales/download/451-2025/8628-rg-21-vencimientos-sircar-2026"
+      },
+      "norma_verificada_al": "2026-07-03"
     },
     {
       "id": "comarb_sircreb",
@@ -219,7 +271,14 @@
       "prioridad": "P1",
       "fuentes": [
         "https://www.argentina.gob.ar/economia/politicatributaria/armonizacion/comarb"
-      ]
+      ],
+      "calendario_2026": {
+        "esquema": "Calendario anual 2026 publicado por la Comisión Arbitral para los sistemas COMARB.",
+        "norma_calendario": "RG CA 20 a 24/2025 (calendarios 2026); la resolución específica de este sistema debe confirmarse contra ca.gob.ar.",
+        "fechas_hardcodeadas": false,
+        "fuente": "https://www.ca.gob.ar/"
+      },
+      "norma_verificada_al": "2026-07-03"
     },
     {
       "id": "comarb_sirtac",
@@ -246,7 +305,14 @@
       "prioridad": "P1",
       "fuentes": [
         "https://www.ca.gob.ar/preguntas-frecuentes/sistemas/sirtac"
-      ]
+      ],
+      "calendario_2026": {
+        "esquema": "Calendario anual 2026 publicado por la Comisión Arbitral para los sistemas COMARB.",
+        "norma_calendario": "RG CA 20 a 24/2025 (calendarios 2026); la resolución específica de este sistema debe confirmarse contra ca.gob.ar.",
+        "fechas_hardcodeadas": false,
+        "fuente": "https://www.ca.gob.ar/"
+      },
+      "norma_verificada_al": "2026-07-03"
     },
     {
       "id": "comarb_sircupa",
@@ -273,7 +339,14 @@
       "prioridad": "P1",
       "fuentes": [
         "https://www.ca.gob.ar/sistemas/sircupa"
-      ]
+      ],
+      "calendario_2026": {
+        "esquema": "Calendario anual 2026 publicado por la Comisión Arbitral para los sistemas COMARB.",
+        "norma_calendario": "RG CA 20 a 24/2025 (calendarios 2026); la resolución específica de este sistema debe confirmarse contra ca.gob.ar.",
+        "fechas_hardcodeadas": false,
+        "fuente": "https://www.ca.gob.ar/"
+      },
+      "norma_verificada_al": "2026-07-03"
     },
     {
       "id": "comarb_sirpei",
@@ -327,7 +400,14 @@
       "prioridad": "P2",
       "fuentes": [
         "https://www.argentina.gob.ar/economia/politicatributaria/armonizacion/comarb"
-      ]
+      ],
+      "calendario_2026": {
+        "esquema": "Calendario anual 2026 publicado por la Comisión Arbitral para los sistemas COMARB.",
+        "norma_calendario": "RG CA 20 a 24/2025 (calendarios 2026); la resolución específica de este sistema debe confirmarse contra ca.gob.ar.",
+        "fechas_hardcodeadas": false,
+        "fuente": "https://www.ca.gob.ar/"
+      },
+      "norma_verificada_al": "2026-07-03"
     },
     {
       "id": "comarb_sircip",

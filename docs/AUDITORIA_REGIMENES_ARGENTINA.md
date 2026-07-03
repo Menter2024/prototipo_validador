@@ -168,3 +168,15 @@ Para CAPTCHA, credenciales, ordenanzas PDF, portales no automatizables y fuentes
 ## Próximo desarrollo sugerido
 
 Crear módulo `app/modules/regimenes_catalogo.py` y endpoint `GET /api/regimenes` para visualizar el mapa, filtrar por nivel/prioridad/automatización y convertirlo en backlog operativo.
+
+## Verificación normativa 2026-07-03 — SIRE/SICORE y calendarios 2026 (catálogo v2)
+
+Cambios aplicados a `config/regimenes_catalogo.json` (versión 2):
+
+- **SIRE y SICORE quedan modelados como sistemas separados que conviven**: `arca_sire` (RG AFIP 3726/2015 — IVA, Seguridad Social y Ganancias beneficiarios del exterior) y `arca_sicore` nuevo (RG AFIP 2233/2007 — regímenes no migrados, p. ej. Ganancias RG 830). Verificado con caso real: la constancia ARCA de CICSA (05/2026) muestra Ganancias por SICORE y los regímenes de IVA por SIRE desde 2020.
+- **Calendario 2026 referenciado a norma, sin fechas hardcodeadas.** Criterio: las fechas puntuales se reprograman durante el año (ya ocurrió dos veces en 2026), por lo que el catálogo registra la norma del calendario, el esquema, la fuente oficial y el campo `norma_verificada_al`.
+  - SIRCAR: RG CA 21/2025 (calendario 2026), modificada por **Disposición CA 1/2026** (BO 23/01/2026: presentación/pago desde el 5º día hábil para los anticipos de segunda quincena/mensuales de enero, febrero, mayo, julio y octubre) y **RG CA 2/2026** (BO 18/02/2026).
+  - SIRCREB / SIRTAC / SIRCUPA / SIFERE: RG CA 20 a 24/2025 (calendarios 2026); la resolución específica de cada sistema debe confirmarse contra ca.gob.ar.
+  - SIRE/SICORE: DDJJ mensual + pago a cuenta quincenal por terminación de CUIT según la agenda oficial de vencimientos ARCA. Aclaración: la RG 5652/2025 fue una prórroga puntual feb-abr 2025 por feriados, no el calendario anual (corrige la referencia del plan de junio).
+
+Fuentes: Boletín Oficial (RG CA 21/2025, Disposición CA 1/2026, RG CA 2/2026, RG ARCA 5652/2025), ca.gob.ar y afip.gob.ar/vencimientos.

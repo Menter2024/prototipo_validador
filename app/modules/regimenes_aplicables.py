@@ -158,12 +158,13 @@ def _evaluar_nacional(regimen: dict[str, Any], resultado: dict[str, Any]) -> dic
                 "Confirmar tipo de operación/comprobante y certificados de exclusión antes de calcular importes.",
             )
         return None
-    if regimen_id == "arca_sire" and (activo and (_hay_dato_fiscal(cond_iva) or _hay_dato_fiscal(cond_gan))):
+    if regimen_id in {"arca_sire", "arca_sicore"} and (activo and (_hay_dato_fiscal(cond_iva) or _hay_dato_fiscal(cond_gan))):
+        sistema = "SIRE" if regimen_id == "arca_sire" else "SICORE"
         return _item(
             regimen,
             "potencial",
-            motivos_base + ["Hay impuestos nacionales normalizados que pueden requerir certificación SIRE/SICORE."],
-            "Usar SIRE/SICORE solo si se practica retención/percepción en una operación concreta.",
+            motivos_base + [f"Hay impuestos nacionales normalizados que pueden requerir certificación {sistema}."],
+            f"Usar {sistema} solo si se practica retención/percepción en una operación concreta; el sistema depende del régimen aplicado.",
         )
     return None
 

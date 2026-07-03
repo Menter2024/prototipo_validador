@@ -39,7 +39,7 @@ def test_regimenes_catalogo_es_json_valido_y_con_ids_unicos():
     regimenes = data["regimenes"]
     ids = [r["id"] for r in regimenes]
 
-    assert data["version"] == 1
+    assert isinstance(data["version"], int) and data["version"] >= 2
     assert len(regimenes) >= 20
     assert len(ids) == len(set(ids))
 
