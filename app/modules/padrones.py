@@ -218,7 +218,11 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
         if not res and disponible_supabase:
             resultados[provincia] = {
                 "status": "no_inscripto",
-                "detalle": "El CUIT no figura en este padrón Supabase activo (no aplica retención/percepción).",
+                "detalle": (
+                    "El CUIT no figura en este padrón Supabase activo. El tratamiento del sujeto no "
+                    "incluido depende del régimen de la jurisdicción (puede corresponder alícuota "
+                    "general, residual o máxima); confirmar la norma vigente antes de definir no retener/percibir."
+                ),
                 "nombre": cfg["nombre"],
                 "prioridad": cfg["prioridad"],
                 "fuente": "supabase",
@@ -240,7 +244,11 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
         else:
             resultados[provincia] = {
                 "status": "no_inscripto",
-                "detalle": "El CUIT no figura en este padrón (no aplica retención/percepción).",
+                "detalle": (
+                    "El CUIT no figura en este padrón. El tratamiento del sujeto no incluido depende "
+                    "del régimen de la jurisdicción (puede corresponder alícuota general, residual o "
+                    "máxima); confirmar la norma vigente antes de definir no retener/percibir."
+                ),
                 "nombre": cfg["nombre"],
                 "prioridad": cfg["prioridad"],
             }

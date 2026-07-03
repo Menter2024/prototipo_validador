@@ -2,6 +2,22 @@
 
 No liquida impuestos; consolida información fiscal para que Impuestos decida.
 """
+from app.modules import regimenes_catalogo
+
+# georef/ARCA pueden nombrar CABA con su denominación larga.
+_JURISDICCION_CANON = {
+    "Ciudad Autónoma de Buenos Aires": "CABA",
+    "Capital Federal": "CABA",
+}
+
+
+def _jurisdicciones_detectadas(resultado: dict) -> set[str]:
+    afip = resultado.get("afip", {})
+    detectadas = set((afip.get("inscripciones_iibb") or {}).get("jurisdicciones") or [])
+    provincia_geo = (resultado.get("georef") or {}).get("provincia")
+    if provincia_geo:
+        detectadas.add(provincia_geo)
+    return {_JURISDICCION_CANON.get(j, j) for j in detectadas}
 
 
 def generar(resultado: dict) -> dict:
@@ -65,6 +81,17 @@ def generar(resultado: dict) -> dict:
             alertas.append(f"Sin padrón cargado para {prov}; no se puede confirmar inscripción local ni determinar alícuota IIBB.")
         elif p.get("status") in {"consulta_manual", "requiere_credenciales"}:
             alertas.append(f"{prov}: fuente requiere consulta manual/credenciales para confirmar inscripción IIBB y alícuotas.")
+
+    # Jurisdicciones con presencia detectada donde el CUIT no figura en padrón:
+    # la ausencia NO implica "no retener"; el tratamiento depende del régimen local.
+    for jurisdiccion in sorted(_jurisdicciones_detectadas(resultado)):
+        padron_key = regimenes_catalogo.PADRON_BY_JURISDICCION.get(jurisdiccion)
+        if padron_key and padrones.get(padron_key, {}).get("status") == "no_inscripto":
+            alertas.append(
+                f"{jurisdiccion}: el CUIT no figura en el padrón cargado; definir el tratamiento del "
+                "sujeto no incluido según el régimen local (puede corresponder alícuota general, "
+                "residual o máxima) antes de liquidar."
+            )
 
     if "MONOTRIBUTO" in str(condicion_iva).upper():
         alertas.append("Proveedor monotributista: controlar categoría y compatibilidad con monto/actividad antes de aplicar tratamiento fiscal.")
