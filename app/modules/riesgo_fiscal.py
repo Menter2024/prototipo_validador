@@ -79,6 +79,12 @@ def evaluar(resultado: dict) -> dict:
         motivos.append("Figura en padrones provinciales de IIBB: " + ", ".join(inscripto_iibb) + ".")
         recomendaciones.append("Aplicar alícuotas de retención/percepción vigentes según jurisdicción.")
 
+    vencidos = [prov for prov, p in padrones.items() if p.get("vigencia_estado") == "vencido"]
+    if vencidos:
+        estado = _max_estado(estado, "OBSERVADO")
+        motivos.append("Padrones vencidos utilizados en la consulta: " + ", ".join(vencidos) + ".")
+        recomendaciones.append("Recargar padrón vigente y revalidar antes de liquidar retenciones/percepciones.")
+
     faltantes = [prov for prov, p in padrones.items() if p.get("status") == "no_disponible"]
     if faltantes:
         estado = _max_estado(estado, "OBSERVADO")

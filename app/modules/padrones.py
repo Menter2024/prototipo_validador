@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from app.modules import supabase_mvp
+from app.modules import padron_manifest, supabase_mvp
 
 
 PADRONES_PROVINCIAS = {
@@ -179,9 +179,19 @@ def buscar_en_padron(cuit_limpio: str, archivo: Path) -> Optional[dict]:
     return {"encontrado": False}
 
 
+def _describir_vigencia(vigencia_estado: str, vigencia_hasta: str) -> str:
+    return {
+        "vigente": "Padrón vigente.",
+        "por_vencer": f"Padrón por vencer (hasta {vigencia_hasta}).",
+        "vencido": f"PADRÓN VENCIDO (vigencia hasta {vigencia_hasta}) — alícuotas potencialmente desactualizadas.",
+        "sin_vigencia": "Padrón cargado sin vigencia registrada.",
+    }[vigencia_estado]
+
+
 def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
     """Consulta el CUIT en todos los padrones disponibles en la carpeta."""
     resultados = {}
+    manifest_padrones = padron_manifest.cargar_manifest(padrones_dir).get("padrones", {})
     for provincia, cfg in PADRONES_PROVINCIAS.items():
         nombre_archivo = cfg["archivo"]
         if cfg.get("tipo") != "archivo":
@@ -195,6 +205,9 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
             continue
 
         archivo = padrones_dir / nombre_archivo
+        meta = manifest_padrones.get(provincia, {})
+        vigencia_hasta_padron = (meta.get("vigencia_hasta") or "").strip()
+        vigencia_estado = padron_manifest.estado_vigencia(vigencia_hasta_padron)
         res = None
         disponible_supabase = False
         try:
@@ -205,6 +218,11 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
 
         if not res and archivo.exists():
             res = buscar_en_padron(cuit_limpio, archivo)
+
+        # Sin vigencia en el manifest, usar la del registro (ruta Supabase o padrón con columna propia).
+        if vigencia_estado == "sin_vigencia" and res and res.get("vigencia_hasta"):
+            vigencia_hasta_padron = res["vigencia_hasta"]
+            vigencia_estado = padron_manifest.estado_vigencia(vigencia_hasta_padron)
 
         if not res and not archivo.exists():
             resultados[provincia] = {
@@ -226,6 +244,8 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
                 "nombre": cfg["nombre"],
                 "prioridad": cfg["prioridad"],
                 "fuente": "supabase",
+                "vigencia_estado": vigencia_estado,
+                "vigencia_hasta_padron": vigencia_hasta_padron,
             }
             continue
         if res and res.get("encontrado"):
@@ -233,12 +253,15 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
             resultados[provincia] = {
                 "status": "inscripto",
                 "detalle": (
-                    f"Padrón vigente. Retención: {res['alicuota_retencion']}% · "
+                    f"{_describir_vigencia(vigencia_estado, vigencia_hasta_padron)} "
+                    f"Retención: {res['alicuota_retencion']}% · "
                     f"Percepción: {res['alicuota_percepcion']}% · "
                     f"Vigencia: {res['vigencia_desde']} a {res['vigencia_hasta']}{regimen}"
                 ),
                 "nombre": cfg["nombre"],
                 "prioridad": cfg["prioridad"],
+                "vigencia_estado": vigencia_estado,
+                "vigencia_hasta_padron": vigencia_hasta_padron,
                 **res,
             }
         else:
@@ -251,5 +274,7 @@ def consultar_todos(cuit_limpio: str, padrones_dir: Path) -> dict:
                 ),
                 "nombre": cfg["nombre"],
                 "prioridad": cfg["prioridad"],
+                "vigencia_estado": vigencia_estado,
+                "vigencia_hasta_padron": vigencia_hasta_padron,
             }
     return resultados

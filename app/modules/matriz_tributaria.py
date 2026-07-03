@@ -68,6 +68,11 @@ def generar(resultado: dict) -> dict:
 
     for prov, p in padrones.items():
         if p.get("status") == "inscripto":
+            if p.get("vigencia_estado") == "vencido":
+                alertas.append(
+                    f"{p.get('nombre', prov)}: las alícuotas provienen de un padrón vencido "
+                    f"(vigencia hasta {p.get('vigencia_hasta_padron', 's/d')}); recargar padrón vigente antes de liquidar."
+                )
             items.append({
                 "jurisdiccion": p.get("nombre", prov),
                 "impuesto": "Ingresos Brutos",
