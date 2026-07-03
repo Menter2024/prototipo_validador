@@ -130,6 +130,15 @@ Doc: docs/AUDITORIA_REGIMENES_ARGENTINA.md
 Web: /regimenes
 API: /api/regimenes
 
+### Vigilancia de certificados propios del cliente-agente
+
+- Lee los certificados de exclusión/no retención/exención del cliente (config/clientes_agentes.json).
+- Calcula vigente / por vencer (30 días) / vencido con días restantes.
+- Genera alertas operativas: un certificado vencido implica que los agentes de terceros vuelven a retener/percibir al cliente.
+
+Módulo: app/modules/certificados.py
+API: /api/certificados
+
 ### Motor de decisión fiscal
 
 Estados:

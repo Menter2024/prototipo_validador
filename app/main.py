@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes, regimenes_catalogo, regimenes_aplicables, accesos_fiscales, clientes_agentes, supabase_mvp
+from app.modules import validador, padrones, afip_arca, georef, excel, fuentes_online, riesgo_fiscal, legajos, carga_masiva, padron_manifest, matriz_tributaria, fuentes_catalogo, descarga_fuentes, fuentes_pendientes, regimenes_catalogo, regimenes_aplicables, accesos_fiscales, clientes_agentes, certificados, supabase_mvp
 
 ROOT_DIR = Path(__file__).parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -476,6 +476,12 @@ def regimenes_estado(
 def clientes_agentes_estado(cliente: str | None = None, cuit: str | None = None):
     """Huella fiscal por cliente-agente: regímenes que debe responder y generar."""
     return clientes_agentes.listar(cliente=cliente, cuit=cuit)
+
+
+@app.get("/api/certificados")
+def certificados_estado():
+    """Vigencia de certificados propios de los clientes-agentes (exclusiones/no retención)."""
+    return certificados.evaluar()
 
 
 @app.get("/api/fuentes-pendientes")
