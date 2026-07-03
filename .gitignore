@@ -5,6 +5,8 @@
 
 # Resultados generados localmente
 salidas/*.xlsx
+salidas/accesos_fiscales.json
+salidas/legajos/
 salidas/evidencias/
 salidas/fuentes_pendientes.json
 padrones/originales/

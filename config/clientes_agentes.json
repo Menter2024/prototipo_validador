@@ -1,8 +1,8 @@
 {
-  "version": 1,
-  "actualizado": "2026-06-15",
-  "criterio": "Catálogo de clientes-agentes y los regímenes de información, retención y percepción que cada uno debe responder y/o generar. Distinto del catálogo general de regímenes (config/regimenes_catalogo.json), que describe el universo; este archivo describe la huella fiscal concreta de un cliente. Los estados de confirmación marcan qué está validado por perfil público y qué requiere confirmación documental del cliente (nóminas de agentes, claves fiscales, designaciones).",
-  "advertencia": "Las designaciones como agente por jurisdiccion deben confirmarse con la constancia/inscripcion del cliente. No reemplaza dictamen profesional ni la norma vigente.",
+  "version": 2,
+  "actualizado": "2026-07-03",
+  "criterio": "Catálogo de clientes-agentes y los regímenes de información, retención y percepción que cada uno debe responder y/o generar. Distinto del catálogo general de regímenes (config/regimenes_catalogo.json), que describe el universo; este archivo describe la huella fiscal concreta de un cliente. Versión 2: incorpora la revisión documental de las constancias impositivas de CICSA entregadas el 2026-07-03 (designaciones de agente, constancia CM Padrón Web, constancia ARCA y certificados propios). Los archivos de evidencia se registran en el módulo de accesos fiscales (salidas/, fuera del repo).",
+  "advertencia": "Estados 'confirmado_documental' se basan en constancias entregadas por el cliente; verificar vigencia/continuidad en nóminas actuales antes de operar. No reemplaza dictamen profesional ni la norma vigente.",
   "clientes": [
     {
       "cliente": "CCU",
@@ -11,13 +11,17 @@
       "cuit": "30-50577985-8",
       "cuit_limpio": "30505779858",
       "condicion_iva": "Responsable Inscripto",
-      "condicion_ganancias": "Inscripto",
-      "iibb": "Convenio Multilateral",
-      "domicilio_fiscal": "Santa Fe, provincia de Santa Fe",
-      "actividad_principal": "Elaboración de cerveza y maltas",
+      "condicion_ganancias": "Inscripto (Ganancias Sociedades desde 03-1988)",
+      "iibb": "Convenio Multilateral (activo desde 04/1982, sede Santa Fe 921)",
+      "domicilio_fiscal": "Calchines 1401, Santa Fe, provincia de Santa Fe",
+      "actividad_principal": "110300 Elaboración de cerveza, bebidas malteadas y malta",
       "huella_jurisdiccional_conocida": [
-        "Santa Fe", "Salta", "Buenos Aires", "CABA", "Cordoba", "Mendoza", "Rio Negro", "San Juan", "Entre Rios"
+        "CABA", "Buenos Aires", "Catamarca", "Cordoba", "Corrientes", "Chaco", "Chubut",
+        "Entre Rios", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones",
+        "Neuquen", "Rio Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe",
+        "Santiago del Estero", "Tierra del Fuego", "Tucuman"
       ],
+      "nota_huella": "Constancia CM 'Sistema Padrón Web' del 10/06/2026: inscripta en las 24 jurisdicciones del Convenio Multilateral. La huella real supera la estimación previa de 9 jurisdicciones.",
       "como_figura_hoy_en_repo": {
         "rol": "sujeto_pasible",
         "detalle": "Aparece como renglon en padrones provinciales de IIBB (ATER Entre Rios, Cordoba, AGIP CABA) con alicuota de retencion y percepcion de 0,10%. Es la alicuota que OTROS agentes le aplican a CICSA, no un rol de agente.",
@@ -29,70 +33,74 @@
           "nivel": "nacional", "organismo": "ARCA", "impuesto": "IVA",
           "tipo": "informacion", "sistema": "Libro IVA Digital",
           "rol": "responde", "periodicidad": "mensual",
-          "estado_confirmacion": "alta_probabilidad_por_perfil"
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia ARCA 19/05/2026: IVA activo desde 03/1989; REG. INF. CITI-Compras desde 01/2005."
         },
         {
           "id": "nac_seguridad_social_sicoss",
           "nivel": "nacional", "organismo": "ARCA", "impuesto": "Seguridad Social",
           "tipo": "informacion", "sistema": "SICOSS / Libro de Sueldos Digital",
           "rol": "responde", "periodicidad": "mensual",
-          "estado_confirmacion": "alta_probabilidad_por_perfil",
-          "nota": "Empleador con dotacion relevante (planta Santa Fe ~550 empleados)."
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia ARCA 19/05/2026: REG. SEG. SOCIAL EMPLEADOR desde 12/1958."
         },
         {
           "id": "nac_ganancias_rg830",
           "nivel": "nacional", "organismo": "ARCA", "impuesto": "Ganancias",
-          "tipo": "retencion", "sistema": "SIRE / SICORE", "regimen": "RG 830",
+          "tipo": "retencion", "sistema": "SICORE", "regimen": "RG 830",
           "rol": "genera", "periodicidad": "quincenal_mensual",
-          "estado_confirmacion": "alta_probabilidad_por_perfil",
-          "nota": "Agente de retencion sobre pagos a proveedores, locadores y prestadores."
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia ARCA 19/05/2026: SICORE-Impto. a las Ganancias regímenes 19, 21, 25, 78, 94, 95, 99, 111, 116, 124 y 965 (altas desde 01/2000). Además RET ART 79 LEY GCIAS INC A,B,C - 160 (sueldos, desde 02/2015)."
         },
         {
           "id": "nac_iva_retencion",
           "nivel": "nacional", "organismo": "ARCA", "impuesto": "IVA",
-          "tipo": "retencion", "sistema": "SIRE / SICORE",
+          "tipo": "retencion", "sistema": "SIRE y SICORE",
           "rol": "genera", "periodicidad": "quincenal_mensual",
-          "estado_confirmacion": "a_confirmar_designacion"
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "RG 608/99 (BO 04/06/1999): incorporada a la nómina de agentes de retención IVA (Anexo I RG 18) desde 01/07/1999, reemplazando a Cervecería Santa Fe SAICyF. Constancia ARCA 19/05/2026: SIRE-IVA regímenes 210, 212, 214, 217, 499, 777, 966 (altas 2020-2022) y SICORE-Ret. y Percep. 210, 212, 214, 217, 270, 493, 499, 966.",
+          "nota": "Verificar continuidad de la inclusión en el Anexo I de la RG 2854 vigente (la designación original es de la RG 18/1997)."
         },
         {
           "id": "nac_iva_percepcion",
           "nivel": "nacional", "organismo": "ARCA", "impuesto": "IVA",
-          "tipo": "percepcion", "sistema": "SIRE / SICORE",
+          "tipo": "percepcion", "sistema": "SIRE y SICORE",
           "rol": "genera", "periodicidad": "quincenal_mensual",
-          "estado_confirmacion": "alta_probabilidad_por_perfil",
-          "nota": "Productor/distribuidor mayorista de bebidas: tipico agente de percepcion de IVA a clientes."
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia ARCA 19/05/2026: regímenes de percepción IVA activos dentro de SICORE-Ret. y Percep. (incluye régimen 493 desde 07/1999)."
         },
         {
           "id": "nac_seguridad_social_suss_retencion",
           "nivel": "nacional", "organismo": "ARCA", "impuesto": "Seguridad Social",
           "tipo": "retencion", "sistema": "SIRE", "regimen": "SUSS",
           "rol": "genera", "periodicidad": "mensual",
-          "estado_confirmacion": "a_confirmar_designacion",
-          "nota": "Aplica si contrata servicios alcanzados por retencion SUSS (limpieza, seguridad, construccion)."
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia ARCA 19/05/2026: RETENCIONES CONTRIB. SEG. SOCIAL regímenes 740, 742, 748, 750, 754 y 755 (altas 1998-2010)."
         },
         {
           "id": "nac_beneficiarios_exterior",
           "nivel": "nacional", "organismo": "ARCA", "impuesto": "Ganancias",
           "tipo": "retencion", "sistema": "SIRE", "regimen": "Beneficiarios del exterior",
           "rol": "genera", "periodicidad": "por_pago",
-          "estado_confirmacion": "a_confirmar",
-          "nota": "Probable por pago de regalias/licencias de marcas internacionales (Heineken, Amstel, Budweiser)."
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia ARCA 19/05/2026: IMP. A LAS GAN. BENEF. DEL EXT. regímenes 171, 766, 819, 820, 900, 902, 903 y 963 (altas 2015-2025)."
         },
         {
           "id": "iibb_cm_sifere",
           "nivel": "provincial_unificado", "organismo": "COMARB", "impuesto": "Ingresos Brutos",
           "tipo": "informacion", "sistema": "SIFERE", "regimen": "Convenio Multilateral",
           "rol": "responde", "periodicidad": "mensual_anual",
-          "estado_confirmacion": "confirmado_por_perfil",
-          "nota": "Contribuyente CM por operacion nacional."
+          "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia CM Padrón Web 10/06/2026: contribuyente CM sede Santa Fe (921), inscripta en las 24 jurisdicciones. CM01 y CM05 2025 disponibles como evidencia."
         },
         {
           "id": "iibb_agente_sircar",
           "nivel": "provincial_unificado", "organismo": "COMARB", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "sistema": "SIRCAR",
           "rol": "genera", "periodicidad": "quincenal_mensual",
-          "estado_confirmacion": "a_confirmar_designacion",
-          "nota": "Presentacion unificada de DDJJ de agente de retencion/percepcion IIBB de jurisdicciones adheridas."
+          "estado_confirmacion": "confirmado_parcial",
+          "evidencia": "Neuquén (Res. 686/DPR/14) y Santiago del Estero (RESOL-2020-55 DGR) obligan expresamente a presentar por SIRCAR.",
+          "nota": "Pedir constancia de alta como agente en SIRCAR y listado completo de jurisdicciones que presentan por ese sistema."
         },
         {
           "id": "iibb_sircreb",
@@ -106,56 +114,161 @@
           "id": "iibb_santa_fe_api",
           "nivel": "provincial", "organismo": "API Santa Fe", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "jurisdiccion": "Santa Fe",
-          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
-          "nota": "Sede y planta principal; alta probabilidad de designacion como agente."
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia API 22/12/2008: agente de retención (Art. 2) y de percepción (Art. 10 inc. j), cuenta N° 400-002215-6. Respuesta F1276 web recibida (pendiente de revisión de contenido).",
+          "nota": "Constancia de 2008: pedir constancia/estado actualizado como agente API."
         },
         {
           "id": "iibb_arba",
           "nivel": "provincial", "organismo": "ARBA", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "jurisdiccion": "Buenos Aires",
           "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
-          "nota": "Plantas Lujan/Ciudadela/Chascomus; alta probabilidad de designacion."
+          "nota": "SIN DOCUMENTO en la entrega 2026-07-03. Plantas Lujan/Ciudadela/Chascomus; es la designación pendiente más relevante."
         },
         {
           "id": "iibb_agip_caba",
           "nivel": "provincial", "organismo": "AGIP", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "jurisdiccion": "CABA",
-          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion"
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Resolución 1465-SHyF-2001 (10/08/2001): incorporada como agente de recaudación IIBB CABA (Res. 430-SHyF-01) con N° 921-620018-7, vigencia desde 01/09/2001.",
+          "nota": "Designación de 2001: verificar inclusión en la nómina AGIP vigente."
         },
         {
           "id": "iibb_cordoba",
           "nivel": "provincial", "organismo": "Rentas Cordoba", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "jurisdiccion": "Cordoba",
-          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion"
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Res. SIP 48/2000: agente de percepción desde 16/12/2000 (alícuota original 2,50%). Constancia F-307 (28/12/2016): agente de retención y/o percepción N° 300023711, régimen Decreto 443/04, inscripción 16/12/2000, sin fecha de cese."
+        },
+        {
+          "id": "iibb_entre_rios_ater",
+          "nivel": "provincial", "organismo": "ATER Entre Rios", "impuesto": "Ingresos Brutos",
+          "tipo": "retencion", "jurisdiccion": "Entre Rios",
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Resolución ATER 319/2016: incluida en nómina de agentes de retención IIBB (vigencia abril 2017). Criterio de territorialidad ATER (Res. 208/2024): no inscripto en IIBB ER con sustento territorial se retiene al 6%.",
+          "nota": "Jurisdicción nueva detectada en la revisión documental; no estaba en la huella estimada como agente."
         },
         {
           "id": "iibb_salta",
           "nivel": "provincial", "organismo": "DGR Salta", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "jurisdiccion": "Salta",
           "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
-          "nota": "Planta en ciudad de Salta."
+          "nota": "SIN DOCUMENTO de designación como agente. El F600 recibido es una constancia de actividad EXENTA por exportación (certificado propio como sujeto pasible), no una designación."
         },
         {
           "id": "iibb_mendoza_atm",
           "nivel": "provincial", "organismo": "ATM Mendoza", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "jurisdiccion": "Mendoza",
-          "rol": "genera", "estado_confirmacion": "a_confirmar_designacion"
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Constancia ATM (emitida 09/10/2025): Agente de Percepción N° 00000992741 (Anexo I RG 30/99, desde 01/06/2015) y Agente de Retención N° 00000957396 (Anexo V RG 19/2012, desde 01/03/2020).",
+          "nota": "ATENCIÓN: la constancia venció el 09/04/2026. Pedir constancia renovada."
         },
         {
           "id": "iibb_rio_negro",
           "nivel": "provincial", "organismo": "ART Rio Negro", "impuesto": "Ingresos Brutos",
           "tipo": "retencion_percepcion", "jurisdiccion": "Rio Negro",
           "rol": "genera", "estado_confirmacion": "a_confirmar_designacion",
-          "nota": "Planta en Allen."
+          "nota": "SIN DOCUMENTO en la entrega 2026-07-03. Planta en Allen."
+        },
+        {
+          "id": "iibb_neuquen",
+          "nivel": "provincial", "organismo": "DPR Neuquen", "impuesto": "Ingresos Brutos",
+          "tipo": "percepcion", "jurisdiccion": "Neuquen",
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Resolución 686/DPR/2014 (28/11/2014): designada agente de percepción IIBB, vigencia desde 02/01/2015; DDJJ por SIRCAR (Res. 102/DPR/02).",
+          "nota": "Jurisdicción nueva detectada en la revisión documental."
+        },
+        {
+          "id": "iibb_san_luis",
+          "nivel": "provincial", "organismo": "DPIP San Luis", "impuesto": "Ingresos Brutos",
+          "tipo": "percepcion", "jurisdiccion": "San Luis",
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "RG 16-DPIP-2007 (régimen general de percepciones): obligados los distribuidores/comercializadores de productos alimenticios y bebidas (art. 2 inc. b) y quienes superen $6M de ingresos (inc. c).",
+          "nota": "Designación por encuadre en régimen general (no nominativa en lo revisado). Confirmar si además figura en el Anexo I y las condiciones operativas actuales."
+        },
+        {
+          "id": "iibb_santiago_del_estero",
+          "nivel": "provincial", "organismo": "DGR Santiago del Estero", "impuesto": "Ingresos Brutos",
+          "tipo": "percepcion", "jurisdiccion": "Santiago del Estero",
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "RESOL-2020-55-E-GDESDE-DGR (06/10/2020): nominada agente de percepción IIBB en Anexo I, vigencia desde 01/11/2020; DDJJ y pagos por SIRCAR.",
+          "nota": "Jurisdicción nueva detectada en la revisión documental."
+        },
+        {
+          "id": "municipal_cordoba_retencion",
+          "nivel": "municipal", "organismo": "Municipalidad de Cordoba", "impuesto": "Contribución sobre Actividad Comercial, Industrial y de Servicios",
+          "tipo": "retencion", "jurisdiccion": "Municipio de Cordoba",
+          "rol": "genera", "estado_confirmacion": "confirmado_documental",
+          "evidencia": "Resolución General N° 33 (27/09/2016) DG Recursos Tributarios: designada Agente de Retención de la Contribución Comercial/Industrial/Servicios desde 01/11/2016 (Res. 240/03 y Res. 53/2014).",
+          "nota": "Régimen municipal nuevo detectado en la revisión documental."
         },
         {
           "id": "municipal_tish_drei",
           "nivel": "municipal", "organismo": "Municipios", "impuesto": "Tasa de Seguridad e Higiene / DReI",
           "tipo": "tasa_y_eventual_retencion", "jurisdiccion": "Segun huella (Santa Fe, Salta, Lujan, etc.)",
           "rol": "responde_y_posible_genera", "estado_confirmacion": "a_relevar_por_huella",
-          "nota": "Tasa local donde hay planta/deposito; algunos municipios designan agente de retencion de DReI."
+          "nota": "Solo se documentó Municipalidad de Córdoba. Relevar resto de municipios con planta/depósito."
         }
-      ]
+      ],
+      "certificados_propios": {
+        "criterio": "Certificados que CICSA posee como SUJETO PASIBLE (exclusiones/no retención/no percepción que otros agentes deben respetarle). Controlar vencimientos: al vencer, los agentes vuelven a retener/percibir.",
+        "items": [
+          {
+            "concepto": "Ganancias RG 830 - Certificado de exclusión (Art. 38)",
+            "organismo": "ARCA", "numero": "020/2026/02137/1",
+            "vigencia_desde": "2026-05-01", "vigencia_hasta": "2027-03-31",
+            "estado": "vigente", "fuente": "documento revisado"
+          },
+          {
+            "concepto": "Salta - Constancia actividad exenta IIBB por exportación (F600 N° 1855/2026)",
+            "organismo": "DGR Salta",
+            "vigencia_desde": "2026-01-01", "vigencia_hasta": "2026-12-31",
+            "estado": "vigente", "fuente": "documento revisado",
+            "nota": "No sujeta a retenciones/percepciones IIBB Salta por actividades exentas (exportación)."
+          },
+          {
+            "concepto": "Chaco - Certificado no retención/no percepción IIBB",
+            "organismo": "ATP Chaco",
+            "vigencia_desde": "2026-06-24", "vigencia_hasta": "2026-08-31",
+            "estado": "vigente", "fuente": "nombre de archivo; contenido a validar al cargar evidencia"
+          },
+          {
+            "concepto": "Catamarca - Certificado no retención/no percepción IIBB",
+            "organismo": "ARCA Catamarca (Rentas)",
+            "vigencia_desde": "2025-07-25", "vigencia_hasta": "2026-07-31",
+            "estado": "por_vencer", "fuente": "nombre de archivo; contenido a validar al cargar evidencia"
+          },
+          {
+            "concepto": "Chubut - Certificado no retención/no percepción IIBB",
+            "organismo": "DGR Chubut",
+            "vigencia_hasta": "2026-08-31",
+            "estado": "vigente", "fuente": "nombre de archivo; contenido a validar al cargar evidencia"
+          },
+          {
+            "concepto": "Santiago del Estero - Certificado no retención/no percepción IIBB",
+            "organismo": "DGR Santiago del Estero",
+            "vigencia_hasta": "2026-07-13",
+            "estado": "por_vencer", "fuente": "nombre de archivo; contenido a validar al cargar evidencia",
+            "nota": "VENCE 13/07/2026 (en días). Verificar renovación en curso."
+          },
+          {
+            "concepto": "Corrientes - Certificado no retención/no percepción IIBB",
+            "organismo": "DGR Corrientes",
+            "vigencia_desde": "2026-06-08", "vigencia_hasta": "2026-12-09",
+            "estado": "vigente", "fuente": "nombre de archivo; contenido a validar al cargar evidencia"
+          },
+          {
+            "concepto": "Mendoza - Certificado de no percepción aduanera",
+            "organismo": "ATM Mendoza",
+            "estado": "a_validar", "fuente": "documento recibido; vigencia a extraer"
+          },
+          {
+            "concepto": "Nota exclusión Bienes de Uso",
+            "organismo": "s/d",
+            "estado": "a_validar", "fuente": "documento recibido; alcance y vigencia a extraer"
+          }
+        ]
+      }
     }
   ]
 }
