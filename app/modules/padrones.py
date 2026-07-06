@@ -126,16 +126,30 @@ def _norm_header(valor: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", limpio).split())
 
 
+# Lookup inverso alias normalizado -> campo destino, calculado una sola vez.
+_ALIAS_LOOKUP = {
+    _norm_header(alias): destino
+    for destino, aliases in ALIASES.items()
+    for alias in aliases
+}
+
+
+def _mapa_columnas(fieldnames) -> dict[str, str]:
+    """Mapea columnas originales del archivo a campos destino (una vez por archivo)."""
+    mapa: dict[str, str] = {}
+    asignados: set[str] = set()
+    for col in fieldnames or []:
+        destino = _ALIAS_LOOKUP.get(_norm_header(col or ""))
+        if destino and destino not in asignados:
+            mapa[col] = destino
+            asignados.add(destino)
+    return mapa
+
+
 def _normalizar_row(row: dict) -> dict:
-    normalizado = {}
-    headers = {_norm_header(k): v for k, v in row.items()}
-    for destino, aliases in ALIASES.items():
-        aliases_norm = {_norm_header(a) for a in aliases}
-        for header, valor in headers.items():
-            if header in aliases_norm:
-                normalizado[destino] = (valor or "").strip()
-                break
-    return normalizado
+    """Normaliza una fila suelta (uso puntual; el importador masivo usa _mapa_columnas)."""
+    mapa = _mapa_columnas(row.keys())
+    return {destino: (row.get(col) or "").strip() for col, destino in mapa.items()}
 
 
 def _leer_texto(archivo: Path) -> str:
@@ -163,12 +177,16 @@ def _leer_padron(archivo: Path) -> dict[str, dict]:
     except csv.Error:
         dialect = csv.excel
     indice: dict[str, dict] = {}
-    for row in csv.DictReader(io.StringIO(texto), dialect=dialect):
-        normalizado = _normalizar_row(row)
-        cuit = "".join(filter(str.isdigit, normalizado.get("cuit", "")))
-        if cuit:
-            # Ante CUIT duplicado se conserva la primera aparición (comportamiento histórico).
-            indice.setdefault(cuit, normalizado)
+    reader = csv.DictReader(io.StringIO(texto), dialect=dialect)
+    mapa = _mapa_columnas(reader.fieldnames)
+    col_cuit = next((col for col, destino in mapa.items() if destino == "cuit"), None)
+    if col_cuit:
+        solo_digitos = str.isdigit
+        for row in reader:
+            cuit = "".join(filter(solo_digitos, row.get(col_cuit) or ""))
+            if cuit:
+                # Ante CUIT duplicado se conserva la primera aparición (comportamiento histórico).
+                indice.setdefault(cuit, {destino: (row.get(col) or "").strip() for col, destino in mapa.items()})
 
     _INDEX_CACHE[cache_key] = indice
     while len(_INDEX_CACHE) > _cache_max():

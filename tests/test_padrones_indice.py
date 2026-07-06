@@ -55,6 +55,27 @@ def test_cache_conserva_varios_padrones_a_la_vez(tmp_path, monkeypatch):
     assert lecturas["n"] == 2, "cada padrón debe parsearse una sola vez"
 
 
+def test_mapa_columnas_resuelve_alias_una_vez_por_archivo():
+    mapa = padrones._mapa_columnas(["Número de CUIT", "Alícuota Retención", "ALIC PERC", "Fecha Desde", "otra_columna"])
+
+    assert mapa == {
+        "Número de CUIT": "cuit",
+        "Alícuota Retención": "alicuota_retencion",
+        "ALIC PERC": "alicuota_percepcion",
+        "Fecha Desde": "vigencia_desde",
+    }
+
+
+def test_normalizar_row_sigue_funcionando_para_filas_sueltas():
+    row = {"CUIT/CUIL": "30-50577985-8", "Retención": "1,50", "Categoria": "General"}
+
+    normalizado = padrones._normalizar_row(row)
+
+    assert normalizado["cuit"] == "30-50577985-8"
+    assert normalizado["alicuota_retencion"] == "1,50"
+    assert normalizado["regimen"] == "General"
+
+
 def test_cache_respeta_limite_configurado(tmp_path, monkeypatch):
     monkeypatch.setenv("PADRONES_CACHE_MAX", "2")
     padrones._INDEX_CACHE.clear()
