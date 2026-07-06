@@ -11,6 +11,19 @@ Con lo que mandaste quedaron **confirmadas documentalmente** las designaciones d
 
 Todo quedó cargado en la plataforma con su archivo como evidencia.
 
+## Actualización 2026-07-06 — cómo proponemos la prueba, y una aclaración importante
+
+**La prueba la manejás vos, con tus datos.** La idea es simple: te damos usuario propio (con tu rol) y probás el circuito completo como lo harías en tu operación diaria:
+
+1. **Cargás el padrón del mes** de una jurisdicción donde CICSA es agente (por ejemplo el de ARBA o AGIP que ya usan para liquidar) desde la pantalla de padrones — con previsualización, control de calidad y evidencia automática.
+2. **Cargás una tanda de CUITs reales de proveedores** (individual o por Excel) y el sistema devuelve: situación ARCA en vivo, cruce contra los padrones que cargaste, decisión sugerida (aprobable/observado/revisión/bloquear), matriz de señales y el legajo sellado con toda la evidencia.
+3. **Comparás contra lo que Impuestos ya sabe** de esos proveedores y nos marcás dónde el sistema acierta, dónde le falta y qué criterio propio de CICSA habría que configurar.
+
+**Aclaración importante sobre credenciales ARCA** (corrige el punto 16 de esta nota): **no necesitamos ningún certificado ni clave fiscal de CICSA para la consulta de constancias** — eso corre con el certificado digital propio de Menter, porque el web service de constancia consulta datos de terceros. Lo que sí necesitamos de ustedes es solo esto:
+
+- **Los archivos de padrón de agente** que descargan de los portales provinciales (o, si prefieren, acceso delegado al portal para descargarlos nosotros): esos archivos solo los puede bajar el agente designado.
+- Más adelante, si el sistema tuviera que actuar en nombre de CICSA (Mis Retenciones, SIRE/SICORE): **delegación formal de servicios vía "Administrador de Relaciones" de ARCA** al CUIT de Menter — trámite auditable y revocable. **Nunca vamos a pedir contraseñas.**
+
 ## Lo que falta — punto por punto
 
 ### A. Designaciones de agente sin documento (lo más importante)
@@ -45,7 +58,7 @@ Todo quedó cargado en la plataforma con su archivo como evidencia.
 ### F. Del pedido original, sigue pendiente completo
 
 15. **Reglas internas de Impuestos** (puntos 25-30 del pedido original): criterios de aprobación/bloqueo de proveedores, tratamiento del proveedor NO incluido en padrón por jurisdicción, política de certificados de exclusión de proveedores, mínimos 2026, monotributistas.
-16. **Credenciales y accesos** (puntos 31-33): certificado ARCA para el web service y accesos a portales — recordá: solo por canal seguro, definimos el medio antes.
+16. **Accesos a portales provinciales** (puntos 31-33, ver la aclaración de la actualización 2026-07-06): NO hace falta certificado ARCA de CICSA. Solo los archivos de padrón de agente de los portales (o acceso delegado para descargarlos); si algún día delegan servicios ARCA, se hace por Administrador de Relaciones, sin compartir claves. Todo intercambio sensible, por canal seguro definido de antemano.
 17. **Padrones del mes** (puntos 34-36): los archivos de padrón vigentes que hoy usan para liquidar, y quién los descarga.
 18. **Datos del piloto** (puntos 37-42): lista de 20-50 proveedores de prueba, 3-5 usuarios, volúmenes y criterios de éxito.
 19. **ERP / maestro de proveedores** (punto 40): sistema y formato de exportación.
