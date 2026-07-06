@@ -188,6 +188,7 @@ Cada validación genera evidencia auditable:
 - ID único;
 - fecha/hora;
 - sellado al crear: estado "cerrado" + hash SHA256 del contenido completo;
+- operador que disparó la validación (usuario y rol, con MENTER_USERS);
 - verificación de integridad al consultar el legajo (detecta adulteración);
 - versiones de los catálogos de reglas aplicados (regímenes y clientes-agentes);
 - snapshot del manifest de padrones usados (período, hash, vigencia);
@@ -283,6 +284,7 @@ Estructura:
     AFIPSDK_KEY_B64=
     BASIC_AUTH_USER=
     BASIC_AUTH_PASS=
+    MENTER_USERS=            # multi-usuario con rol: "ana:clave:impuestos,juan:clave:compras" (roles: admin, impuestos, compras, cxp, auditoria)
     PADRONES_DIR=./padrones
     SALIDAS_DIR=./salidas
     UPLOADS_DIR=./uploads

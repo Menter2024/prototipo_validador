@@ -72,6 +72,7 @@ def crear_legajo(
     excel_filename: str,
     salidas_dir: Path,
     padrones_dir: Path | None = None,
+    operador: dict | None = None,
 ) -> dict:
     legajos_dir = salidas_dir / "legajos"
     legajos_dir.mkdir(parents=True, exist_ok=True)
@@ -94,6 +95,10 @@ def crear_legajo(
         "id": legajo_id,
         "creado_en": now.strftime("%Y-%m-%d %H:%M:%S"),
         "estado": "cerrado",
+        "operador": {
+            "usuario": (operador or {}).get("usuario", "no_identificado"),
+            "rol": (operador or {}).get("rol", ""),
+        },
         "excel": excel_filename,
         "total_proveedores": len(resultados),
         "reglas_aplicadas": {
@@ -124,6 +129,7 @@ def listar_legajos(salidas_dir: Path) -> list[dict]:
             "id": data.get("id", path.stem),
             "creado_en": data.get("creado_en"),
             "estado": data.get("estado", "sin_sellar"),
+            "operador": (data.get("operador") or {}).get("usuario", ""),
             "sha256": data.get(HASH_FIELD, ""),
             "excel": data.get("excel"),
             "total_proveedores": data.get("total_proveedores", 0),

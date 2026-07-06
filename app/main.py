@@ -146,36 +146,55 @@ def _padrones_estado() -> list[dict]:
     return estado
 
 
-def _basic_auth_habilitada() -> bool:
-    return bool(os.environ.get("BASIC_AUTH_USER") and os.environ.get("BASIC_AUTH_PASS"))
+ROLES_VALIDOS = {"admin", "impuestos", "compras", "cxp", "auditoria"}
 
 
-def _credenciales_validas(header: str | None) -> bool:
-    if not _basic_auth_habilitada():
-        return True
+def _usuarios_configurados() -> dict[str, dict]:
+    """Usuarios con rol desde MENTER_USERS ("usuario:clave:rol,...") y/o BASIC_AUTH_USER/PASS.
+
+    BASIC_AUTH_USER/PASS se mantiene por compatibilidad y equivale a un usuario admin.
+    """
+    usuarios: dict[str, dict] = {}
+    for token in os.environ.get("MENTER_USERS", "").split(","):
+        partes = token.strip().split(":")
+        if len(partes) >= 2 and partes[0] and partes[1]:
+            rol = partes[2].strip().lower() if len(partes) > 2 and partes[2].strip() else "admin"
+            usuarios[partes[0]] = {"password": partes[1], "rol": rol if rol in ROLES_VALIDOS else "admin"}
+    if os.environ.get("BASIC_AUTH_USER") and os.environ.get("BASIC_AUTH_PASS"):
+        usuarios.setdefault(os.environ["BASIC_AUTH_USER"], {"password": os.environ["BASIC_AUTH_PASS"], "rol": "admin"})
+    return usuarios
+
+
+def _autenticar(header: str | None) -> dict | None:
+    """Devuelve el operador autenticado ({usuario, rol}) o None si las credenciales no valen."""
+    usuarios = _usuarios_configurados()
+    if not usuarios:
+        return {"usuario": "anonimo", "rol": "sin_auth"}
     if not header or not header.startswith("Basic "):
-        return False
+        return None
     try:
         usuario_pass = base64.b64decode(header.split(" ", 1)[1]).decode("utf-8")
         usuario, password = usuario_pass.split(":", 1)
     except Exception:
-        return False
-    return (
-        secrets.compare_digest(usuario, os.environ["BASIC_AUTH_USER"])
-        and secrets.compare_digest(password, os.environ["BASIC_AUTH_PASS"])
-    )
+        return None
+    for nombre, datos in usuarios.items():
+        if secrets.compare_digest(usuario, nombre) and secrets.compare_digest(password, datos["password"]):
+            return {"usuario": nombre, "rol": datos["rol"]}
+    return None
 
 
 @app.middleware("http")
 async def basic_auth_middleware(request: Request, call_next):
     if request.url.path in ("/healthz", "/api/info"):
         return await call_next(request)
-    if not _credenciales_validas(request.headers.get("Authorization")):
+    operador = _autenticar(request.headers.get("Authorization"))
+    if operador is None:
         return Response(
             status_code=401,
             headers={"WWW-Authenticate": 'Basic realm="Menter Validador"'},
             content="Autenticación requerida",
         )
+    request.state.operador = operador
     return await call_next(request)
 
 
@@ -231,7 +250,7 @@ def _agregar_regimenes_aplicables(resultados: list[dict]) -> None:
 
 
 @app.post("/api/validar")
-async def validar_endpoint(req: ValidarRequest):
+async def validar_endpoint(req: ValidarRequest, request: Request):
     if not req.cuits:
         raise HTTPException(status_code=400, detail="Lista de CUITs vacía.")
     if len(req.cuits) > 50:
@@ -245,7 +264,8 @@ async def validar_endpoint(req: ValidarRequest):
     filename = f"validacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
-    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR, PADRONES_DIR)
+    operador = getattr(request.state, "operador", None)
+    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR, PADRONES_DIR, operador=operador)
     tareas_asistidas = fuentes_pendientes.crear_desde_resultados(SALIDAS_DIR, resultados, legajo["id"])
 
     return {
@@ -273,6 +293,7 @@ async def validar_endpoint(req: ValidarRequest):
 
 @app.post("/api/validar-excel")
 async def validar_excel_endpoint(
+    request: Request,
     archivo: UploadFile = File(...),
     columna: str | None = Form(None),
     sheet: str | None = Form(None),
@@ -299,7 +320,8 @@ async def validar_excel_endpoint(
     filename = f"validacion_lote_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     ruta = SALIDAS_DIR / filename
     excel.generar(resultados, ruta)
-    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR, PADRONES_DIR)
+    operador = getattr(request.state, "operador", None)
+    legajo = legajos.crear_legajo(resultados, filename, SALIDAS_DIR, PADRONES_DIR, operador=operador)
     tareas_asistidas = fuentes_pendientes.crear_desde_resultados(SALIDAS_DIR, resultados, legajo["id"])
     return {
         "resultados": resultados,

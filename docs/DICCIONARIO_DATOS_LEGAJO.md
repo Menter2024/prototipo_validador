@@ -12,6 +12,7 @@
 | `id` | string | sistema | Identificador único: `legajo_AAAAMMDD_HHMMSS_<8 hex>`. |
 | `creado_en` | string fecha-hora | sistema | Momento de creación y sellado (`AAAA-MM-DD HH:MM:SS`, hora del servidor). |
 | `estado` | string | sistema | `cerrado`: el legajo se sella al crearse y no se modifica. Legajos previos al sellado figuran `sin_sellar` en el listado. |
+| `operador` | objeto | autenticación | `usuario` y `rol` de quien disparó la validación (según `MENTER_USERS`). `anonimo/sin_auth` si la instancia corre sin autenticación; `no_identificado` en legajos previos a esta versión. |
 | `sha256` | string (64 hex) | sistema | Hash SHA256 del legajo canónico (JSON ordenado por clave, excluyendo este campo). Base de la verificación de integridad. |
 | `excel` | string | sistema | Nombre del reporte Excel asociado en `salidas/`. |
 | `total_proveedores` | int | sistema | Cantidad de CUITs evaluados en la corrida. |
