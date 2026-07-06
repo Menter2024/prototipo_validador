@@ -1,7 +1,9 @@
 """Lectura normalizada de padrones provinciales de Ingresos Brutos."""
 import csv
 import io
+import os
 import re
+from collections import OrderedDict
 from pathlib import Path
 from typing import Optional
 
@@ -106,7 +108,16 @@ ALIASES = {
     "regimen": {"regimen", "régimen", "tipo", "categoria", "categoría", "categoria fiscal", "categoría fiscal"},
 }
 
-_PADRON_CACHE: dict = {}
+# Cache LRU de índices por CUIT: conserva varios padrones a la vez para que un
+# lote de N CUITs parsee cada archivo una sola vez (antes, capacidad 1 → re-parseo).
+_INDEX_CACHE: "OrderedDict[tuple, dict[str, dict]]" = OrderedDict()
+
+
+def _cache_max() -> int:
+    try:
+        return max(1, int(os.environ.get("PADRONES_CACHE_MAX", "12")))
+    except ValueError:
+        return 12
 
 
 def _norm_header(valor: str) -> str:
@@ -137,22 +148,32 @@ def _leer_texto(archivo: Path) -> str:
     return data.decode("utf-8", errors="replace")
 
 
-def _leer_padron(archivo: Path) -> list[dict]:
+def _leer_padron(archivo: Path) -> dict[str, dict]:
+    """Devuelve un índice {cuit_limpio: fila_normalizada} del padrón (cacheado)."""
     stat = archivo.stat()
     cache_key = (str(archivo), stat.st_mtime_ns, stat.st_size)
-    if cache_key in _PADRON_CACHE:
-        return _PADRON_CACHE[cache_key]
+    cached = _INDEX_CACHE.get(cache_key)
+    if cached is not None:
+        _INDEX_CACHE.move_to_end(cache_key)
+        return cached
 
     texto = _leer_texto(archivo)
     try:
         dialect = csv.Sniffer().sniff(texto[:4096], delimiters=",;\t|")
     except csv.Error:
         dialect = csv.excel
-    rows = [_normalizar_row(row) for row in csv.DictReader(io.StringIO(texto), dialect=dialect)]
-    rows = [r for r in rows if r.get("cuit")]
-    _PADRON_CACHE.clear()
-    _PADRON_CACHE[cache_key] = rows
-    return rows
+    indice: dict[str, dict] = {}
+    for row in csv.DictReader(io.StringIO(texto), dialect=dialect):
+        normalizado = _normalizar_row(row)
+        cuit = "".join(filter(str.isdigit, normalizado.get("cuit", "")))
+        if cuit:
+            # Ante CUIT duplicado se conserva la primera aparición (comportamiento histórico).
+            indice.setdefault(cuit, normalizado)
+
+    _INDEX_CACHE[cache_key] = indice
+    while len(_INDEX_CACHE) > _cache_max():
+        _INDEX_CACHE.popitem(last=False)
+    return indice
 
 
 def _fmt_pct(valor: str) -> str:
@@ -162,21 +183,20 @@ def _fmt_pct(valor: str) -> str:
 
 
 def buscar_en_padron(cuit_limpio: str, archivo: Path) -> Optional[dict]:
-    """Busca un CUIT en un padrón CSV con cabeceras normalizadas."""
+    """Busca un CUIT en un padrón CSV con cabeceras normalizadas (índice O(1))."""
     if not archivo.exists():
         return None
-    for row in _leer_padron(archivo):
-        row_cuit = "".join(filter(str.isdigit, row.get("cuit", "")))
-        if row_cuit == cuit_limpio:
-            return {
-                "encontrado": True,
-                "alicuota_retencion": _fmt_pct(row.get("alicuota_retencion", "")),
-                "alicuota_percepcion": _fmt_pct(row.get("alicuota_percepcion", "")),
-                "vigencia_desde": row.get("vigencia_desde", ""),
-                "vigencia_hasta": row.get("vigencia_hasta", ""),
-                "regimen": row.get("regimen", ""),
-            }
-    return {"encontrado": False}
+    row = _leer_padron(archivo).get(cuit_limpio)
+    if row is None:
+        return {"encontrado": False}
+    return {
+        "encontrado": True,
+        "alicuota_retencion": _fmt_pct(row.get("alicuota_retencion", "")),
+        "alicuota_percepcion": _fmt_pct(row.get("alicuota_percepcion", "")),
+        "vigencia_desde": row.get("vigencia_desde", ""),
+        "vigencia_hasta": row.get("vigencia_hasta", ""),
+        "regimen": row.get("regimen", ""),
+    }
 
 
 def _describir_vigencia(vigencia_estado: str, vigencia_hasta: str) -> str:
