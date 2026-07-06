@@ -366,6 +366,49 @@ def sync_padron_importado(
     return {"enabled": True, "synced": True, "upload": upload, "insert": insert}
 
 
+LEGAJOS_TABLE = "legajos"
+_LEGAJO_CAMPOS = (
+    "id", "creado_en", "estado", "operador", "excel", "total_proveedores",
+    "sha256", "reglas_aplicadas", "padrones_snapshot", "resumen", "resultados",
+)
+
+
+def sync_legajo(legajo: dict[str, Any]) -> dict[str, Any]:
+    """Persiste el legajo sellado en Supabase. Nunca debe romper el flujo local."""
+    cfg = get_config()
+    if not cfg:
+        return {"enabled": False, "synced": False, "reason": "Supabase no configurado"}
+    payload = {campo: legajo.get(campo) for campo in _LEGAJO_CAMPOS}
+    payload["tenant_id"] = tenant_id()
+    insert = insert_row(LEGAJOS_TABLE, payload)
+    return {"enabled": True, "synced": True, "insert": {"inserted": insert.get("inserted", False)}}
+
+
+def list_legajos_remotos(limit: int = 100) -> list[dict[str, Any]]:
+    tid = tenant_id()
+    if not tid:
+        return []
+    return select_rows(LEGAJOS_TABLE, {
+        "select": "id,creado_en,estado,operador,excel,total_proveedores,sha256,resumen",
+        "tenant_id": f"eq.{tid}",
+        "order": "creado_en.desc",
+        "limit": str(max(1, min(limit, 500))),
+    })
+
+
+def get_legajo_remoto(legajo_id: str) -> dict[str, Any] | None:
+    tid = tenant_id()
+    if not tid:
+        return None
+    rows = select_rows(LEGAJOS_TABLE, {
+        "select": ",".join(_LEGAJO_CAMPOS),
+        "tenant_id": f"eq.{tid}",
+        "id": f"eq.{legajo_id}",
+        "limit": "1",
+    })
+    return rows[0] if rows else None
+
+
 def sync_acceso(acceso: dict[str, Any]) -> dict[str, Any]:
     if not get_config():
         return {"enabled": False, "synced": False, "reason": "Supabase no configurado"}

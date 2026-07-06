@@ -12,9 +12,14 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from app.modules import clientes_agentes, padron_manifest, regimenes_catalogo
+from app.modules import clientes_agentes, padron_manifest, regimenes_catalogo, supabase_mvp
 
 HASH_FIELD = "sha256"
+# Campos persistidos del legajo: el hash cubre exactamente este contenido.
+CAMPOS_PERSISTIDOS = (
+    "id", "creado_en", "estado", "operador", "excel", "total_proveedores",
+    "reglas_aplicadas", "padrones_snapshot", "resumen", "resultados", HASH_FIELD,
+)
 
 
 def _safe_json(data):
@@ -112,38 +117,67 @@ def crear_legajo(
     legajo[HASH_FIELD] = calcular_hash(legajo)
     path = legajos_dir / f"{legajo_id}.json"
     path.write_text(json.dumps(legajo, ensure_ascii=False, indent=2), encoding="utf-8")
-    return {"id": legajo_id, "path": str(path), **legajo}
+
+    # Persistencia durable: el archivo local es respaldo; en deploy el disco es efímero.
+    try:
+        sync = supabase_mvp.sync_legajo(legajo)
+    except Exception as e:
+        sync = {"enabled": supabase_mvp.enabled(), "synced": False, "error": str(e)}
+    return {"id": legajo_id, "path": str(path), "supabase_sync": sync, **legajo}
+
+
+def _item_listado(data: dict, fuente: str) -> dict:
+    return {
+        "id": data.get("id", ""),
+        "creado_en": data.get("creado_en"),
+        "estado": data.get("estado", "sin_sellar"),
+        "operador": (data.get("operador") or {}).get("usuario", ""),
+        "sha256": data.get(HASH_FIELD, ""),
+        "excel": data.get("excel"),
+        "total_proveedores": data.get("total_proveedores", 0),
+        "resumen": data.get("resumen", []),
+        "fuente": fuente,
+    }
 
 
 def listar_legajos(salidas_dir: Path) -> list[dict]:
+    """Legajos locales + remotos (Supabase) fusionados por id; el local tiene prioridad."""
+    items: dict[str, dict] = {}
     legajos_dir = salidas_dir / "legajos"
-    if not legajos_dir.exists():
-        return []
-    items = []
-    for path in sorted(legajos_dir.glob("legajo_*.json"), reverse=True):
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        items.append({
-            "id": data.get("id", path.stem),
-            "creado_en": data.get("creado_en"),
-            "estado": data.get("estado", "sin_sellar"),
-            "operador": (data.get("operador") or {}).get("usuario", ""),
-            "sha256": data.get(HASH_FIELD, ""),
-            "excel": data.get("excel"),
-            "total_proveedores": data.get("total_proveedores", 0),
-            "resumen": data.get("resumen", []),
-        })
-    return items
+    if legajos_dir.exists():
+        for path in sorted(legajos_dir.glob("legajo_*.json"), reverse=True):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            item = _item_listado(data, "local")
+            items[item["id"] or path.stem] = item
+    try:
+        for remoto in supabase_mvp.list_legajos_remotos():
+            rid = remoto.get("id", "")
+            if rid and rid not in items:
+                items[rid] = _item_listado(remoto, "supabase")
+    except Exception:
+        pass
+    return sorted(items.values(), key=lambda i: i.get("creado_en") or "", reverse=True)
 
 
 def obtener_legajo(salidas_dir: Path, legajo_id: str) -> dict | None:
     if "/" in legajo_id or ".." in legajo_id:
         return None
     path = salidas_dir / "legajos" / f"{legajo_id}.json"
-    if not path.exists():
-        return None
-    legajo = json.loads(path.read_text(encoding="utf-8"))
-    legajo["integridad"] = verificar_integridad(legajo)
+    if path.exists():
+        legajo = json.loads(path.read_text(encoding="utf-8"))
+        legajo["fuente"] = "local"
+    else:
+        try:
+            remoto = supabase_mvp.get_legajo_remoto(legajo_id)
+        except Exception:
+            remoto = None
+        if not remoto:
+            return None
+        # Reconstruir exactamente el contenido sellado (sin columnas técnicas de la tabla).
+        legajo = {k: remoto.get(k) for k in CAMPOS_PERSISTIDOS if k in remoto}
+        legajo["fuente"] = "supabase"
+    legajo["integridad"] = verificar_integridad({k: v for k, v in legajo.items() if k in CAMPOS_PERSISTIDOS})
     return legajo

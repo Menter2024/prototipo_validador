@@ -189,6 +189,7 @@ Cada validación genera evidencia auditable:
 - fecha/hora;
 - sellado al crear: estado "cerrado" + hash SHA256 del contenido completo;
 - operador que disparó la validación (usuario y rol, con MENTER_USERS);
+- persistencia durable: dual-write a Supabase (tabla legajos, migración 003) con el archivo local como respaldo; en deploys con disco efímero los legajos sobreviven al redeploy y la integridad se verifica también sobre la copia remota;
 - verificación de integridad al consultar el legajo (detecta adulteración);
 - versiones de los catálogos de reglas aplicados (regímenes y clientes-agentes);
 - snapshot del manifest de padrones usados (período, hash, vigencia);
@@ -285,6 +286,8 @@ Estructura:
     BASIC_AUTH_USER=
     BASIC_AUTH_PASS=
     MENTER_USERS=            # multi-usuario con rol: "ana:clave:impuestos,juan:clave:compras" (roles: admin, impuestos, compras, cxp, auditoria)
+    SUPABASE_URL=            # habilita persistencia durable (legajos, padrones, accesos)
+    SUPABASE_SERVICE_ROLE_KEY=   # solo server-side; aplicar supabase/migrations/*.sql en el SQL Editor (el conector no tiene permisos)
     PADRONES_DIR=./padrones
     SALIDAS_DIR=./salidas
     UPLOADS_DIR=./uploads
