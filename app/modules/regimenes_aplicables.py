@@ -34,6 +34,8 @@ JURISDICCIONES_CANON = {
     "CIUDAD AUTONOMA DE BUENOS AIRES": "CABA",
     "BUENOS AIRES": "Buenos Aires",
     "CORDOBA": "Córdoba",
+    "ENTRE RIOS": "Entre Ríos",
+    "FORMOSA": "Formosa",
     "JUJUY": "Jujuy",
     "MENDOZA": "Mendoza",
     "SANTA FE": "Santa Fe",

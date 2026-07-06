@@ -1,7 +1,7 @@
 {
-  "version": 2,
-  "actualizado": "2026-07-03",
-  "criterio": "Catálogo operativo inicial de regímenes argentinos de retención, percepción, recaudación e información. No calcula alícuotas; clasifica integración, evidencia y seguimiento. v2 (2026-07-03): SIRE y SICORE modelados como sistemas separados que conviven; calendarios 2026 referenciados a norma verificada, sin fechas hardcodeadas (las fechas puntuales se reprograman durante el año y deben consultarse en la fuente oficial).",
+  "version": 3,
+  "actualizado": "2026-07-06",
+  "criterio": "Catálogo operativo inicial de regímenes argentinos de retención, percepción, recaudación e información. No calcula alícuotas; clasifica integración, evidencia y seguimiento. v2 (2026-07-03): SIRE y SICORE modelados como sistemas separados que conviven; calendarios 2026 referenciados a norma verificada, sin fechas hardcodeadas (las fechas puntuales se reprograman durante el año y deben consultarse en la fuente oficial). v3 (2026-07-06): regímenes nacionales y COMARB catalogados con norma base verificada (los no confirmados quedan pendiente_catalogado con nota); se agregan las jurisdicciones de la huella real CICSA (Entre Ríos, Neuquén, Santiago del Estero, San Luis, Salta, Formosa).",
   "regimenes": [
     {
       "id": "arca_ganancias_rg830",
@@ -19,16 +19,24 @@
       "alicuota_fuente": "tabla_normativa_arca",
       "padron_fuente": "constancia_arca_y_parametros_normativos",
       "periodicidad": "por_pago_y_declaracion_periodica",
-      "sistema_presentacion": "SICORE/SIRE según régimen vigente",
+      "sistema_presentacion": "SICORE (RG 2233) — ver arca_sicore",
       "credenciales_requeridas": true,
       "automatizacion": "parcialmente_automatizable",
       "evidencia_requerida": "constancia_arca_parametros_calculo_certificado_retencion",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P0",
       "fuentes": [
-        "https://arca.gob.ar/gananciasYBienes/ganancias/retenciones/rg830/conceptos-alcanzados.asp"
-      ]
+        "https://www.afip.gob.ar/gananciasYBienes/ganancias/retenciones/rg830/conceptos-alcanzados.asp",
+        "https://servicios.infoleg.gob.ar/infolegInternet/anexos/60000-64999/62872/texact.htm"
+      ],
+      "norma_base": "RG (AFIP) 830/2000 y modificatorias. Mínimos no sujetos a retención e importes mínimos: Anexo VIII (actualizado por RG 5423/2023 y posteriores).",
+      "minimos_referencia": {
+        "ubicacion": "Anexo VIII RG 830 (texto vigente en Biblioteca Electrónica ARCA)",
+        "importes_hardcodeados": false,
+        "nota": "Análisis profesional 2026 señala mínimos desactualizados frente a inflación: verificar el anexo vigente en cada implementación de cálculo."
+      },
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "arca_iva_retenciones",
@@ -51,11 +59,13 @@
       "automatizacion": "parcialmente_automatizable",
       "evidencia_requerida": "constancia_condicion_iva_certificado_retencion",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P0",
       "fuentes": [
-        "https://www.arca.gob.ar/sire/"
-      ]
+        "https://servicios.infoleg.gob.ar/infolegInternet/anexos/165000-169999/168755/norma.htm"
+      ],
+      "norma_base": "RG (AFIP) 2854/2010 y modificatorias; nómina de agentes designados en Anexo I (continuidad del régimen RG 18/1997).",
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "arca_iva_percepciones",
@@ -78,11 +88,18 @@
       "automatizacion": "parcialmente_automatizable",
       "evidencia_requerida": "comprobante_percepcion_constancia_certificado_exclusion",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P0",
       "fuentes": [
-        "https://www.afip.gob.ar/monitoreo-fiscal/regimen-percepcion-iva/caracteristicas.asp"
-      ]
+        "https://servicioscf.afip.gob.ar/publico/abc/ABCpaso2.aspx?cat=3269"
+      ],
+      "norma_base": "RG (AFIP) 2408/2008 — régimen general de percepción de IVA; obligados a actuar: los agentes de retención de la RG 2854, entre otros.",
+      "alicuota_referencia": {
+        "valores": "3% general / 1,5% según operación (art. de la norma)",
+        "importes_hardcodeados": false,
+        "nota": "Confirmar alícuota aplicable por tipo de operación contra el texto vigente antes de calcular."
+      },
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "arca_sire",
@@ -105,7 +122,7 @@
       "automatizacion": "portal_credenciales_api_si_disponible",
       "evidencia_requerida": "certificados_sire_acuse_presentacion",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P0",
       "fuentes": [
         "https://www.arca.gob.ar/sire/",
@@ -119,7 +136,7 @@
         "fechas_hardcodeadas": false,
         "fuente": "https://www.afip.gob.ar/vencimientos/"
       },
-      "norma_verificada_al": "2026-07-03"
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "arca_sicore",
@@ -142,7 +159,7 @@
       "automatizacion": "portal_credenciales_api_si_disponible",
       "evidencia_requerida": "certificados_sire_acuse_presentacion",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P0",
       "fuentes": [
         "https://servicioscf.afip.gob.ar/publico/abc/ABCpaso2.aspx?cat=3285"
@@ -155,7 +172,7 @@
         "fechas_hardcodeadas": false,
         "fuente": "https://www.afip.gob.ar/vencimientos/"
       },
-      "norma_verificada_al": "2026-07-03"
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "arca_libro_iva_digital_iva_simple",
@@ -178,12 +195,14 @@
       "automatizacion": "parcialmente_automatizable",
       "evidencia_requerida": "acuse_presentacion_libro_iva_ddjj",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P0",
       "fuentes": [
         "https://biblioteca.arca.gob.ar/search/query/norma.aspx?p=t%3ARAG%7Cn%3A4597%7Co%3A3%7Ca%3A2019%7Cf%3A30%2F09%2F2019",
         "https://www.afip.gob.ar/iva/iva-simple/"
-      ]
+      ],
+      "norma_base": "Libro IVA Digital: RG (AFIP) 4597/2019 y modificatorias. IVA Simple: esquema en implementación — confirmar la RG vigente y el universo alcanzado antes de operar.",
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "arca_siter_financiero",
@@ -233,7 +252,7 @@
       "automatizacion": "portal_credenciales_archivo",
       "evidencia_requerida": "padron_acuse_archivo_hash",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P1",
       "fuentes": [
         "https://www.ca.gob.ar/sistemas/sircar"
@@ -244,7 +263,8 @@
         "fechas_hardcodeadas": false,
         "fuente": "https://www.ca.gob.ar/comarb-generales/download/451-2025/8628-rg-21-vencimientos-sircar-2026"
       },
-      "norma_verificada_al": "2026-07-03"
+      "norma_verificada_al": "2026-07-06",
+      "norma_base": "RG CA 84/2002 (aprobación del sistema), modif. RG CA 5/2013; texto actualizado y calendario anual en ca.gob.ar."
     },
     {
       "id": "comarb_sircreb",
@@ -267,10 +287,11 @@
       "automatizacion": "portal_credenciales_archivo",
       "evidencia_requerida": "padron_acuse_archivo_hash",
       "riesgo_operativo": "medio",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P1",
       "fuentes": [
-        "https://www.argentina.gob.ar/economia/politicatributaria/armonizacion/comarb"
+        "https://www.ca.gob.ar/sistemas/sircreb",
+        "https://www.ca.gob.ar/resoluciones-comarb/download/446-ta/8525-texto-actualizado-sircreb"
       ],
       "calendario_2026": {
         "esquema": "Calendario anual 2026 publicado por la Comisión Arbitral para los sistemas COMARB.",
@@ -278,7 +299,8 @@
         "fechas_hardcodeadas": false,
         "fuente": "https://www.ca.gob.ar/"
       },
-      "norma_verificada_al": "2026-07-03"
+      "norma_verificada_al": "2026-07-06",
+      "norma_base": "RG CA 104/2004 y modificatorias (texto actualizado en ca.gob.ar)."
     },
     {
       "id": "comarb_sirtac",
@@ -301,7 +323,7 @@
       "automatizacion": "portal_credenciales_archivo",
       "evidencia_requerida": "padron_acuse_archivo_hash",
       "riesgo_operativo": "medio",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P1",
       "fuentes": [
         "https://www.ca.gob.ar/preguntas-frecuentes/sistemas/sirtac"
@@ -312,7 +334,8 @@
         "fechas_hardcodeadas": false,
         "fuente": "https://www.ca.gob.ar/"
       },
-      "norma_verificada_al": "2026-07-03"
+      "norma_verificada_al": "2026-07-06",
+      "norma_base": "RG CA 2/2019 (aprobación); RG CA 11/2020 y 12/2020 (reglas básicas y operatividad); RG CA 8/2021 (ajustes)."
     },
     {
       "id": "comarb_sircupa",
@@ -335,7 +358,7 @@
       "automatizacion": "portal_credenciales_archivo",
       "evidencia_requerida": "padron_acuse_archivo_hash",
       "riesgo_operativo": "medio",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P1",
       "fuentes": [
         "https://www.ca.gob.ar/sistemas/sircupa"
@@ -346,7 +369,8 @@
         "fechas_hardcodeadas": false,
         "fuente": "https://www.ca.gob.ar/"
       },
-      "norma_verificada_al": "2026-07-03"
+      "norma_verificada_al": "2026-07-06",
+      "norma_base": "RG CA 9/2022 (aprobación del sistema de recaudación sobre cuentas de pago)."
     },
     {
       "id": "comarb_sirpei",
@@ -373,7 +397,9 @@
       "prioridad": "P2",
       "fuentes": [
         "https://www.ca.gob.ar/preguntas-frecuentes/sistemas/sirpei/que-es-el-sirpei"
-      ]
+      ],
+      "nota_verificacion": "Verificación 2026-07-06: no se pudo confirmar la norma CA específica del régimen de percepciones en importaciones; confirmar contra ca.gob.ar antes de catalogar. Sigue pendiente_catalogado a propósito.",
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "comarb_sifere",
@@ -396,7 +422,7 @@
       "automatizacion": "portal_credenciales_archivo",
       "evidencia_requerida": "padron_acuse_archivo_hash",
       "riesgo_operativo": "alto",
-      "estado_integracion": "pendiente_catalogado",
+      "estado_integracion": "catalogado_no_integrado",
       "prioridad": "P2",
       "fuentes": [
         "https://www.argentina.gob.ar/economia/politicatributaria/armonizacion/comarb"
@@ -407,7 +433,8 @@
         "fechas_hardcodeadas": false,
         "fuente": "https://www.ca.gob.ar/"
       },
-      "norma_verificada_al": "2026-07-03"
+      "norma_verificada_al": "2026-07-06",
+      "norma_base": "SIFERE WEB: RG CA 8/2015 y modificatorias (reemplazo del módulo Contribuyentes)."
     },
     {
       "id": "comarb_sircip",
@@ -433,8 +460,10 @@
       "estado_integracion": "pendiente_catalogado",
       "prioridad": "P2",
       "fuentes": [
-        "https://www.argentina.gob.ar/economia/politicatributaria/armonizacion/comarb"
-      ]
+        "https://www.ca.gob.ar/comarb-generales/download/451-2025/8558-rg-9-sircip"
+      ],
+      "nota_verificacion": "Verificación 2026-07-06: existe 'RG 09 SIRCIP' publicada en ca.gob.ar (carpeta 2025) pero no se confirmó alcance/vigencia. Sigue pendiente_catalogado a propósito.",
+      "norma_verificada_al": "2026-07-06"
     },
     {
       "id": "arba_iibb_ret_per",
@@ -623,6 +652,180 @@
       "prioridad": "P2",
       "fuentes": [
         "https://www.atm.mendoza.gov.ar/portalatm/zoneTop/preguntasFrecuentes/sircar/sircar.jsp"
+      ]
+    },
+    {
+      "nivel": "provincial",
+      "impuesto_tasa": "Ingresos Brutos",
+      "familia": "iibb_agentes_provincial",
+      "base_calculo": "Operación, pago o base según régimen local",
+      "credenciales_requeridas": true,
+      "riesgo_operativo": "alto",
+      "norma_verificada_al": "2026-07-06",
+      "id": "entrerios_iibb_ret_per",
+      "jurisdiccion": "Entre Ríos",
+      "organismo": "ATER",
+      "tipo": "retencion_percepcion",
+      "nombre": "Entre Ríos · Agentes IIBB (ATER)",
+      "hecho_disparador": "Retenciones/percepciones IIBB por operaciones con sustento territorial en Entre Ríos",
+      "sujeto_agente": "Agentes incluidos en nóminas ATER (CICSA incluida por Res. ATER 319/2016)",
+      "sujeto_pasible": "Contribuyentes IIBB ER locales o CM con sustento territorial",
+      "alicuota_fuente": "padron_ater",
+      "padron_fuente": "ATER",
+      "periodicidad": "segun_normativa",
+      "sistema_presentacion": "SIRCAR/aplicativo local (confirmar)",
+      "automatizacion": "archivo_credenciales",
+      "evidencia_requerida": "padron_archivo_hash_manifest",
+      "estado_integracion": "parcial_importador",
+      "prioridad": "P1",
+      "norma_base": "Régimen de agentes ATER; criterio de territorialidad Res. ATER 208/2024: no inscripto en IIBB ER con sustento territorial se retiene al 6%; inscripto según alícuota de padrón.",
+      "fuentes": [
+        "https://www.ater.gob.ar/ater2/NominasAgentes.asp"
+      ]
+    },
+    {
+      "nivel": "provincial",
+      "impuesto_tasa": "Ingresos Brutos",
+      "familia": "iibb_agentes_provincial",
+      "base_calculo": "Operación, pago o base según régimen local",
+      "credenciales_requeridas": true,
+      "riesgo_operativo": "alto",
+      "norma_verificada_al": "2026-07-06",
+      "id": "neuquen_iibb_percepcion",
+      "jurisdiccion": "Neuquén",
+      "organismo": "DPR Neuquén",
+      "tipo": "percepcion",
+      "nombre": "Neuquén · Agentes de percepción IIBB",
+      "hecho_disparador": "Percepciones IIBB en operaciones alcanzadas en Neuquén",
+      "sujeto_agente": "Agentes designados por resolución DPR (CICSA: Res. 686/DPR/2014, vigencia 02/01/2015)",
+      "sujeto_pasible": "Contribuyentes IIBB Neuquén / CM",
+      "alicuota_fuente": "normativa_dpr",
+      "padron_fuente": "consulta_online_neuquen",
+      "periodicidad": "segun_normativa",
+      "sistema_presentacion": "SIRCAR (adhesión Res. 102/DPR/02)",
+      "automatizacion": "pagina_publica_importador_asistido",
+      "evidencia_requerida": "resolucion_designacion_acuses_sircar",
+      "estado_integracion": "catalogado_no_integrado",
+      "prioridad": "P2",
+      "norma_base": "Régimen general: Res. 490/DPR/1997 y modificatorias; designaciones nominativas por resolución DPR.",
+      "fuentes": [
+        "https://rentasneuquenweb.gob.ar/nqn/SCF/cons_inscripcion.php"
+      ]
+    },
+    {
+      "nivel": "provincial",
+      "impuesto_tasa": "Ingresos Brutos",
+      "familia": "iibb_agentes_provincial",
+      "base_calculo": "Operación, pago o base según régimen local",
+      "credenciales_requeridas": true,
+      "riesgo_operativo": "alto",
+      "norma_verificada_al": "2026-07-06",
+      "id": "santiago_estero_iibb_percepcion",
+      "jurisdiccion": "Santiago del Estero",
+      "organismo": "DGR Santiago del Estero",
+      "tipo": "percepcion",
+      "nombre": "Santiago del Estero · Agentes de percepción IIBB",
+      "hecho_disparador": "Percepciones IIBB en operaciones alcanzadas en Santiago del Estero",
+      "sujeto_agente": "Agentes nominados en Anexo I (CICSA: RESOL-2020-55-E-GDESDE-DGR, vigencia 01/11/2020)",
+      "sujeto_pasible": "Contribuyentes IIBB SdE / CM",
+      "alicuota_fuente": "normativa_dgr",
+      "padron_fuente": "sin_padron_normalizado",
+      "periodicidad": "segun_normativa",
+      "sistema_presentacion": "SIRCAR (obligatorio por RESOL-2020-55)",
+      "automatizacion": "asistido_archivo_exportable",
+      "evidencia_requerida": "resolucion_designacion_acuses_sircar",
+      "estado_integracion": "catalogado_no_integrado",
+      "prioridad": "P2",
+      "norma_base": "RG (DGR) 9/1995, 17/1995 y 24/1995 (régimen de percepción, Ley 6792 art. 192); nóminas actualizadas por resolución.",
+      "fuentes": [
+        "https://www.dgrsantiago.gob.ar/"
+      ]
+    },
+    {
+      "nivel": "provincial",
+      "impuesto_tasa": "Ingresos Brutos",
+      "familia": "iibb_agentes_provincial",
+      "base_calculo": "Operación, pago o base según régimen local",
+      "credenciales_requeridas": true,
+      "riesgo_operativo": "alto",
+      "norma_verificada_al": "2026-07-06",
+      "id": "sanluis_iibb_percepcion",
+      "jurisdiccion": "San Luis",
+      "organismo": "DPIP San Luis",
+      "tipo": "percepcion",
+      "nombre": "San Luis · Régimen general de percepción IIBB",
+      "hecho_disparador": "Ventas, locaciones y prestaciones a sujetos con actividad en San Luis",
+      "sujeto_agente": "Obligados por encuadre: Anexo I, distribuidores/comercializadores de alimentos y bebidas (art. 2 inc. b) o ingresos > umbral (inc. c)",
+      "sujeto_pasible": "Adquirentes/locatarios con actividad en San Luis (locales o CM)",
+      "alicuota_fuente": "normativa_dpip",
+      "padron_fuente": "sin_padron_normalizado",
+      "periodicidad": "segun_normativa",
+      "sistema_presentacion": "a_confirmar (SIRCAR o aplicativo local)",
+      "automatizacion": "asistido_archivo_exportable",
+      "evidencia_requerida": "encuadre_normativo_acuses",
+      "estado_integracion": "catalogado_no_integrado",
+      "prioridad": "P2",
+      "norma_base": "RG 16-DPIP-2007 (régimen general de percepciones, Código Tributario Ley VI-0490-2005 art. 18 inc. 10).",
+      "fuentes": [
+        "https://www.sanluis.gov.ar/"
+      ]
+    },
+    {
+      "nivel": "provincial",
+      "impuesto_tasa": "Ingresos Brutos",
+      "familia": "iibb_agentes_provincial",
+      "base_calculo": "Operación, pago o base según régimen local",
+      "credenciales_requeridas": true,
+      "riesgo_operativo": "alto",
+      "norma_verificada_al": "2026-07-06",
+      "id": "salta_iibb_ret_per",
+      "jurisdiccion": "Salta",
+      "organismo": "DGR Salta",
+      "tipo": "retencion_percepcion",
+      "nombre": "Salta · Agentes IIBB (Actividades Económicas)",
+      "hecho_disparador": "Retenciones/percepciones del Impuesto a las Actividades Económicas en Salta",
+      "sujeto_agente": "Agentes designados por DGR Salta (designación del cliente piloto A CONFIRMAR: sin documento en la entrega 2026-07-03)",
+      "sujeto_pasible": "Contribuyentes locales o CM con actividad en Salta; exentos con F600 no son pasibles",
+      "alicuota_fuente": "normativa_dgr_salta",
+      "padron_fuente": "sin_padron_normalizado",
+      "periodicidad": "segun_normativa",
+      "sistema_presentacion": "a_confirmar",
+      "automatizacion": "priorizar_por_huella_cliente",
+      "evidencia_requerida": "designacion_o_descarte_documental",
+      "estado_integracion": "catalogado_no_integrado",
+      "prioridad": "P2",
+      "norma_base": "Regímenes de retención/percepción DGR Salta (Código Fiscal arts. 174/174 bis para exenciones con constancia F600); norma de designación a confirmar.",
+      "fuentes": [
+        "https://www.dgrsalta.gov.ar/"
+      ]
+    },
+    {
+      "nivel": "provincial",
+      "impuesto_tasa": "Ingresos Brutos",
+      "familia": "iibb_agentes_provincial",
+      "base_calculo": "Operación, pago o base según régimen local",
+      "credenciales_requeridas": true,
+      "riesgo_operativo": "alto",
+      "norma_verificada_al": "2026-07-06",
+      "id": "formosa_iibb_ret_per",
+      "jurisdiccion": "Formosa",
+      "organismo": "DGR Formosa",
+      "tipo": "retencion_percepcion",
+      "nombre": "Formosa · Agentes IIBB",
+      "hecho_disparador": "Retenciones/percepciones IIBB en operaciones alcanzadas en Formosa",
+      "sujeto_agente": "Agentes designados por DGR Formosa (rol del cliente a confirmar)",
+      "sujeto_pasible": "Contribuyentes IIBB Formosa / CM (CICSA inscripta en la jurisdicción desde 10/1984)",
+      "alicuota_fuente": "padron_formosa",
+      "padron_fuente": "Formosa",
+      "periodicidad": "mensual",
+      "sistema_presentacion": "a_confirmar",
+      "automatizacion": "archivo_credenciales",
+      "evidencia_requerida": "padron_archivo_hash_manifest",
+      "estado_integracion": "parcial_importador",
+      "prioridad": "P2",
+      "norma_base": "Norma de agentes DGR Formosa a confirmar; el padrón mensual ya está integrado al importador (layout validado con muestra oficial).",
+      "fuentes": [
+        "https://www.dgrformosa.gob.ar/"
       ]
     },
     {

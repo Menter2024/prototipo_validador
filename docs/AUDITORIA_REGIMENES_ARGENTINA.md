@@ -180,3 +180,13 @@ Cambios aplicados a `config/regimenes_catalogo.json` (versión 2):
   - SIRE/SICORE: DDJJ mensual + pago a cuenta quincenal por terminación de CUIT según la agenda oficial de vencimientos ARCA. Aclaración: la RG 5652/2025 fue una prórroga puntual feb-abr 2025 por feriados, no el calendario anual (corrige la referencia del plan de junio).
 
 Fuentes: Boletín Oficial (RG CA 21/2025, Disposición CA 1/2026, RG CA 2/2026, RG ARCA 5652/2025), ca.gob.ar y afip.gob.ar/vencimientos.
+
+## Verificación normativa 2026-07-06 — Catálogo v3: normas base y huella CICSA
+
+Cambios aplicados a `config/regimenes_catalogo.json` (versión 3, 28 regímenes):
+
+**Nacionales catalogados con norma base verificada** (pasan a `catalogado_no_integrado`): RG 830/2000 con mínimos referenciados al Anexo VIII sin importes hardcodeados (actualizado por RG 5423/2023 y posteriores; análisis profesional 2026 los señala desactualizados); retención IVA RG 2854/2010 (nómina Anexo I, continuidad de RG 18/1997); percepción IVA RG 2408/2008 (3%/1,5%; obligados los agentes de la RG 2854); Libro IVA Digital RG 4597/2019 (IVA Simple: RG a confirmar); SIRE RG 3726/2015 y SICORE RG 2233/2007.
+
+**COMARB catalogados**: SIRCAR RG CA 84/2002 (modif. 5/2013); SIRCREB RG CA 104/2004; SIRTAC RG CA 2/2019 (+11/2020, 12/2020, 8/2021); SIRCUPA RG CA 9/2022; SIFERE WEB RG CA 8/2015. **SIRPEI y SIRCIP quedan `pendiente_catalogado` a propósito**: la norma específica no pudo confirmarse en esta verificación (SIRCIP tiene una "RG 09" publicada en ca.gob.ar cuyo alcance debe validarse).
+
+**Jurisdicciones de la huella real CICSA agregadas** (faltaban pese a designaciones confirmadas documentalmente el 2026-07-03): Entre Ríos/ATER (retención; territorialidad Res. 208/2024: no inscripto con sustento → 6%; padrón ya integrado al importador), Neuquén (percepción, Res. 490/DPR/97 + designación 686/DPR/14, SIRCAR), Santiago del Estero (percepción, RG 9-17-24/1995 + RESOL-2020-55, SIRCAR), San Luis (percepción por encuadre RG 16-DPIP-2007), Salta (designación del cliente a confirmar; exenciones F600 arts. 174/174 bis CF) y Formosa (padrón integrado; norma de agentes a confirmar). Además se mapearon Entre Ríos y Formosa en `PADRON_BY_JURISDICCION`, con lo que la derivación por proveedor ahora cruza esos padrones.

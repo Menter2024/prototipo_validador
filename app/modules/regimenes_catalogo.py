@@ -14,6 +14,8 @@ PADRON_BY_JURISDICCION = {
     "Buenos Aires": "ARBA",
     "CABA": "CABA",
     "Córdoba": "Cordoba",
+    "Entre Ríos": "EntreRios",
+    "Formosa": "Formosa",
     "Jujuy": "Jujuy",
     "Tucumán": "Tucuman",
     "Santa Fe": "SantaFe",

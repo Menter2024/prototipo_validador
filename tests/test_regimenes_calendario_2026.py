@@ -27,7 +27,7 @@ def test_calendario_2026_referenciado_sin_fechas_hardcodeadas():
         assert cal, f"{rid} sin calendario_2026"
         assert cal["fechas_hardcodeadas"] is False
         assert cal["fuente"].startswith("https://")
-        assert regimenes[rid]["norma_verificada_al"] == "2026-07-03"
+        assert regimenes[rid]["norma_verificada_al"] >= "2026-07-03"
 
     # SIRCAR: la reprogramación 2026 tiene que estar citada.
     sircar = regimenes["comarb_sircar"]["calendario_2026"]
