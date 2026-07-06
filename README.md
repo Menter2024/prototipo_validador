@@ -321,6 +321,7 @@ Para producción enterprise se debe agregar:
 ## Documentación complementaria
 
 - docs/MANUAL_USUARIO.md
+- docs/DICCIONARIO_DATOS_LEGAJO.md
 - docs/PILOTO_CCU_READINESS.md
 - docs/ARQUITECTURA_ENTERPRISE.md
 - docs/OPERACION_TRIBUTARIA.md
