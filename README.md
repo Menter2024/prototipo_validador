@@ -220,7 +220,7 @@ Módulo: app/modules/excel.py
 
 | Ruta | Uso |
 |---|---|
-| /dashboard | Dashboard ejecutivo de piloto y próximas acciones por rol |
+| /dashboard | Dashboard ejecutivo de piloto, próximas acciones por rol y panel de vencimiento de certificados propios |
 | /piloto-ccu | Checklist vivo de readiness para prueba piloto CCU |
 | / | Validación individual o múltiple por texto |
 | /configuracion | Configuración guiada de cliente, cobertura, padrones, fuentes y accesos |
