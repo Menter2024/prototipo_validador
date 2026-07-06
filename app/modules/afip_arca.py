@@ -403,17 +403,28 @@ def _parse_persona(resp: dict) -> dict:
         elif isinstance(fuente, list):
             impuestos_total.extend(fuente)
 
-    cond_iva = "—"
-    cond_gan = "—"
+    def _mejor_condicion(candidatos: list[tuple[str, str]]) -> str:
+        """Prefiere el impuesto propio (IVA, GANANCIAS SOCIEDADES) sobre los
+        regímenes de agente/certificación (SIRE-IVA, SICORE-..., RET ...)."""
+        if not candidatos:
+            return "—"
+        def puntaje(item):
+            desc = item[0]
+            return ("SIRE" in desc) + ("SICORE" in desc) + ("RET" in desc) + ("BENEF" in desc)
+        desc, estado = min(candidatos, key=puntaje)
+        return f"{desc} ({estado})"
+
+    candidatos_iva: list[tuple[str, str]] = []
+    candidatos_gan: list[tuple[str, str]] = []
     for imp in impuestos_total:
         desc = (imp.get("descripcionImpuesto") or imp.get("descripcion") or "").upper()
         estado = _map_estado_impuesto(imp.get("estadoImpuesto") or imp.get("estado"))
-        # IVA puro o IVA + algo (SIRE-IVA, etc.)
-        if "IVA" in desc and "MONOTRIBUTO" not in desc and cond_iva == "—":
-            cond_iva = f"{desc} ({estado})"
-        # Ganancias (GANANCIAS SOCIEDADES, IMPTO.A LAS GANANCIAS, etc.)
-        if "GANANCIAS" in desc and cond_gan == "—":
-            cond_gan = f"{desc} ({estado})"
+        if "IVA" in desc and "MONOTRIBUTO" not in desc:
+            candidatos_iva.append((desc, estado))
+        if "GANANCIAS" in desc:
+            candidatos_gan.append((desc, estado))
+    cond_iva = _mejor_condicion(candidatos_iva)
+    cond_gan = _mejor_condicion(candidatos_gan)
 
     # Si tiene categoría de monotributo, eso sobreescribe IVA
     cat_mono = dmo.get("categoriaMonotributo")
