@@ -448,6 +448,7 @@ def padrones_estado():
 def fuentes_estado():
     estado = fuentes_catalogo.evaluar_fuentes(PADRONES_DIR)
     estado["descargas"] = descarga_fuentes.cargar_manifest(EVIDENCIAS_FUENTES_DIR).get("descargas", [])[:20]
+    estado["calendarios_regimenes"] = regimenes_catalogo.calendarios()
     return estado
 
 

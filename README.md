@@ -110,6 +110,7 @@ Módulo: app/modules/fuentes_online.py
 - Descarga controlada de fuentes públicas con evidencia, hash y manifest.
 - Circuito definido para fuentes restantes: público, credenciales, archivo cliente, consulta CUIT, navegador o CAPTCHA.
 - Cola de fuentes pendientes/asistidas para resolver CAPTCHA, credenciales, navegador y verificaciones manuales con evidencia.
+- Calendarios de vencimiento 2026 de SIRE/SICORE/COMARB referenciados a norma verificada, con alerta cuando la verificación normativa supera los 120 días (en /api/fuentes).
 
 Config: config/fuentes_catalogo.json
 Web: /fuentes

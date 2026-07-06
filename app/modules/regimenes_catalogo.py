@@ -4,8 +4,12 @@ from __future__ import annotations
 import json
 import os
 from collections import Counter, defaultdict
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
+
+# Días máximos sin reverificar la norma de un calendario antes de alertar (D3).
+DIAS_REVERIFICACION = 120
 
 ROOT_DIR = Path(__file__).parent.parent.parent
 DEFAULT_CATALOG = ROOT_DIR / "config" / "regimenes_catalogo.json"
@@ -96,6 +100,52 @@ def resumen(regimenes: list[dict[str, Any]]) -> dict[str, Any]:
         "por_backlog": dict(por_backlog),
         "por_familia": dict(sorted(por_familia.items())),
         "criticos_o_prioritarios_pendientes": len(criticos),
+    }
+
+
+def calendarios(catalog_path: Path | None = None, hoy: date | None = None) -> dict[str, Any]:
+    """Calendarios de vencimiento referenciados a norma, con alerta de reverificación.
+
+    El catálogo no hardcodea fechas (se reprograman durante el año); el monitor
+    expone la norma, el esquema y la fuente, y alerta cuando la verificación
+    normativa quedó vieja.
+    """
+    hoy = hoy or date.today()
+    items: list[dict[str, Any]] = []
+    alertas: list[str] = []
+    for regimen in cargar_catalogo(catalog_path)["regimenes"]:
+        cal = regimen.get("calendario_2026")
+        if not cal:
+            continue
+        verificada = regimen.get("norma_verificada_al", "")
+        try:
+            dias = (hoy - datetime.strptime(verificada, "%Y-%m-%d").date()).days
+        except ValueError:
+            dias = None
+        reverificar = dias is None or dias > DIAS_REVERIFICACION
+        items.append({
+            "id": regimen["id"],
+            "nombre": regimen["nombre"],
+            "nivel": regimen["nivel"],
+            "sistema": regimen.get("sistema_presentacion", ""),
+            "esquema": cal.get("esquema", ""),
+            "norma_calendario": cal.get("norma_calendario", ""),
+            "fuente": cal.get("fuente", ""),
+            "norma_verificada_al": verificada,
+            "dias_desde_verificacion": dias,
+            "reverificacion_requerida": reverificar,
+        })
+        if reverificar:
+            detalle = f"hace {dias} días" if dias is not None else "sin fecha registrada"
+            alertas.append(
+                f"{regimen['nombre']}: norma del calendario sin reverificar ({detalle}; umbral "
+                f"{DIAS_REVERIFICACION} días). Confirmar contra {cal.get('fuente', 'la fuente oficial')}."
+            )
+    return {
+        "fecha_evaluacion": hoy.strftime("%Y-%m-%d"),
+        "umbral_reverificacion_dias": DIAS_REVERIFICACION,
+        "items": items,
+        "alertas": alertas,
     }
 
 
